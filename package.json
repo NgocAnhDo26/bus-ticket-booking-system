@@ -1,0 +1,42 @@
+{
+  "name": "bus-ticket-booking-system",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prepare": "husky",
+    "---------------- INFRASTRUCTURE ----------------": "",
+    "infra:up": "docker-compose up -d",
+    "infra:down": "docker-compose down",
+    "infra:logs": "docker-compose logs -f",
+    "infra:nuke": "docker-compose down -v",
+    "---------------- DATABASE (Backend) ----------------": "",
+    "db:clean": "cd backend && ./mvnw flyway:clean",
+    "db:migrate": "cd backend && ./mvnw flyway:migrate",
+    "db:info": "cd backend && ./mvnw flyway:info",
+    "db:reset": "npm run db:clean && npm run db:migrate",
+    "---------------- HARD RESET ----------------": "",
+    "reset:env": "bash scripts/reset-env.sh",
+    "---------------- DEVELOPMENT ----------------": "",
+    "dev:backend": "cd backend && ./mvnw spring-boot:run",
+    "dev:client": "cd frontend && npx nx serve client",
+    "dev:admin": "cd frontend && npx nx serve admin",
+    "dev:all": "concurrently \"npm run dev:backend\" \"npm run dev:client\" \"npm run dev:admin\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/NgocAnhDo26/bus-ticket-booking-system.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/NgocAnhDo26/bus-ticket-booking-system/issues"
+  },
+  "homepage": "https://github.com/NgocAnhDo26/bus-ticket-booking-system#readme",
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "husky": "^9.1.7"
+  }
+}
