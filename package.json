@@ -20,9 +20,9 @@
     "reset:env": "bash scripts/reset-env.sh",
     "---------------- DEVELOPMENT ----------------": "",
     "dev:backend": "cd backend && ./mvnw spring-boot:run",
-    "dev:client": "cd frontend && npx nx serve client",
-    "dev:admin": "cd frontend && npx nx serve admin",
-    "dev:all": "concurrently \"npm run dev:backend\" \"npm run dev:client\" \"npm run dev:admin\""
+    "dev:client": "cd frontend && npm run dev",
+    "dev:admin": "cd frontend && npm run dev",
+    "dev:all": "concurrently \"npm run dev:backend\" \"npm run dev:client\""
   },
   "repository": {
     "type": "git",
