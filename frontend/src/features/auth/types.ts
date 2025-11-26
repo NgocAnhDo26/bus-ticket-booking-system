@@ -1,8 +1,12 @@
 import { type UserProfile } from '@/types/user'
 
 export type AuthResponse = {
-  accessToken: string
-  user: UserProfile
+  status: number
+  message: string
+  data: {
+    accessToken: string
+    user: UserProfile
+  }
 }
 
 export type LoginRequest = {

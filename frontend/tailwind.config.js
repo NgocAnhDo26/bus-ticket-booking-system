@@ -1,58 +1,58 @@
-import defaultTheme from 'tailwindcss/defaultTheme'
-
-const colorWithAlpha = (variable) => `rgb(var(${variable}) / <alpha-value>)`
-
-const spacingScale = {
-  xs: 'var(--space-xs)',
-  sm: 'var(--space-sm)',
-  md: 'var(--space-md)',
-  lg: 'var(--space-lg)',
-  xl: 'var(--space-xl)',
-  '2xl': 'var(--space-2xl)',
-}
-
 /** @type {import('tailwindcss').Config} */
 export default {
-  darkMode: 'class',
-  content: ['./index.html', './src/**/*.{ts,tsx}'],
+    darkMode: ["class"],
+    content: [],
   theme: {
-    extend: {
-      colors: {
-        background: colorWithAlpha('--color-background'),
-        surface: colorWithAlpha('--color-surface'),
-        primary: colorWithAlpha('--color-primary'),
-        secondary: colorWithAlpha('--color-secondary'),
-        muted: colorWithAlpha('--color-muted'),
-        border: colorWithAlpha('--color-border'),
-        success: colorWithAlpha('--color-success'),
-        danger: colorWithAlpha('--color-danger'),
-        warning: colorWithAlpha('--color-warning'),
-        info: colorWithAlpha('--color-info'),
-        text: {
-          base: colorWithAlpha('--color-text-base'),
-          muted: colorWithAlpha('--color-text-muted'),
-          inverted: colorWithAlpha('--color-text-inverted'),
-        },
-      },
-      fontFamily: {
-        sans: ['"Inter Variable"', ...defaultTheme.fontFamily.sans],
-        display: ['"Space Grotesk"', ...defaultTheme.fontFamily.sans],
-      },
-      spacing: {
-        ...defaultTheme.spacing,
-        ...spacingScale,
-      },
-      borderRadius: {
-        card: 'var(--radius-card)',
-        button: 'var(--radius-button)',
-        input: 'var(--radius-input)',
-      },
-      boxShadow: {
-        card: '0 10px 40px rgb(15 23 42 / 0.08)',
-        soft: '0 4px 20px rgb(15 23 42 / 0.06)',
-      },
-    },
+  	extend: {
+  		borderRadius: {
+  			lg: 'var(--radius)',
+  			md: 'calc(var(--radius) - 2px)',
+  			sm: 'calc(var(--radius) - 4px)'
+  		},
+  		colors: {
+  			background: 'hsl(var(--background))',
+  			foreground: 'hsl(var(--foreground))',
+  			card: {
+  				DEFAULT: 'hsl(var(--card))',
+  				foreground: 'hsl(var(--card-foreground))'
+  			},
+  			popover: {
+  				DEFAULT: 'hsl(var(--popover))',
+  				foreground: 'hsl(var(--popover-foreground))'
+  			},
+  			primary: {
+  				DEFAULT: 'hsl(var(--primary))',
+  				foreground: 'hsl(var(--primary-foreground))'
+  			},
+  			secondary: {
+  				DEFAULT: 'hsl(var(--secondary))',
+  				foreground: 'hsl(var(--secondary-foreground))'
+  			},
+  			muted: {
+  				DEFAULT: 'hsl(var(--muted))',
+  				foreground: 'hsl(var(--muted-foreground))'
+  			},
+  			accent: {
+  				DEFAULT: 'hsl(var(--accent))',
+  				foreground: 'hsl(var(--accent-foreground))'
+  			},
+  			destructive: {
+  				DEFAULT: 'hsl(var(--destructive))',
+  				foreground: 'hsl(var(--destructive-foreground))'
+  			},
+  			border: 'hsl(var(--border))',
+  			input: 'hsl(var(--input))',
+  			ring: 'hsl(var(--ring))',
+  			chart: {
+  				'1': 'hsl(var(--chart-1))',
+  				'2': 'hsl(var(--chart-2))',
+  				'3': 'hsl(var(--chart-3))',
+  				'4': 'hsl(var(--chart-4))',
+  				'5': 'hsl(var(--chart-5))'
+  			}
+  		}
+  	}
   },
-  plugins: [],
+  plugins: [require("tailwindcss-animate")],
 }
 

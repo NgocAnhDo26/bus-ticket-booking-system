@@ -1,17 +1,17 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { GoogleOAuthProvider } from '@react-oauth/google'
-import { ReactNode, useMemo } from 'react'
-import { ThemeProvider } from '@/hooks/use-theme'
-import { useHydrateAuth } from '@/features/auth/hooks'
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { GoogleOAuthProvider } from "@react-oauth/google";
+import { type ReactNode, useMemo } from "react";
+import { ThemeProvider } from "@/hooks/use-theme";
+import { useHydrateAuth } from "@/features/auth/hooks";
 
 type Props = {
-  children: ReactNode
-}
+  children: ReactNode;
+};
 
 const AuthHydrator = ({ children }: Props) => {
-  useHydrateAuth()
-  return <>{children}</>
-}
+  useHydrateAuth();
+  return <>{children}</>;
+};
 
 export const AppProviders = ({ children }: Props) => {
   const queryClient = useMemo(
@@ -24,10 +24,10 @@ export const AppProviders = ({ children }: Props) => {
           },
         },
       }),
-    [],
-  )
+    []
+  );
 
-  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID ?? ''
+  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID ?? "";
 
   return (
     <ThemeProvider>
@@ -37,6 +37,5 @@ export const AppProviders = ({ children }: Props) => {
         </QueryClientProvider>
       </GoogleOAuthProvider>
     </ThemeProvider>
-  )
-}
-
+  );
+};

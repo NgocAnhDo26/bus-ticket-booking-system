@@ -10,7 +10,7 @@ import java.time.Instant;
 import java.util.UUID;
 import lombok.Getter;
 import lombok.Setter;
-import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.UuidGenerator;
 
 @Getter
 @Setter
@@ -18,8 +18,8 @@ import org.hibernate.annotations.GenericGenerator;
 public abstract class BaseEntity {
 
     @Id
-    @GeneratedValue(generator = "uuid2")
-    @GenericGenerator(name = "uuid2", strategy = "org.hibernate.id.UUIDGenerator")
+    @GeneratedValue
+    @UuidGenerator
     private UUID id;
 
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -40,4 +40,3 @@ public abstract class BaseEntity {
         this.updatedAt = Instant.now();
     }
 }
-
