@@ -23,9 +23,12 @@ let refreshPromise: Promise<string | null> | null = null;
 
 const requestRefresh = async () => {
   try {
-    const { data } = await refreshClient.post<AuthResponse>("/auth/refresh");
-    useAuthStore.getState().setAuth(data);
-    return data.accessToken;
+    const refreshResponse = await refreshClient.post<AuthResponse>(
+      "/auth/refresh",
+    );
+    const authData = refreshResponse.data.data;
+    useAuthStore.getState().setAuth(authData);
+    return authData.accessToken;
   } catch {
     useAuthStore.getState().clearAuth();
     return null;

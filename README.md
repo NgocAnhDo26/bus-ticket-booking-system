@@ -525,6 +525,39 @@ cd backend
 
 **Backend URL:** `https://your-app.railway.app`
 
+### GitHub Actions Automation
+
+The repo ships with `.github/workflows/deploy.yml` to automate production pushes:
+
+1. **Triggers**
+   - Automatic on every push to `main`.
+   - Manual from the *Actions* tab (`Deploy to Production` workflow) with toggles to deploy backend and/or trigger Vercel.
+
+2. **What happens**
+   - Builds the Spring Boot JAR with Maven and uploads it as an artifact.
+   - Securely copies the JAR to your EC2 box, moves it into `/opt/app`, and restarts the systemd service.
+   - Calls your Vercel Deploy Hook so the latest commit is built with production env vars.
+
+3. **Required GitHub secrets**
+   - `EC2_HOST`: Public DNS or IP of the EC2 instance.
+   - `EC2_USER`: SSH user with permission to restart the service (e.g. `ec2-user`).
+   - `EC2_SSH_KEY`: Private key contents for the above user.
+   - `EC2_DEPLOY_PATH`: Temporary upload directory on the instance (e.g. `/home/ec2-user/deploy`).
+   - `EC2_SERVICE_NAME`: systemd unit name (`bus-ticket.service`).
+   - `VERCEL_DEPLOY_HOOK_URL`: Deploy Hook URL from Vercel Project Settings.
+
+   *(Optional)* Update the `JAR_NAME` value at the top of the workflow if the Maven artifact name changes.
+
+4. **Server preparation**
+   - Ensure `${EC2_DEPLOY_PATH}` exists and is writable by the SSH user.
+   - `/opt/app` should contain the currently running jar and be writable by the service user.
+   - `sudo systemctl restart $EC2_SERVICE_NAME` must succeed without a password.
+
+5. **Monitoring**
+   - Check the workflow run logs for SCP/SSH output.
+   - Validate API health: `curl -I https://api.<domain>/api/health`.
+   - Verify the Vercel deployment status from the Vercel dashboard.
+
 ---
 
 ## Troubleshooting

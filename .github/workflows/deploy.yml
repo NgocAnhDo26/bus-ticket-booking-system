@@ -1,0 +1,84 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      deploy_backend:
+        description: "Deploy Spring Boot API"
+        required: false
+        default: "true"
+      deploy_frontend:
+        description: "Trigger Vercel deploy"
+        required: false
+        default: "true"
+
+env:
+  JAR_NAME: ticketbooking-0.0.1-SNAPSHOT.jar
+
+jobs:
+  build-backend:
+    if: github.event_name == 'push' || github.event.inputs.deploy_backend == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: "21"
+          distribution: temurin
+          cache: maven
+
+      - name: Build backend
+        run: ./mvnw clean package -DskipTests
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-jar
+          path: backend/target/${{ env.JAR_NAME }}
+
+  deploy-backend:
+    needs: build-backend
+    runs-on: ubuntu-latest
+    if: needs.build-backend.result == 'success'
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: backend-jar
+          path: artifact
+
+      - name: Copy jar to EC2
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: artifact/${{ env.JAR_NAME }}
+          target: ${{ secrets.EC2_DEPLOY_PATH }}
+
+      - name: Restart backend service
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            set -euo pipefail
+            sudo mv ${{ secrets.EC2_DEPLOY_PATH }}/${{ env.JAR_NAME }} /opt/app/${{ env.JAR_NAME }}
+            sudo systemctl restart ${{ secrets.EC2_SERVICE_NAME }}
+
+  trigger-vercel:
+    if: github.event_name == 'push' || github.event.inputs.deploy_frontend == 'true'
+    needs:
+      - build-backend
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Vercel deploy hook
+        run: curl -X POST -fsS ${{ secrets.VERCEL_DEPLOY_HOOK_URL }}
+
