@@ -1,8 +1,8 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import { type ReactNode, useMemo } from "react";
-import { ThemeProvider } from "@/hooks/use-theme";
 import { useHydrateAuth } from "@/features/auth/hooks";
+import { ThemeProvider } from "@/components/theme-provider";
 
 type Props = {
   children: ReactNode;
@@ -30,7 +30,7 @@ export const AppProviders = ({ children }: Props) => {
   const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID ?? "";
 
   return (
-    <ThemeProvider>
+    <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
       <GoogleOAuthProvider clientId={googleClientId}>
         <QueryClientProvider client={queryClient}>
           <AuthHydrator>{children}</AuthHydrator>
