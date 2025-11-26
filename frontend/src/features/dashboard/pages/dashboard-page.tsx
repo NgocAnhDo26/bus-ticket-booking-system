@@ -5,8 +5,13 @@ import { AdminStatsWidget } from "../components/admin-stats-widget";
 import { useDashboard } from "../hooks";
 import { Card, CardContent } from "@/components/ui/card";
 
-export const DashboardPage = () => {
+type DashboardPageProps = {
+  variant?: "passenger" | "admin";
+};
+
+export const DashboardPage = ({ variant = "passenger" }: DashboardPageProps) => {
   const { data, isLoading } = useDashboard();
+  const showAdminWidgets = variant === "admin";
 
   if (isLoading || !data) {
     return (
@@ -21,7 +26,7 @@ export const DashboardPage = () => {
   return (
     <div className="space-y-8">
       <SummaryCards data={data.summary} />
-      <AdminStatsWidget />
+      {showAdminWidgets && <AdminStatsWidget />}
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">
           <ActivityList data={data.activity} />

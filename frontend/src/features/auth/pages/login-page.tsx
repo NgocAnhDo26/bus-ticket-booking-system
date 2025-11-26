@@ -1,13 +1,15 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
-import { AuthLayout } from "../components/auth-layout";
-import { login, loginWithGoogle } from "../api";
-import { loginSchema, type LoginFormValues } from "../schema";
-import { useAuthStore } from "@/store/auth-store";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
+import type { AxiosError } from "axios";
 import { LoginForm } from "@/features/auth/components/login-form";
+import { useAuthStore } from "@/store/auth-store";
+import { login, loginWithGoogle } from "../api";
+import { AuthLayout } from "../components/auth-layout";
+import { loginSchema, type LoginFormValues } from "../schema";
+import { getDashboardPath } from "@/lib/navigation";
 
 export const LoginPage = () => {
   const setAuth = useAuthStore((state) => state.setAuth);
@@ -21,6 +23,8 @@ export const LoginPage = () => {
     },
   });
 
+  type ErrorResponse = { message?: string };
+
   const loginMutation = useMutation({
     mutationFn: login,
     onSuccess: (data) => {
@@ -28,9 +32,9 @@ export const LoginPage = () => {
       setError("");
       setAuth(data);
       console.log("Auth set, navigating to dashboard");
-      navigate("/dashboard");
+      navigate(getDashboardPath(data.user.role));
     },
-    onError: (error: any) => {
+    onError: (error: AxiosError<ErrorResponse>) => {
       const errorMessage =
         error.response?.data?.message || error.message || "Login failed";
       setError(errorMessage);
@@ -43,9 +47,9 @@ export const LoginPage = () => {
     onSuccess: (data) => {
       setError("");
       setAuth(data);
-      navigate("/dashboard");
+      navigate(getDashboardPath(data.user.role));
     },
-    onError: (error: any) => {
+    onError: (error: AxiosError<ErrorResponse>) => {
       const errorMessage =
         error.response?.data?.message || error.message || "Google login failed";
       setError(errorMessage);

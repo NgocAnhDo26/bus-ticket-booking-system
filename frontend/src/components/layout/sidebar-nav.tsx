@@ -3,20 +3,28 @@ import { LayoutDashboard, LogOut, Search, Ticket } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuthStore } from "@/store/auth-store";
 
-const navItems = [
-  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { to: "/dashboard/trips", label: "Trips", icon: Search, disabled: true },
-  {
-    to: "/dashboard/bookings",
-    label: "Bookings",
-    icon: Ticket,
-    disabled: true,
-  },
-];
-
 export const SidebarNav = () => {
   const user = useAuthStore((state) => state.user);
   const clearAuth = useAuthStore((state) => state.clearAuth);
+  const isAdmin = user?.role === "ADMIN";
+  const dashboardPath = isAdmin ? "/admin/dashboard" : "/dashboard";
+  const sectionPrefix = isAdmin ? "/admin" : "/dashboard";
+
+  const navItems = [
+    { to: dashboardPath, label: "Dashboard", icon: LayoutDashboard },
+    {
+      to: `${sectionPrefix}/trips`,
+      label: "Trips",
+      icon: Search,
+      disabled: true,
+    },
+    {
+      to: `${sectionPrefix}/bookings`,
+      label: "Bookings",
+      icon: Ticket,
+      disabled: true,
+    },
+  ];
 
   return (
     <aside className="hidden w-64 border-r border-border/60 bg-surface/80 px-6 py-8 lg:block">
