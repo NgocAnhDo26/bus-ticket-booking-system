@@ -1,16 +1,19 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { type ActivityItem } from '../types'
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { type ActivityItem } from "../types";
 
-const badgeVariantMap: Record<ActivityItem['status'], 'success' | 'warning' | 'default'> = {
-  success: 'success',
-  warning: 'warning',
-  info: 'default',
-}
+const badgeVariantMap: Record<
+  ActivityItem["status"],
+  "success" | "warning" | "default"
+> = {
+  success: "success",
+  warning: "warning",
+  info: "default",
+};
 
 type ActivityListProps = {
-  data: ActivityItem[]
-}
+  data: ActivityItem[];
+};
 
 export const ActivityList = ({ data }: ActivityListProps) => (
   <Card className="h-full">
@@ -30,5 +33,4 @@ export const ActivityList = ({ data }: ActivityListProps) => (
       ))}
     </CardContent>
   </Card>
-)
-
+);

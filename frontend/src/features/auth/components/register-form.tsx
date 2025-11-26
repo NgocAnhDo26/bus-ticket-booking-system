@@ -1,20 +1,19 @@
-import { type RegisterFormValues } from "@/features/auth/schema"
-import { Button } from "@/components/ui/button"
-import { FormField } from "@/components/ui/form-field"
-import { Input } from "@/components/ui/input"
-import { cn } from "@/lib/utils"
-import { type UseFormReturn } from "react-hook-form"
-import { Link } from "react-router-dom"
-import { Alert, AlertTitle } from "@/components/ui/alert"
-import { AlertCircle } from "lucide-react"
+import { type RegisterFormValues } from "@/features/auth/schema";
+import { Button } from "@/components/ui/button";
+import { FormField } from "@/components/ui/form-field";
+import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
+import { type UseFormReturn } from "react-hook-form";
+import { Link } from "react-router-dom";
+import { Alert, AlertTitle } from "@/components/ui/alert";
 
 type Props = {
-  form: UseFormReturn<RegisterFormValues>
-  onSubmit: (values: RegisterFormValues) => void
-  isSubmitting?: boolean
-  error?: string
-  className?: string
-}
+  form: UseFormReturn<RegisterFormValues>;
+  onSubmit: (values: RegisterFormValues) => void;
+  isSubmitting?: boolean;
+  error?: string;
+  className?: string;
+};
 
 export function RegisterForm({
   form,
@@ -28,7 +27,7 @@ export function RegisterForm({
     register,
     handleSubmit,
     formState: { errors },
-  } = form
+  } = form;
 
   return (
     <form
@@ -68,7 +67,10 @@ export function RegisterForm({
           {...register("password")}
         />
       </FormField>
-      <FormField label="Confirm password" error={errors.confirmPassword?.message}>
+      <FormField
+        label="Confirm password"
+        error={errors.confirmPassword?.message}
+      >
         <Input
           type="password"
           placeholder="••••••••"
@@ -87,7 +89,5 @@ export function RegisterForm({
         </Link>
       </p>
     </form>
-  )
+  );
 }
-
-

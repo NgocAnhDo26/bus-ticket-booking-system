@@ -1,26 +1,25 @@
-import { type UserProfile } from '@/types/user'
+import { type UserProfile } from "@/types/user";
 
 export type AuthResponse = {
-  status: number
-  message: string
+  status: number;
+  message: string;
   data: {
-    accessToken: string
-    user: UserProfile
-  }
-}
+    accessToken: string;
+    user: UserProfile;
+  };
+};
 
 export type LoginRequest = {
-  email: string
-  password: string
-}
+  email: string;
+  password: string;
+};
 
 export type RegisterRequest = {
-  fullName: string
-  email: string
-  password: string
-}
+  fullName: string;
+  email: string;
+  password: string;
+};
 
 export type GoogleLoginRequest = {
-  credential: string
-}
-
+  credential: string;
+};

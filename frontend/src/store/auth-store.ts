@@ -1,17 +1,17 @@
-import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
-import { type UserProfile } from '@/types/user'
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+import { type UserProfile } from "@/types/user";
 
 type AuthState = {
-  user: UserProfile | null
-  accessToken: string | null
-}
+  user: UserProfile | null;
+  accessToken: string | null;
+};
 
 type AuthActions = {
-  setAuth: (payload: { user: UserProfile; accessToken: string }) => void
-  updateUser: (user: UserProfile | null) => void
-  clearAuth: () => void
-}
+  setAuth: (payload: { user: UserProfile; accessToken: string }) => void;
+  updateUser: (user: UserProfile | null) => void;
+  clearAuth: () => void;
+};
 
 export const useAuthStore = create<AuthState & AuthActions>()(
   persist(
@@ -23,12 +23,11 @@ export const useAuthStore = create<AuthState & AuthActions>()(
       clearAuth: () => set({ user: null, accessToken: null }),
     }),
     {
-      name: 'btb-auth',
+      name: "btb-auth",
       partialize: (state) => ({
         user: state.user,
         accessToken: state.accessToken,
       }),
     },
   ),
-)
-
+);

@@ -24,7 +24,7 @@ export const AppProviders = ({ children }: Props) => {
           },
         },
       }),
-    []
+    [],
   );
 
   const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID ?? "";

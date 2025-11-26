@@ -1,22 +1,22 @@
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { cn } from "@/lib/utils"
-import { type LoginFormValues } from "@/features/auth/schema"
-import { GoogleLogin } from "@react-oauth/google"
-import { type UseFormReturn } from "react-hook-form"
-import { Link } from "react-router-dom"
-import { Alert, AlertTitle } from "@/components/ui/alert"
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
+import { type LoginFormValues } from "@/features/auth/schema";
+import { GoogleLogin } from "@react-oauth/google";
+import { type UseFormReturn } from "react-hook-form";
+import { Link } from "react-router-dom";
+import { Alert, AlertTitle } from "@/components/ui/alert";
 
 type Props = {
-  form: UseFormReturn<LoginFormValues>
-  error?: string
-  isSubmitting?: boolean
-  onSubmit: (values: LoginFormValues) => void
-  onGoogleLogin: (credential: string) => void
-  onGoogleError?: () => void
-  className?: string
-}
+  form: UseFormReturn<LoginFormValues>;
+  error?: string;
+  isSubmitting?: boolean;
+  onSubmit: (values: LoginFormValues) => void;
+  onGoogleLogin: (credential: string) => void;
+  onGoogleError?: () => void;
+  className?: string;
+};
 
 export function LoginForm({
   form,
@@ -32,7 +32,7 @@ export function LoginForm({
     register,
     handleSubmit,
     formState: { errors },
-  } = form
+  } = form;
 
   return (
     <form
@@ -101,7 +101,7 @@ export function LoginForm({
           <GoogleLogin
             onSuccess={(credentialResponse) => {
               if (credentialResponse.credential) {
-                onGoogleLogin(credentialResponse.credential)
+                onGoogleLogin(credentialResponse.credential);
               }
             }}
             onError={onGoogleError}
@@ -116,5 +116,5 @@ export function LoginForm({
         </Link>
       </div>
     </form>
-  )
+  );
 }

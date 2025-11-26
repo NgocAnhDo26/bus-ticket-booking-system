@@ -1,10 +1,10 @@
-import { type ReactNode } from 'react'
-import { SidebarNav } from './sidebar-nav'
-import { TopBar } from './top-bar'
+import { type ReactNode } from "react";
+import { SidebarNav } from "./sidebar-nav";
+import { TopBar } from "./top-bar";
 
 type AppShellProps = {
-  children: ReactNode
-}
+  children: ReactNode;
+};
 
 export const AppShell = ({ children }: AppShellProps) => {
   return (
@@ -17,6 +17,5 @@ export const AppShell = ({ children }: AppShellProps) => {
         </div>
       </div>
     </div>
-  )
-}
-
+  );
+};
