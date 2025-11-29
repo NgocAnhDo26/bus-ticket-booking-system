@@ -82,8 +82,14 @@ public class AuthService {
                     .role(UserRole.PASSENGER)
                     .build()));
             return issueTokens(user);
+        } catch (IllegalArgumentException ex) {
+            // Re-throw IllegalArgumentException as-is
+            throw ex;
         } catch (Exception ex) {
-            throw new IllegalArgumentException("Google sign-in failed");
+            // Log the actual exception for debugging
+            System.err.println("Google sign-in error: " + ex.getClass().getName() + " - " + ex.getMessage());
+            ex.printStackTrace();
+            throw new IllegalArgumentException("Google sign-in failed: " + ex.getMessage());
         }
     }
 
