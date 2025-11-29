@@ -1,11 +1,10 @@
 import { createBrowserRouter, Navigate } from "react-router-dom";
-import { LoginPage } from "@/features/auth/pages/login-page";
-import { RegisterPage } from "@/features/auth/pages/register-page";
-import { DashboardPage } from "@/features/dashboard/pages/dashboard-page";
-import { PublicRoute } from "@/components/common/public-route";
-import { ProtectedRoute } from "@/components/common/protected-route";
-import { DashboardLayout } from "@/components/layout/dashboard-layout";
-import { AdminDashboardPage } from "@/features/dashboard/pages/admin-dashboard-page";
+import { LoginPage, RegisterPage } from "@/features/auth";
+import { DashboardLayout } from "@/components/layout";
+import { DashboardPage } from "@/features/dashboard";
+import { AdminDashboardLayout } from "@/components/layout/AdminLayout";
+import { AdminDashboardPage } from "@/features/dashboard-admin";
+import { PublicRoute, ProtectedRoute } from "@/components/common";
 import { useAuthStore } from "@/store/auth-store";
 import { useHydrateAuth } from "@/features/auth/hooks";
 import { getDashboardPath } from "@/lib/navigation";
@@ -52,7 +51,10 @@ export const router = createBrowserRouter([
         element: <DashboardLayout />,
         children: [
           { path: "/dashboard", element: <DashboardPage /> },
-          { path: "/dashboard/*", element: <Navigate to="/dashboard" replace /> },
+          {
+            path: "/dashboard/*",
+            element: <Navigate to="/dashboard" replace />,
+          },
         ],
       },
       { path: "/", element: <RoleDashboardRedirect /> },
@@ -62,10 +64,13 @@ export const router = createBrowserRouter([
     element: <ProtectedRoute allowedRoles={["ADMIN"]} />,
     children: [
       {
-        element: <DashboardLayout />,
+        element: <AdminDashboardLayout />,
         children: [
           { path: "/admin/dashboard", element: <AdminDashboardPage /> },
-          { path: "/admin", element: <Navigate to="/admin/dashboard" replace /> },
+          {
+            path: "/admin",
+            element: <Navigate to="/admin/dashboard" replace />,
+          },
           {
             path: "/admin/*",
             element: <Navigate to="/admin/dashboard" replace />,

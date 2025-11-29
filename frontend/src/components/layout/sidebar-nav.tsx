@@ -1,30 +1,12 @@
 import { NavLink } from "react-router-dom";
-import { LayoutDashboard, LogOut, Search, Ticket } from "lucide-react";
+import { LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuthStore } from "@/store/auth-store";
+import { useNav } from "@/hooks/useNav";
 
 export const SidebarNav = () => {
-  const user = useAuthStore((state) => state.user);
   const clearAuth = useAuthStore((state) => state.clearAuth);
-  const isAdmin = user?.role === "ADMIN";
-  const dashboardPath = isAdmin ? "/admin/dashboard" : "/dashboard";
-  const sectionPrefix = isAdmin ? "/admin" : "/dashboard";
-
-  const navItems = [
-    { to: dashboardPath, label: "Dashboard", icon: LayoutDashboard },
-    {
-      to: `${sectionPrefix}/trips`,
-      label: "Trips",
-      icon: Search,
-      disabled: true,
-    },
-    {
-      to: `${sectionPrefix}/bookings`,
-      label: "Bookings",
-      icon: Ticket,
-      disabled: true,
-    },
-  ];
+  const { userNavItems, user } = useNav();
 
   return (
     <aside className="hidden w-64 border-r border-border/60 bg-surface/80 px-6 py-8 lg:block">
@@ -35,7 +17,7 @@ export const SidebarNav = () => {
         </p>
       </div>
       <nav className="space-y-2">
-        {navItems.map(({ to, label, icon: Icon, disabled }) => (
+        {userNavItems.map(({ to, label, icon: Icon, disabled }) => (
           <NavLink
             key={to}
             to={to}

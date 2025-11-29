@@ -9,7 +9,9 @@ type DashboardPageProps = {
   variant?: "passenger" | "admin";
 };
 
-export const DashboardPage = ({ variant = "passenger" }: DashboardPageProps) => {
+export const DashboardPage = ({
+  variant = "passenger",
+}: DashboardPageProps) => {
   const { data, isLoading } = useDashboard();
   const showAdminWidgets = variant === "admin";
 
