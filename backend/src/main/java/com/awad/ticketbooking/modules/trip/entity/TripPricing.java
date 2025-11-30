@@ -22,6 +22,7 @@ public class TripPricing {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "trip_id", nullable = false)
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private Trip trip;
 
     @Enumerated(EnumType.STRING)

@@ -72,7 +72,7 @@ class TripServiceTest {
         Bus bus = new Bus();
         bus.setOperator(operator);
         bus.setPlateNumber("29A-12345");
-        bus.setAmenities("[\"wifi\"]");
+        bus.setAmenities(Collections.singletonList("wifi"));
         trip.setBus(bus);
 
         Page<Trip> page = new PageImpl<>(Collections.singletonList(trip));
@@ -116,7 +116,7 @@ class TripServiceTest {
         Bus bus = new Bus();
         bus.setOperator(operator);
         bus.setPlateNumber("29A-12345");
-        bus.setAmenities("[\"wifi\"]");
+        bus.setAmenities(Collections.singletonList("wifi"));
         trip.setBus(bus);
 
         when(tripRepository.findById(tripId)).thenReturn(java.util.Optional.of(trip));

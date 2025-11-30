@@ -17,7 +17,7 @@ public class TripResponse {
     private Instant arrivalTime;
     private String operatorName;
     private String busPlateNumber;
-    private String busAmenities; // JSON string
+    private java.util.List<String> busAmenities;
     private Map<SeatType, BigDecimal> prices;
     private int durationMinutes;
 }

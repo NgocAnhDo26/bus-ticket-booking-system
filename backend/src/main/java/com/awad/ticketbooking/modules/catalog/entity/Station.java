@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.UuidGenerator;
 
+import java.io.Serializable;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -12,7 +13,8 @@ import java.util.UUID;
 @Table(name = "stations")
 @Getter
 @Setter
-public class Station {
+public class Station implements Serializable {
+    private static final long serialVersionUID = 1L;
 
     @Id
     @GeneratedValue

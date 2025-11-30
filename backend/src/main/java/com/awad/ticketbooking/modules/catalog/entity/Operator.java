@@ -5,6 +5,8 @@ import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.UuidGenerator;
 
+import com.awad.ticketbooking.common.converter.MapConverter;
+import java.util.Map;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -23,7 +25,8 @@ public class Operator {
     private String name;
 
     @Column(name = "contact_info", columnDefinition = "JSONB")
-    private String contactInfo; // Storing as JSON string for now
+    @Convert(converter = MapConverter.class)
+    private Map<String, Object> contactInfo;
 
     @Column(name = "is_active")
     private Boolean isActive = true;
@@ -35,4 +38,7 @@ public class Operator {
     public void onCreate() {
         this.createdAt = Instant.now();
     }
+
 }
+
+    

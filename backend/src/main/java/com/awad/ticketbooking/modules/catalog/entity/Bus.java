@@ -5,6 +5,8 @@ import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.UuidGenerator;
 
+import com.awad.ticketbooking.common.converter.StringListConverter;
+import java.util.List;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -30,7 +32,8 @@ public class Bus {
     private Integer capacity;
 
     @Column(columnDefinition = "JSONB")
-    private String amenities; // Storing as JSON string
+    @Convert(converter = StringListConverter.class)
+    private List<String> amenities;
 
     @Column(name = "is_active")
     private Boolean isActive = true;
