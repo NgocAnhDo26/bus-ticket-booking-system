@@ -5,7 +5,7 @@ import com.awad.ticketbooking.modules.auth.repository.UserRepository;
 import com.awad.ticketbooking.modules.booking.entity.Booking;
 import com.awad.ticketbooking.modules.booking.repository.BookingRepository;
 import com.awad.ticketbooking.modules.catalog.entity.Route;
-import com.awad.ticketbooking.modules.dashboard.dto.DashboardDTOs;
+import com.awad.ticketbooking.modules.dashboard.dto.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -28,7 +28,7 @@ public class AdminDashboardService {
     private final UserRepository userRepository;
 
     @Transactional(readOnly = true)
-    public DashboardDTOs.MetricsResponse getMetrics() {
+    public MetricsResponse getMetrics() {
         Instant now = Instant.now();
         Instant startOfDay = LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant();
 
@@ -43,7 +43,7 @@ public class AdminDashboardService {
         long todayNewUsers = userRepository.countByCreatedAtBetween(startOfDay, now);
         long todayActiveOperators = bookingRepository.countDistinctOperators(startOfDay, now, BookingStatus.CONFIRMED);
 
-        return DashboardDTOs.MetricsResponse.builder()
+        return MetricsResponse.builder()
                 .todayRevenue(todayRevenue)
                 .todayTicketsSold(todayTicketsSold)
                 .todayNewUsers(todayNewUsers)
@@ -52,7 +52,7 @@ public class AdminDashboardService {
     }
 
     @Transactional(readOnly = true)
-    public List<DashboardDTOs.RevenueChartResponse> getRevenueChart(Instant start, Instant end) {
+    public List<RevenueChartResponse> getRevenueChart(Instant start, Instant end) {
         List<Object[]> data = bookingRepository.getRevenueChartData(start, end);
         return data.stream().map(row -> {
             // Assuming row[0] is Date/Timestamp and row[1] is BigDecimal
@@ -60,7 +60,7 @@ public class AdminDashboardService {
             // For now assuming row[0] is java.sql.Date or java.sql.Timestamp
             String dateStr = row[0].toString();
             BigDecimal revenue = (BigDecimal) row[1];
-            return DashboardDTOs.RevenueChartResponse.builder()
+            return RevenueChartResponse.builder()
                     .date(dateStr)
                     .revenue(revenue)
                     .build();
@@ -68,12 +68,12 @@ public class AdminDashboardService {
     }
 
     @Transactional(readOnly = true)
-    public List<DashboardDTOs.TopRouteResponse> getTopRoutes(int limit) {
+    public List<TopRouteResponse> getTopRoutes(int limit) {
         List<Object[]> data = bookingRepository.findTopRoutes(PageRequest.of(0, limit));
         return data.stream().map(row -> {
             Route route = (Route) row[0];
             long ticketsSold = (long) row[1];
-            return DashboardDTOs.TopRouteResponse.builder()
+            return TopRouteResponse.builder()
                     .routeId(route.getId())
                     .origin(route.getOriginStation().getCity())
                     .destination(route.getDestinationStation().getCity())
@@ -83,9 +83,9 @@ public class AdminDashboardService {
     }
 
     @Transactional(readOnly = true)
-    public List<DashboardDTOs.TransactionResponse> getRecentTransactions(int limit) {
+    public List<TransactionResponse> getRecentTransactions(int limit) {
         List<Booking> bookings = bookingRepository.findRecentBookings(PageRequest.of(0, limit));
-        return bookings.stream().map(booking -> DashboardDTOs.TransactionResponse.builder()
+        return bookings.stream().map(booking -> TransactionResponse.builder()
                 .id(booking.getId())
                 .passengerName(booking.getPassengerName())
                 .route(booking.getTrip().getRoute().getOriginStation().getCity() + " -> "
@@ -94,5 +94,21 @@ public class AdminDashboardService {
                 .status(booking.getStatus())
                 .bookingTime(booking.getCreatedAt())
                 .build()).collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<TopOperatorResponse> getTopOperators(int limit) {
+        List<Object[]> data = bookingRepository.findTopOperators(PageRequest.of(0, limit));
+        return data.stream().map(row -> {
+            com.awad.ticketbooking.modules.catalog.entity.Operator operator = (com.awad.ticketbooking.modules.catalog.entity.Operator) row[0];
+            long ticketsSold = (long) row[1];
+            BigDecimal totalRevenue = (BigDecimal) row[2];
+            return TopOperatorResponse.builder()
+                    .operatorId(operator.getId())
+                    .operatorName(operator.getName())
+                    .ticketsSold(ticketsSold)
+                    .totalRevenue(totalRevenue)
+                    .build();
+        }).collect(Collectors.toList());
     }
 }

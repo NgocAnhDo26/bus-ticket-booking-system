@@ -22,87 +22,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-
-export interface Transaction {
-  id: string;
-  customerName: string;
-  route: string;
-  totalAmount: number;
-  state: "PENDING" | "CONFIRMED" | "CANCELLED" | "REFUNDED";
-  bookedAt: Date;
-}
+import type { TransactionResponse } from "../types";
 
 interface RecentTransactionsListProps {
-  limit?: number;
+  transactions: TransactionResponse[];
 }
-
-// Mock data
-const mockTransactions: Transaction[] = [
-  {
-    id: "TXN-001",
-    customerName: "Nguyễn Văn A",
-    route: "Hà Nội - Hồ Chí Minh",
-    totalAmount: 450000,
-    state: "CONFIRMED",
-    bookedAt: new Date("2024-01-15T10:30:00"),
-  },
-  {
-    id: "TXN-002",
-    customerName: "Trần Thị B",
-    route: "Đà Nẵng - Hà Nội",
-    totalAmount: 320000,
-    state: "CONFIRMED",
-    bookedAt: new Date("2024-01-15T09:15:00"),
-  },
-  {
-    id: "TXN-003",
-    customerName: "Lê Văn C",
-    route: "Hồ Chí Minh - Cần Thơ",
-    totalAmount: 180000,
-    state: "PENDING",
-    bookedAt: new Date("2024-01-15T08:45:00"),
-  },
-  {
-    id: "TXN-004",
-    customerName: "Phạm Thị D",
-    route: "Hà Nội - Hải Phòng",
-    totalAmount: 120000,
-    state: "CONFIRMED",
-    bookedAt: new Date("2024-01-14T16:20:00"),
-  },
-  {
-    id: "TXN-005",
-    customerName: "Hoàng Văn E",
-    route: "Hồ Chí Minh - Đà Lạt",
-    totalAmount: 280000,
-    state: "CANCELLED",
-    bookedAt: new Date("2024-01-14T14:10:00"),
-  },
-  {
-    id: "TXN-006",
-    customerName: "Vũ Thị F",
-    route: "Hà Nội - Quảng Ninh",
-    totalAmount: 150000,
-    state: "REFUNDED",
-    bookedAt: new Date("2024-01-14T11:30:00"),
-  },
-  {
-    id: "TXN-007",
-    customerName: "Đặng Văn G",
-    route: "Hồ Chí Minh - Nha Trang",
-    totalAmount: 350000,
-    state: "CONFIRMED",
-    bookedAt: new Date("2024-01-13T20:15:00"),
-  },
-  {
-    id: "TXN-008",
-    customerName: "Bùi Thị H",
-    route: "Đà Nẵng - Huế",
-    totalAmount: 95000,
-    state: "CONFIRMED",
-    bookedAt: new Date("2024-01-13T18:45:00"),
-  },
-];
 
 const formatCurrency = (amount: number): string => {
   return new Intl.NumberFormat("vi-VN", {
@@ -111,7 +35,8 @@ const formatCurrency = (amount: number): string => {
   }).format(amount);
 };
 
-const formatDateTime = (date: Date): string => {
+const formatDateTime = (dateStr: string): string => {
+  const date = new Date(dateStr);
   return new Intl.DateTimeFormat("vi-VN", {
     year: "numeric",
     month: "2-digit",
@@ -122,9 +47,9 @@ const formatDateTime = (date: Date): string => {
 };
 
 const getStateBadgeVariant = (
-  state: Transaction["state"],
+  status: TransactionResponse["status"],
 ): "default" | "success" | "warning" => {
-  switch (state) {
+  switch (status) {
     case "CONFIRMED":
       return "success";
     case "PENDING":
@@ -137,8 +62,8 @@ const getStateBadgeVariant = (
   }
 };
 
-const getStateLabel = (state: Transaction["state"]): string => {
-  switch (state) {
+const getStateLabel = (status: TransactionResponse["status"]): string => {
+  switch (status) {
     case "CONFIRMED":
       return "Đã xác nhận";
     case "PENDING":
@@ -148,11 +73,11 @@ const getStateLabel = (state: Transaction["state"]): string => {
     case "REFUNDED":
       return "Đã hoàn tiền";
     default:
-      return state;
+      return status;
   }
 };
 
-const columns: ColumnDef<Transaction>[] = [
+const columns: ColumnDef<TransactionResponse>[] = [
   {
     accessorKey: "id",
     header: ({ column }) => {
@@ -170,11 +95,13 @@ const columns: ColumnDef<Transaction>[] = [
       );
     },
     cell: ({ row }) => (
-      <div className="text-center font-medium">{row.getValue("id")}</div>
+      <div className="text-center font-medium truncate max-w-[100px]" title={row.getValue("id")}>
+        {row.getValue("id")}
+      </div>
     ),
   },
   {
-    accessorKey: "customerName",
+    accessorKey: "passengerName",
     header: ({ column }) => {
       return (
         <Button
@@ -187,7 +114,7 @@ const columns: ColumnDef<Transaction>[] = [
         </Button>
       );
     },
-    cell: ({ row }) => <div>{row.getValue("customerName")}</div>,
+    cell: ({ row }) => <div>{row.getValue("passengerName")}</div>,
   },
   {
     accessorKey: "route",
@@ -206,7 +133,7 @@ const columns: ColumnDef<Transaction>[] = [
     cell: ({ row }) => <div>{row.getValue("route")}</div>,
   },
   {
-    accessorKey: "totalAmount",
+    accessorKey: "totalPrice",
     header: ({ column }) => {
       return (
         <div className="text-right">
@@ -222,28 +149,28 @@ const columns: ColumnDef<Transaction>[] = [
       );
     },
     cell: ({ row }) => {
-      const amount = parseFloat(row.getValue("totalAmount"));
+      const amount = parseFloat(row.getValue("totalPrice"));
       return (
         <div className="text-right font-medium">{formatCurrency(amount)}</div>
       );
     },
   },
   {
-    accessorKey: "state",
+    accessorKey: "status",
     header: () => <div className="text-center">Trạng thái</div>,
     cell: ({ row }) => {
-      const state = row.getValue("state") as Transaction["state"];
+      const status = row.getValue("status") as TransactionResponse["status"];
       return (
         <div className="text-center">
-          <Badge variant={getStateBadgeVariant(state)}>
-            {getStateLabel(state)}
+          <Badge variant={getStateBadgeVariant(status)}>
+            {getStateLabel(status)}
           </Badge>
         </div>
       );
     },
   },
   {
-    accessorKey: "bookedAt",
+    accessorKey: "bookingTime",
     header: ({ column }) => {
       return (
         <div className="text-center">
@@ -259,10 +186,10 @@ const columns: ColumnDef<Transaction>[] = [
       );
     },
     cell: ({ row }) => {
-      const date = row.getValue("bookedAt") as Date;
+      const dateStr = row.getValue("bookingTime") as string;
       return (
         <div className="text-center text-muted-foreground">
-          {formatDateTime(date)}
+          {formatDateTime(dateStr)}
         </div>
       );
     },
@@ -270,11 +197,11 @@ const columns: ColumnDef<Transaction>[] = [
 ];
 
 export const RecentTransactionsList = ({
-  limit = 5,
+  transactions = [],
 }: RecentTransactionsListProps) => {
   const [sorting, setSorting] = React.useState<SortingState>([]);
 
-  const data = React.useMemo(() => mockTransactions.slice(0, limit), [limit]);
+  const data = React.useMemo(() => transactions, [transactions]);
 
   // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({

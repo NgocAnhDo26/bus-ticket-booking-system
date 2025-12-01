@@ -114,10 +114,15 @@ public class TripService {
                 }
             }
 
-            // 4. Price Filter
+            // 4. Price Filter - Simplified for now (requires join)
             if (request.getMinPrice() != null || request.getMaxPrice() != null) {
-                Join<Trip, TripPricing> pricingJoin = root.join("tripPricings"); // Need to map this in Entity or use
-
+                Join<Trip, TripPricing> pricingJoin = root.join("tripPricings");
+                if (request.getMinPrice() != null) {
+                    predicates.add(cb.greaterThanOrEqualTo(pricingJoin.get("price"), request.getMinPrice()));
+                }
+                if (request.getMaxPrice() != null) {
+                    predicates.add(cb.lessThanOrEqualTo(pricingJoin.get("price"), request.getMaxPrice()));
+                }
             }
 
             // 5. Amenities Filter
@@ -149,19 +154,51 @@ public class TripService {
         return trips.map(this::mapToResponse);
     }
 
-    private TripResponse mapToResponse(Trip trip) {
-        TripResponse response = new TripResponse();
-        response.setId(trip.getId());
-        response.setOrigin(trip.getRoute().getOriginStation().getCity());
-        response.setDestination(trip.getRoute().getDestinationStation().getCity());
-        response.setDepartureTime(trip.getDepartureTime());
-        response.setArrivalTime(trip.getArrivalTime());
-        response.setOperatorName(trip.getBus().getOperator().getName());
-        response.setBusPlateNumber(trip.getBus().getPlateNumber());
-        response.setBusAmenities(trip.getBus().getAmenities());
-        response.setDurationMinutes(trip.getRoute().getDurationMinutes());
+    @Transactional(readOnly = true)
+    public List<TripResponse> getAllTrips() {
+        return tripRepository.findAll().stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
 
-        return response;
+    private TripResponse mapToResponse(Trip trip) {
+        return TripResponse.builder()
+                .id(trip.getId())
+                .route(TripResponse.RouteInfo.builder()
+                        .id(trip.getRoute().getId())
+                        .originStation(TripResponse.StationInfo.builder()
+                                .id(trip.getRoute().getOriginStation().getId())
+                                .name(trip.getRoute().getOriginStation().getName())
+                                .city(trip.getRoute().getOriginStation().getCity())
+                                .build())
+                        .destinationStation(TripResponse.StationInfo.builder()
+                                .id(trip.getRoute().getDestinationStation().getId())
+                                .name(trip.getRoute().getDestinationStation().getName())
+                                .city(trip.getRoute().getDestinationStation().getCity())
+                                .build())
+                        .durationMinutes(trip.getRoute().getDurationMinutes())
+                        .build())
+                .bus(TripResponse.BusInfo.builder()
+                        .id(trip.getBus().getId())
+                        .plateNumber(trip.getBus().getPlateNumber())
+                        .operator(TripResponse.OperatorInfo.builder()
+                                .id(trip.getBus().getOperator().getId())
+                                .name(trip.getBus().getOperator().getName())
+                                .build())
+                        .capacity(trip.getBus().getCapacity())
+                        .amenities(trip.getBus().getAmenities())
+                        .build())
+                .departureTime(trip.getDepartureTime())
+                .arrivalTime(trip.getArrivalTime())
+                .status(trip.getStatus())
+                .tripPricings(trip.getTripPricings().stream()
+                        .map(pricing -> TripResponse.TripPricingInfo.builder()
+                                .id(pricing.getId())
+                                .seatType(pricing.getSeatType())
+                                .price(pricing.getPrice())
+                                .build())
+                        .collect(Collectors.toList()))
+                .build();
     }
 
     @Transactional(readOnly = true)

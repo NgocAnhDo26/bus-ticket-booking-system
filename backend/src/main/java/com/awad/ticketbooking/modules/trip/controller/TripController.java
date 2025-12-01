@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/v1/trips")
+@RequestMapping("/api/trips")
 @RequiredArgsConstructor
 public class TripController {
 
@@ -21,6 +21,11 @@ public class TripController {
     @GetMapping("/search")
     public ResponseEntity<Page<TripResponse>> searchTrips(@ModelAttribute SearchTripRequest request) {
         return ResponseEntity.ok(tripService.searchTrips(request));
+    }
+
+    @GetMapping
+    public ResponseEntity<java.util.List<TripResponse>> getAllTrips() {
+        return ResponseEntity.ok(tripService.getAllTrips());
     }
 
     @GetMapping("/{id}")

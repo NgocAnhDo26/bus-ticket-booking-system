@@ -47,29 +47,29 @@ const allAdminNavItems: AdminNavItem[] = [
   },
   {
     title: "Vận tải",
-    url: "/admin/transport",
+    url: "#",
     icon: BusFront,
     isCollapsible: true,
     items: [
       {
-        title: "Tuyến đường",
-        url: "/admin/transport/routes",
-      },
-      {
-        title: "Chuyến xe",
-        url: "/admin/transport/trips",
-      },
-      {
-        title: "Đội xe",
-        url: "/admin/transport/fleets",
-      },
-      {
-        title: "Loại xe & Sơ đồ ghế",
-        url: "/admin/transport/vehicle-types",
+        title: "Bến xe",
+        url: "/admin/catalog/stations",
       },
       {
         title: "Nhà xe",
-        url: "/admin/transport/operators",
+        url: "/admin/catalog/operators",
+      },
+      {
+        title: "Xe",
+        url: "/admin/catalog/buses",
+      },
+      {
+        title: "Tuyến đường",
+        url: "/admin/catalog/routes",
+      },
+      {
+        title: "Chuyến đi",
+        url: "/admin/catalog/trips",
       },
     ],
     // Both ADMIN and STAFF can see transport

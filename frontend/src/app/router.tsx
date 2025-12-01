@@ -4,20 +4,16 @@ import { DashboardLayout } from "@/components/layout";
 import { DashboardPage } from "@/features/dashboard";
 import { AdminDashboardLayout } from "@/components/layout/AdminLayout";
 import { AdminDashboardPage } from "@/features/dashboard-admin";
+import {
+  BusManagementPage,
+  OperatorManagementPage,
+  StationManagementPage,
+  RouteManagementPage,
+  TripManagementPage,
+} from "@/features/catalog";
 import { PublicRoute, ProtectedRoute } from "@/components/common";
 import { useAuthStore } from "@/store/auth-store";
 import { useHydrateAuth } from "@/features/auth/hooks";
-import { getDashboardPath } from "@/lib/navigation";
-
-const RoleDashboardRedirect = () => {
-  const user = useAuthStore((state) => state.user);
-
-  if (!user) {
-    return null;
-  }
-
-  return <Navigate to={getDashboardPath(user.role)} replace />;
-};
 
 const AuthenticatedRedirect = () => {
   const token = useAuthStore((state) => state.accessToken);
@@ -36,19 +32,25 @@ const AuthenticatedRedirect = () => {
   return <Navigate to={getDashboardPath(user.role)} replace />;
 };
 
+import { HomePage } from "@/features/home/pages/HomePage";
+import { SearchResultsPage } from "@/features/search/pages/SearchResultsPage";
+
+// ... existing imports
+
 export const router = createBrowserRouter([
   {
-    element: <PublicRoute />,
-    children: [
-      { path: "/login", element: <LoginPage /> },
-      { path: "/register", element: <RegisterPage /> },
-    ],
-  },
-  {
-    element: <ProtectedRoute allowedRoles={["PASSENGER"]} />,
+    element: <DashboardLayout />,
     children: [
       {
-        element: <DashboardLayout />,
+        path: "/",
+        element: <HomePage />,
+      },
+      {
+        path: "/search",
+        element: <SearchResultsPage />,
+      },
+      {
+        element: <ProtectedRoute allowedRoles={["PASSENGER"]} />,
         children: [
           { path: "/dashboard", element: <DashboardPage /> },
           {
@@ -57,7 +59,13 @@ export const router = createBrowserRouter([
           },
         ],
       },
-      { path: "/", element: <RoleDashboardRedirect /> },
+    ],
+  },
+  {
+    element: <PublicRoute />,
+    children: [
+      { path: "/login", element: <LoginPage /> },
+      { path: "/register", element: <RegisterPage /> },
     ],
   },
   {
@@ -67,6 +75,23 @@ export const router = createBrowserRouter([
         element: <AdminDashboardLayout />,
         children: [
           { path: "/admin/dashboard", element: <AdminDashboardPage /> },
+          {
+            path: "/admin/catalog/stations",
+            element: <StationManagementPage />,
+          },
+          {
+            path: "/admin/catalog/operators",
+            element: <OperatorManagementPage />,
+          },
+          { path: "/admin/catalog/buses", element: <BusManagementPage /> },
+          {
+            path: "/admin/catalog/routes",
+            element: <RouteManagementPage />,
+          },
+          {
+            path: "/admin/catalog/trips",
+            element: <TripManagementPage />,
+          },
           {
             path: "/admin",
             element: <Navigate to="/admin/dashboard" replace />,

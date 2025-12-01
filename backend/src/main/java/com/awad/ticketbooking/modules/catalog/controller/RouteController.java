@@ -11,15 +11,20 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/routes")
+@RequestMapping("/api/routes")
 @RequiredArgsConstructor
 public class RouteController {
 
     private final RouteService routeService;
 
     @GetMapping("/top")
-    public ResponseEntity<List<Route>> getTopRoutes() {
+    public ResponseEntity<List<com.awad.ticketbooking.modules.catalog.dto.RouteResponse>> getTopRoutes() {
         return ResponseEntity.ok(routeService.getTopRoutes());
+    }
+
+    @GetMapping
+    public ResponseEntity<List<com.awad.ticketbooking.modules.catalog.dto.RouteResponse>> getAllRoutes() {
+        return ResponseEntity.ok(routeService.getAllRoutes());
     }
 
     @org.springframework.web.bind.annotation.PostMapping

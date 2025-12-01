@@ -89,7 +89,7 @@ function SimpleNavItem({ item }: { item: NavItem }) {
   // Otherwise, render the item itself as a simple link
   return (
     <SidebarMenuItem key={item.title}>
-      <SidebarMenuButton tooltip={item.title} asChild>
+      <SidebarMenuButton tooltip={item.title} asChild isActive={item.isActive}>
         <Link to={item.url}>
           {item.icon && <item.icon />}
           <span>{item.title}</span>
