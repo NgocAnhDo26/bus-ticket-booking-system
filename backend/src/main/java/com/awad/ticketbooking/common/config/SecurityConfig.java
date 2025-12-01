@@ -41,6 +41,11 @@ public class SecurityConfig {
                         .requestMatchers("/actuator/**").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/health").permitAll()
+                        .requestMatchers("/api/v1/trips/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/routes/**").permitAll()
+                        .requestMatchers("/api/v1/operators/**").permitAll()
+                        .requestMatchers("/api/v1/buses/**").permitAll()
+                        .requestMatchers("/api/v1/admin/**").permitAll()
                         .anyRequest().authenticated())
                 .authenticationProvider(daoAuthenticationProvider())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
@@ -79,4 +84,3 @@ public class SecurityConfig {
         return source;
     }
 }
-
