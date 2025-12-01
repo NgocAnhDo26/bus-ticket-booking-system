@@ -1,18 +1,10 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Plus, Calendar, Clock, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import {
   Sheet,
   SheetContent,
@@ -24,13 +16,9 @@ import {
 import { FormField } from "@/components/ui/form-field";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import {
-  useTrips,
-  useCreateTrip,
-  useRoutes,
-  useBuses,
-} from "../hooks";
-import { SeatType } from "../types";
+import { GenericTable, type ColumnDef } from "@/components/common";
+import { useTrips, useCreateTrip, useRoutes, useBuses } from "../hooks";
+import { SeatType, type Trip } from "../types";
 import { format } from "date-fns";
 
 const formSchema = z.object({
@@ -98,6 +86,103 @@ export const TripManagementPage = () => {
       },
     );
   };
+
+  const [pageIndex, setPageIndex] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [sorting, setSorting] = useState<{
+    key: string | null;
+    direction: "asc" | "desc";
+  }>({ key: null, direction: "asc" });
+
+  const sortedPaged = useMemo(() => {
+    if (!trips) return { data: [], total: 0, totalPages: 1, page: 1 };
+    const arr = [...trips];
+
+    if (sorting.key) {
+      const key = sorting.key as keyof Trip;
+      arr.sort((a, b) => {
+        const aVal = a[key] as unknown;
+        const bVal = b[key] as unknown;
+        if (aVal == null || bVal == null) return 0;
+        if (aVal < bVal) return sorting.direction === "asc" ? -1 : 1;
+        if (aVal > bVal) return sorting.direction === "asc" ? 1 : -1;
+        return 0;
+      });
+    }
+
+    const total = arr.length;
+    const totalPages = Math.max(1, Math.ceil(total / pageSize));
+    const safePage = Math.min(pageIndex, totalPages);
+    const start = (safePage - 1) * pageSize;
+    const end = start + pageSize;
+
+    return {
+      data: arr.slice(start, end),
+      total,
+      totalPages,
+      page: safePage,
+    };
+  }, [trips, pageIndex, pageSize, sorting]);
+
+  const meta = {
+    total: sortedPaged.total,
+    page: sortedPaged.page,
+    pageSize,
+    totalPages: sortedPaged.totalPages,
+  };
+
+  const columns: ColumnDef<Trip>[] = useMemo(
+    () => [
+      {
+        key: "route",
+        header: "Tuyến đường",
+        cell: (trip) => (
+          <div className="flex items-center gap-2">
+            <span>{trip.route.originStation.name}</span>
+            <ArrowRight className="h-4 w-4 text-muted-foreground" />
+            <span>{trip.route.destinationStation.name}</span>
+          </div>
+        ),
+      },
+      {
+        key: "bus",
+        header: "Xe",
+        cell: (trip) => (
+          <>
+            <div>{trip.bus.plateNumber}</div>
+            <div className="text-xs text-muted-foreground">
+              {trip.bus.operator.name}
+            </div>
+          </>
+        ),
+      },
+      {
+        key: "departureTime",
+        header: "Thời gian",
+        sortable: true,
+        cell: (trip) => (
+          <div className="flex flex-col gap-1 text-sm">
+            <div className="flex items-center gap-2">
+              <Calendar className="h-3 w-3 text-muted-foreground" />
+              {format(new Date(trip.departureTime), "dd/MM/yyyy")}
+            </div>
+            <div className="flex items-center gap-2">
+              <Clock className="h-3 w-3 text-muted-foreground" />
+              {format(new Date(trip.departureTime), "HH:mm")} -{" "}
+              {format(new Date(trip.arrivalTime), "HH:mm")}
+            </div>
+          </div>
+        ),
+      },
+      {
+        key: "status",
+        header: "Trạng thái",
+        sortable: true,
+        cell: (trip) => <Badge variant="default">{trip.status}</Badge>,
+      },
+    ],
+    [],
+  );
 
   return (
     <div className="flex flex-col gap-4 p-4">
@@ -199,65 +284,28 @@ export const TripManagementPage = () => {
           <CardTitle>Danh sách Chuyến đi</CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Tuyến đường</TableHead>
-                <TableHead>Xe</TableHead>
-                <TableHead>Thời gian</TableHead>
-                <TableHead>Trạng thái</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoadingTrips ? (
-                <TableRow>
-                  <TableCell colSpan={4} className="text-center">
-                    Đang tải...
-                  </TableCell>
-                </TableRow>
-              ) : trips?.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={4} className="text-center">
-                    Chưa có chuyến đi nào
-                  </TableCell>
-                </TableRow>
-              ) : (
-                trips?.map((trip) => (
-                  <TableRow key={trip.id}>
-                    <TableCell className="font-medium">
-                      <div className="flex items-center gap-2">
-                        <span>{trip.route.originStation.name}</span>
-                        <ArrowRight className="h-4 w-4 text-muted-foreground" />
-                        <span>{trip.route.destinationStation.name}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div>{trip.bus.plateNumber}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {trip.bus.operator.name}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex flex-col gap-1 text-sm">
-                        <div className="flex items-center gap-2">
-                          <Calendar className="h-3 w-3 text-muted-foreground" />
-                          {format(new Date(trip.departureTime), "dd/MM/yyyy")}
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Clock className="h-3 w-3 text-muted-foreground" />
-                          {format(new Date(trip.departureTime), "HH:mm")} -{" "}
-                          {format(new Date(trip.arrivalTime), "HH:mm")}
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="default">{trip.status}</Badge>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+          <GenericTable<Trip>
+            data={sortedPaged.data}
+            columns={columns}
+            isLoading={isLoadingTrips}
+            meta={meta}
+            pageIndex={meta.page}
+            pageSize={pageSize}
+            sorting={sorting}
+            onPageChange={setPageIndex}
+            onPageSizeChange={(size) => {
+              setPageSize(size);
+              setPageIndex(1);
+            }}
+            onSort={(key) =>
+              setSorting((prev) =>
+                prev.key === key
+                  ? { key, direction: prev.direction === "asc" ? "desc" : "asc" }
+                  : { key, direction: "asc" },
+              )
+            }
+            getRowId={(trip) => trip.id}
+          />
         </CardContent>
       </Card>
     </div>

@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useMemo, useState } from "react";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Plus, Bus as BusIcon } from "lucide-react";
@@ -7,14 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import {
   Sheet,
   SheetContent,
@@ -26,7 +18,9 @@ import {
 import { FormField } from "@/components/ui/form-field";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { GenericTable, type ColumnDef } from "@/components/common/GenericTable";
 import { useBuses, useCreateBus, useOperators } from "../hooks";
+import type { Bus } from "../types";
 
 const AMENITIES_LIST = [
   "WiFi",
@@ -58,7 +52,7 @@ export const BusManagementPage = () => {
     handleSubmit,
     reset,
     setValue,
-    watch,
+    control,
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -70,7 +64,7 @@ export const BusManagementPage = () => {
     },
   });
 
-  const selectedAmenities = watch("amenities");
+  const selectedAmenities = useWatch({ control, name: "amenities" }) ?? [];
 
   const handleAmenityChange = (amenity: string, checked: boolean) => {
     if (checked) {
@@ -91,6 +85,101 @@ export const BusManagementPage = () => {
       },
     });
   };
+
+  const [pageIndex, setPageIndex] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [sorting, setSorting] = useState<{
+    key: string | null;
+    direction: "asc" | "desc";
+  }>({ key: null, direction: "asc" });
+
+  const sortedPaged = useMemo(() => {
+    if (!buses) return { data: [], total: 0, totalPages: 1, page: 1 };
+    const arr = [...buses];
+
+    if (sorting.key) {
+      const key = sorting.key as keyof Bus;
+      arr.sort((a, b) => {
+        const aVal = a[key] as unknown;
+        const bVal = b[key] as unknown;
+        if (aVal == null || bVal == null) return 0;
+        if (aVal < bVal) return sorting.direction === "asc" ? -1 : 1;
+        if (aVal > bVal) return sorting.direction === "asc" ? 1 : -1;
+        return 0;
+      });
+    }
+
+    const total = arr.length;
+    const totalPages = Math.max(1, Math.ceil(total / pageSize));
+    const safePage = Math.min(pageIndex, totalPages);
+    const start = (safePage - 1) * pageSize;
+    const end = start + pageSize;
+
+    return {
+      data: arr.slice(start, end),
+      total,
+      totalPages,
+      page: safePage,
+    };
+  }, [buses, pageIndex, pageSize, sorting]);
+
+  const meta = {
+    total: sortedPaged.total,
+    page: sortedPaged.page,
+    pageSize,
+    totalPages: sortedPaged.totalPages,
+  };
+
+  const columns: ColumnDef<Bus>[] = useMemo(
+    () => [
+      {
+        key: "plateNumber",
+        header: "Biển số",
+        sortable: true,
+        cell: (bus) => (
+          <div className="flex items-center gap-2">
+            <BusIcon className="h-4 w-4 text-muted-foreground" />
+            <span className="font-medium">{bus.plateNumber}</span>
+          </div>
+        ),
+      },
+      {
+        key: "operator",
+        header: "Nhà xe",
+        cell: (bus) => bus.operator?.name ?? "-",
+      },
+      {
+        key: "capacity",
+        header: "Sức chứa",
+        sortable: true,
+        cell: (bus) => <span>{bus.capacity} ghế</span>,
+      },
+      {
+        key: "amenities",
+        header: "Tiện ích",
+        cell: (bus) => (
+          <div className="flex flex-wrap gap-1">
+            {bus.amenities?.map((amenity, index) => (
+              <Badge key={index} className="text-xs">
+                {amenity}
+              </Badge>
+            ))}
+          </div>
+        ),
+      },
+      {
+        key: "isActive",
+        header: "Trạng thái",
+        sortable: true,
+        cell: (bus) => (
+          <Badge variant={bus.isActive ? "success" : "default"}>
+            {bus.isActive ? "Hoạt động" : "Bảo trì"}
+          </Badge>
+        ),
+      },
+    ],
+    [],
+  );
 
   return (
     <div className="flex flex-col gap-4 p-4">
@@ -143,15 +232,12 @@ export const BusManagementPage = () => {
                   <Label>Tiện ích</Label>
                   <div className="grid grid-cols-2 gap-2">
                     {AMENITIES_LIST.map((amenity) => (
-                      <div
-                        key={amenity}
-                        className="flex items-center space-x-2"
-                      >
+                      <div key={amenity} className="flex items-center space-x-2">
                         <Checkbox
                           id={amenity}
                           checked={selectedAmenities.includes(amenity)}
-                          onCheckedChange={(checked) =>
-                            handleAmenityChange(amenity, checked as boolean)
+                          onCheckedChange={(checked: boolean | "indeterminate") =>
+                            handleAmenityChange(amenity, checked === true)
                           }
                         />
                         <Label htmlFor={amenity}>{amenity}</Label>
@@ -177,59 +263,32 @@ export const BusManagementPage = () => {
           <CardTitle>Danh sách Xe</CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Biển số</TableHead>
-                <TableHead>Nhà xe</TableHead>
-                <TableHead>Sức chứa</TableHead>
-                <TableHead>Tiện ích</TableHead>
-                <TableHead>Trạng thái</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoadingBuses ? (
-                <TableRow>
-                  <TableCell colSpan={5} className="text-center">
-                    Đang tải...
-                  </TableCell>
-                </TableRow>
-              ) : buses?.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={5} className="text-center">
-                    Chưa có xe nào
-                  </TableCell>
-                </TableRow>
-              ) : (
-                buses?.map((bus) => (
-                  <TableRow key={bus.id}>
-                    <TableCell className="font-medium">
-                      <div className="flex items-center gap-2">
-                        <BusIcon className="h-4 w-4 text-muted-foreground" />
-                        {bus.plateNumber}
-                      </div>
-                    </TableCell>
-                    <TableCell>{bus.operator?.name}</TableCell>
-                    <TableCell>{bus.capacity} ghế</TableCell>
-                    <TableCell>
-                      <div className="flex flex-wrap gap-1">
-                        {bus.amenities?.map((amenity, index) => (
-                          <Badge key={index} className="text-xs">
-                            {amenity}
-                          </Badge>
-                        ))}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={bus.isActive ? "success" : "default"}>
-                        {bus.isActive ? "Hoạt động" : "Bảo trì"}
-                      </Badge>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+          <GenericTable<Bus>
+            data={sortedPaged.data}
+            columns={columns}
+            isLoading={isLoadingBuses}
+            meta={meta}
+            pageIndex={meta.page}
+            pageSize={pageSize}
+            sorting={sorting}
+            onPageChange={(page) => setPageIndex(page)}
+            onPageSizeChange={(size) => {
+              setPageSize(size);
+              setPageIndex(1);
+            }}
+            onSort={(key) =>
+              setSorting((prev) => {
+                if (prev.key === key) {
+                  return {
+                    key,
+                    direction: prev.direction === "asc" ? "desc" : "asc",
+                  };
+                }
+                return { key, direction: "asc" };
+              })
+            }
+            getRowId={(bus) => bus.id}
+          />
         </CardContent>
       </Card>
     </div>

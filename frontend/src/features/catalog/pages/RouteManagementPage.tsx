@@ -1,18 +1,10 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Plus, Map as MapIcon, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import {
   Sheet,
   SheetContent,
@@ -24,7 +16,9 @@ import {
 import { FormField } from "@/components/ui/form-field";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { GenericTable, type ColumnDef } from "@/components/common";
 import { useRoutes, useCreateRoute, useStations } from "../hooks";
+import type { Route } from "../types";
 
 const formSchema = z.object({
   originStationId: z.string().min(1, "Vui lòng chọn điểm đi"),
@@ -62,6 +56,95 @@ export const RouteManagementPage = () => {
       },
     });
   };
+
+  const [pageIndex, setPageIndex] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [sorting, setSorting] = useState<{
+    key: string | null;
+    direction: "asc" | "desc";
+  }>({ key: null, direction: "asc" });
+
+  const sortedPaged = useMemo(() => {
+    if (!routes) return { data: [], total: 0, totalPages: 1, page: 1 };
+    const arr = [...routes];
+
+    if (sorting.key) {
+      const key = sorting.key as keyof Route;
+      arr.sort((a, b) => {
+        const aVal = a[key] as unknown;
+        const bVal = b[key] as unknown;
+        if (aVal == null || bVal == null) return 0;
+        if (aVal < bVal) return sorting.direction === "asc" ? -1 : 1;
+        if (aVal > bVal) return sorting.direction === "asc" ? 1 : -1;
+        return 0;
+      });
+    }
+
+    const total = arr.length;
+    const totalPages = Math.max(1, Math.ceil(total / pageSize));
+    const safePage = Math.min(pageIndex, totalPages);
+    const start = (safePage - 1) * pageSize;
+    const end = start + pageSize;
+
+    return {
+      data: arr.slice(start, end),
+      total,
+      totalPages,
+      page: safePage,
+    };
+  }, [routes, pageIndex, pageSize, sorting]);
+
+  const meta = {
+    total: sortedPaged.total,
+    page: sortedPaged.page,
+    pageSize,
+    totalPages: sortedPaged.totalPages,
+  };
+
+  const columns: ColumnDef<Route>[] = useMemo(
+    () => [
+      {
+        key: "originStation",
+        header: "Tuyến đường",
+        cell: (route) => (
+          <>
+            <div className="flex items-center gap-2">
+              <MapIcon className="h-4 w-4 text-muted-foreground" />
+              <span>{route.originStation.name}</span>
+              <ArrowRight className="h-4 w-4 text-muted-foreground" />
+              <span>{route.destinationStation.name}</span>
+            </div>
+            <div className="text-xs text-muted-foreground ml-6">
+              {route.originStation.city} - {route.destinationStation.city}
+            </div>
+          </>
+        ),
+      },
+      {
+        key: "durationMinutes",
+        header: "Thời gian",
+        sortable: true,
+        cell: (route) => <span>{route.durationMinutes} phút</span>,
+      },
+      {
+        key: "distanceKm",
+        header: "Khoảng cách",
+        sortable: true,
+        cell: (route) => <span>{route.distanceKm} km</span>,
+      },
+      {
+        key: "isActive",
+        header: "Trạng thái",
+        sortable: true,
+        cell: (route) => (
+          <Badge variant={route.isActive ? "success" : "default"}>
+            {route.isActive ? "Hoạt động" : "Ngừng hoạt động"}
+          </Badge>
+        ),
+      },
+    ],
+    [],
+  );
 
   return (
     <div className="flex flex-col gap-4 p-4">
@@ -151,54 +234,28 @@ export const RouteManagementPage = () => {
           <CardTitle>Danh sách Tuyến đường</CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Tuyến đường</TableHead>
-                <TableHead>Thời gian</TableHead>
-                <TableHead>Khoảng cách</TableHead>
-                <TableHead>Trạng thái</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoadingRoutes ? (
-                <TableRow>
-                  <TableCell colSpan={4} className="text-center">
-                    Đang tải...
-                  </TableCell>
-                </TableRow>
-              ) : routes?.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={4} className="text-center">
-                    Chưa có tuyến đường nào
-                  </TableCell>
-                </TableRow>
-              ) : (
-                routes?.map((route) => (
-                  <TableRow key={route.id}>
-                    <TableCell className="font-medium">
-                      <div className="flex items-center gap-2">
-                        <MapIcon className="h-4 w-4 text-muted-foreground" />
-                        <span>{route.originStation.name}</span>
-                        <ArrowRight className="h-4 w-4 text-muted-foreground" />
-                        <span>{route.destinationStation.name}</span>
-                      </div>
-                      <div className="text-xs text-muted-foreground ml-6">
-                        {route.originStation.city} - {route.destinationStation.city}
-                      </div>
-                    </TableCell>
-                    <TableCell>{route.durationMinutes} phút</TableCell>
-                    <TableCell>{route.distanceKm} km</TableCell>
-                    <TableCell>
-                      <Badge variant={route.isActive ? "success" : "default"}>
-                        {route.isActive ? "Hoạt động" : "Ngừng hoạt động"}
-                      </Badge>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+          <GenericTable<Route>
+            data={sortedPaged.data}
+            columns={columns}
+            isLoading={isLoadingRoutes}
+            meta={meta}
+            pageIndex={meta.page}
+            pageSize={pageSize}
+            sorting={sorting}
+            onPageChange={setPageIndex}
+            onPageSizeChange={(size) => {
+              setPageSize(size);
+              setPageIndex(1);
+            }}
+            onSort={(key) =>
+              setSorting((prev) =>
+                prev.key === key
+                  ? { key, direction: prev.direction === "asc" ? "desc" : "asc" }
+                  : { key, direction: "asc" },
+              )
+            }
+            getRowId={(route) => route.id}
+          />
         </CardContent>
       </Card>
     </div>
