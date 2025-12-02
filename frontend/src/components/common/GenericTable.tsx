@@ -65,7 +65,7 @@ export function GenericTable<TData>({
 
   return (
     <div className="space-y-4">
-      <div className="rounded-md border border-slate-200 bg-white overflow-hidden">
+      <div className="rounded-md border border-slate-200 bg-white overflow-x-auto">
         <Table className="text-left">
           <TableHeader className="bg-slate-50">
             <TableRow>

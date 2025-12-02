@@ -1,10 +1,19 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useCallback } from "react";
+import { AxiosError } from "axios";
+import { useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Plus, Map as MapIcon, ArrowRight } from "lucide-react";
+import { Plus, ArrowRight, Pencil, Trash2, MoreHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Sheet,
   SheetContent,
@@ -17,8 +26,19 @@ import { FormField } from "@/components/ui/form-field";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { GenericTable, type ColumnDef } from "@/components/common";
-import { useRoutes, useCreateRoute, useStations } from "../hooks";
+import { useRoutes, useCreateRoute, useUpdateRoute, useDeleteRoute, useStations } from "../hooks";
 import type { Route } from "../types";
+
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const formSchema = z.object({
   originStationId: z.string().min(1, "Vui lòng chọn điểm đi"),
@@ -28,10 +48,15 @@ const formSchema = z.object({
 });
 
 export const RouteManagementPage = () => {
+  const queryClient = useQueryClient();
   const [isOpen, setIsOpen] = useState(false);
   const { data: routes, isLoading: isLoadingRoutes } = useRoutes();
   const { data: stations } = useStations();
   const createRoute = useCreateRoute();
+  const updateRoute = useUpdateRoute();
+  const deleteRoute = useDeleteRoute();
+  const [editingRoute, setEditingRoute] = useState<Route | null>(null);
+  const [deletingRoute, setDeletingRoute] = useState<Route | null>(null);
 
   const {
     register,
@@ -49,12 +74,72 @@ export const RouteManagementPage = () => {
   });
 
   const onSubmit = (values: z.infer<typeof formSchema>) => {
-    createRoute.mutate(values, {
-      onSuccess: () => {
-        setIsOpen(false);
-        reset();
-      },
+    if (editingRoute) {
+      updateRoute.mutate(
+        { id: editingRoute.id, data: values },
+        {
+          onSuccess: () => {
+            setIsOpen(false);
+            setEditingRoute(null);
+            reset();
+          },
+        }
+      );
+    } else {
+      createRoute.mutate(values, {
+        onSuccess: () => {
+          setIsOpen(false);
+          reset();
+        },
+      });
+    }
+  };
+
+  const handleEdit = useCallback((route: Route) => {
+    setEditingRoute(route);
+    reset({
+      originStationId: route.originStation.id,
+      destinationStationId: route.destinationStation.id,
+      durationMinutes: route.durationMinutes,
+      distanceKm: route.distanceKm,
     });
+    setIsOpen(true);
+  }, [reset]);
+
+  const [forceDeleteId, setForceDeleteId] = useState<string | null>(null);
+
+  const handleDelete = () => {
+    if (deletingRoute) {
+      deleteRoute.mutate(
+        { id: deletingRoute.id },
+        {
+          onSuccess: () => {
+            setDeletingRoute(null);
+          },
+          onError: (error: Error) => {
+            const axiosError = error as AxiosError;
+            if (axiosError.response?.status === 409) {
+              setForceDeleteId(deletingRoute.id);
+              setDeletingRoute(null);
+            }
+          },
+        }
+      );
+    }
+  };
+
+  const handleForceDelete = () => {
+    if (forceDeleteId) {
+      deleteRoute.mutate(
+        { id: forceDeleteId, force: true },
+        {
+          onSuccess: () => {
+            setForceDeleteId(null);
+            queryClient.invalidateQueries({ queryKey: ["routes"] });
+          },
+        }
+      );
+    }
   };
 
   const [pageIndex, setPageIndex] = useState(1);
@@ -107,17 +192,16 @@ export const RouteManagementPage = () => {
         key: "originStation",
         header: "Tuyến đường",
         cell: (route) => (
-          <>
-            <div className="flex items-center gap-2">
-              <MapIcon className="h-4 w-4 text-muted-foreground" />
-              <span>{route.originStation.name}</span>
-              <ArrowRight className="h-4 w-4 text-muted-foreground" />
-              <span>{route.destinationStation.name}</span>
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="font-medium">{route.originStation.name}</span>
+              <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0" />
+              <span className="font-medium">{route.destinationStation.name}</span>
             </div>
-            <div className="text-xs text-muted-foreground ml-6">
+            <div className="text-xs text-muted-foreground">
               {route.originStation.city} - {route.destinationStation.city}
             </div>
-          </>
+          </div>
         ),
       },
       {
@@ -142,15 +226,56 @@ export const RouteManagementPage = () => {
           </Badge>
         ),
       },
+      {
+        key: "actions",
+        header: "",
+        cell: (route) => (
+          <div className="flex justify-end">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="h-8 w-8 p-0">
+                  <span className="sr-only">Open menu</span>
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>Thao tác</DropdownMenuLabel>
+                <DropdownMenuItem onClick={() => handleEdit(route)}>
+                  <Pencil className="mr-2 h-4 w-4" />
+                  Sửa
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => setDeletingRoute(route)}
+                  className="text-destructive focus:text-destructive"
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Xóa
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        ),
+      },
     ],
-    [],
+    [handleEdit],
   );
 
   return (
     <div className="flex flex-col gap-4 p-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold tracking-tight">Quản lý Tuyến đường</h1>
-        <Sheet open={isOpen} onOpenChange={setIsOpen}>
+        <Sheet open={isOpen} onOpenChange={(open) => {
+          setIsOpen(open);
+          if (!open) {
+            setEditingRoute(null);
+            reset({
+              originStationId: "",
+              destinationStationId: "",
+              durationMinutes: 0,
+              distanceKm: 0,
+            });
+          }
+        }}>
           <SheetTrigger asChild>
             <Button>
               <Plus className="mr-2 h-4 w-4" /> Thêm Tuyến đường
@@ -158,7 +283,7 @@ export const RouteManagementPage = () => {
           </SheetTrigger>
           <SheetContent>
             <SheetHeader>
-              <SheetTitle>Thêm Tuyến đường mới</SheetTitle>
+              <SheetTitle>{editingRoute ? "Cập nhật Tuyến đường" : "Thêm Tuyến đường mới"}</SheetTitle>
               <SheetDescription>
                 Nhập thông tin chi tiết về tuyến đường mới.
               </SheetDescription>
@@ -219,9 +344,9 @@ export const RouteManagementPage = () => {
                 <Button
                   type="submit"
                   className="w-full"
-                  disabled={createRoute.isPending}
+                  disabled={createRoute.isPending || updateRoute.isPending}
                 >
-                  {createRoute.isPending ? "Đang tạo..." : "Tạo Tuyến đường"}
+                  {createRoute.isPending || updateRoute.isPending ? "Đang xử lý..." : (editingRoute ? "Cập nhật" : "Tạo Tuyến đường")}
                 </Button>
               </form>
             </div>
@@ -258,6 +383,48 @@ export const RouteManagementPage = () => {
           />
         </CardContent>
       </Card>
+
+
+      <AlertDialog open={!!deletingRoute} onOpenChange={(open) => !open && setDeletingRoute(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Bạn có chắc chắn muốn xóa?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Hành động này không thể hoàn tác. Tuyến đường này sẽ bị xóa vĩnh viễn.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Hủy</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={handleDelete}
+            >
+              {deleteRoute.isPending ? "Đang xóa..." : "Xóa"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={!!forceDeleteId} onOpenChange={(open) => !open && setForceDeleteId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Cảnh báo: Dữ liệu liên quan</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tuyến đường này đang được sử dụng trong các chuyến đi.
+              Bạn có muốn xóa BẮT BUỘC không? Hành động này sẽ xóa tất cả các dữ liệu liên quan (chuyến đi, vé).
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Hủy</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={handleForceDelete}
+            >
+              {deleteRoute.isPending ? "Đang xóa..." : "Xóa bắt buộc"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

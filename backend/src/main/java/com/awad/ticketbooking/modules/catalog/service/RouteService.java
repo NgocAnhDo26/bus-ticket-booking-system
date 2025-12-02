@@ -17,6 +17,7 @@ public class RouteService {
         private final com.awad.ticketbooking.modules.catalog.repository.StationRepository stationRepository;
 
         private final com.awad.ticketbooking.modules.booking.repository.BookingRepository bookingRepository;
+        private final com.awad.ticketbooking.modules.trip.repository.TripRepository tripRepository;
 
         @Transactional(readOnly = true)
         @Cacheable(value = "topRoutes")
@@ -79,5 +80,41 @@ public class RouteService {
                 route.setDistanceKm(request.getDistanceKm());
 
                 return routeRepository.save(route);
+        }
+
+        @Transactional
+        public Route updateRoute(java.util.UUID id,
+                        com.awad.ticketbooking.modules.catalog.dto.CreateRouteRequest request) {
+                Route route = routeRepository.findById(id)
+                                .orElseThrow(() -> new RuntimeException("Route not found"));
+
+                com.awad.ticketbooking.modules.catalog.entity.Station origin = stationRepository
+                                .findById(request.getOriginStationId())
+                                .orElseThrow(() -> new RuntimeException("Origin station not found"));
+
+                com.awad.ticketbooking.modules.catalog.entity.Station destination = stationRepository
+                                .findById(request.getDestinationStationId())
+                                .orElseThrow(() -> new RuntimeException("Destination station not found"));
+
+                route.setOriginStation(origin);
+                route.setDestinationStation(destination);
+                route.setDistanceKm(request.getDistanceKm());
+
+                return routeRepository.save(route);
+        }
+
+        @Transactional
+        public void deleteRoute(java.util.UUID id, boolean force) {
+                if (!routeRepository.existsById(id)) {
+                        throw new RuntimeException("Route not found");
+                }
+                if (force) {
+                        List<com.awad.ticketbooking.modules.trip.entity.Trip> trips = tripRepository.findByRouteId(id);
+                        for (com.awad.ticketbooking.modules.trip.entity.Trip trip : trips) {
+                                bookingRepository.deleteByTripId(trip.getId());
+                        }
+                        tripRepository.deleteByRouteId(id);
+                }
+                routeRepository.deleteById(id);
         }
 }

@@ -1,10 +1,19 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useCallback } from "react";
+import { AxiosError } from "axios";
+import { useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Plus, MapPin } from "lucide-react";
+import { Plus, MapPin, Pencil, Trash2, MoreHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Sheet,
   SheetContent,
@@ -16,8 +25,18 @@ import {
 import { FormField } from "@/components/ui/form-field";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { GenericTable, type ColumnDef } from "@/components/common";
-import { useStations, useCreateStation } from "../hooks";
+import { useStations, useCreateStation, useUpdateStation, useDeleteStation } from "../hooks";
 import type { Station } from "../types";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const formSchema = z.object({
   name: z.string().min(1, "Tên bến xe là bắt buộc"),
@@ -26,9 +45,14 @@ const formSchema = z.object({
 });
 
 export const StationManagementPage = () => {
+  const queryClient = useQueryClient();
   const [isOpen, setIsOpen] = useState(false);
   const { data: stations, isLoading } = useStations();
   const createStation = useCreateStation();
+  const updateStation = useUpdateStation();
+  const deleteStation = useDeleteStation();
+  const [editingStation, setEditingStation] = useState<Station | null>(null);
+  const [deletingStation, setDeletingStation] = useState<Station | null>(null);
 
   const {
     register,
@@ -45,12 +69,72 @@ export const StationManagementPage = () => {
   });
 
   const onSubmit = (values: z.infer<typeof formSchema>) => {
-    createStation.mutate(values, {
-      onSuccess: () => {
-        setIsOpen(false);
-        reset();
-      },
+    if (editingStation) {
+      updateStation.mutate(
+        { id: editingStation.id, data: values },
+        {
+          onSuccess: () => {
+            setIsOpen(false);
+            setEditingStation(null);
+            reset();
+          },
+        }
+      );
+    } else {
+      createStation.mutate(values, {
+        onSuccess: () => {
+          setIsOpen(false);
+          reset();
+        },
+      });
+    }
+  };
+
+  const handleEdit = useCallback((station: Station) => {
+    setEditingStation(station);
+    reset({
+      name: station.name,
+      city: station.city,
+      address: station.address,
     });
+    setIsOpen(true);
+  }, [reset]);
+
+  const [forceDeleteId, setForceDeleteId] = useState<string | null>(null);
+
+  const handleDelete = () => {
+    if (deletingStation) {
+      deleteStation.mutate(
+        { id: deletingStation.id },
+        {
+          onSuccess: () => {
+            setDeletingStation(null);
+          },
+          onError: (error: Error) => {
+            const axiosError = error as AxiosError;
+            if (axiosError.response?.status === 409) {
+              setForceDeleteId(deletingStation.id);
+              setDeletingStation(null);
+            }
+          },
+        }
+      );
+    }
+  };
+
+  const handleForceDelete = () => {
+    if (forceDeleteId) {
+      deleteStation.mutate(
+        { id: forceDeleteId, force: true },
+        {
+          onSuccess: () => {
+            setForceDeleteId(null);
+            // Invalidate queries to ensure UI update
+            queryClient.invalidateQueries({ queryKey: ["stations"] });
+          },
+        }
+      );
+    }
   };
 
   const [pageIndex, setPageIndex] = useState(1);
@@ -58,7 +142,7 @@ export const StationManagementPage = () => {
   const [sorting, setSorting] = useState<{
     key: string | null;
     direction: "asc" | "desc";
-  }>({ key: null, direction: "asc" });
+  }>({ key: "name", direction: "asc" });
 
   const sortedPaged = useMemo(() => {
     if (!stations) return { data: [], total: 0, totalPages: 1, page: 1 };
@@ -87,7 +171,7 @@ export const StationManagementPage = () => {
       total,
       totalPages,
       page: safePage,
-    };
+      };
   }, [stations, pageIndex, pageSize, sorting]);
 
   const meta = {
@@ -104,9 +188,9 @@ export const StationManagementPage = () => {
         header: "Tên bến xe",
         sortable: true,
         cell: (station) => (
-          <div className="flex items-center gap-2">
-            <MapPin className="h-4 w-4 text-muted-foreground" />
-            {station.name}
+          <div className="flex items-center gap-2 flex-wrap">
+            <MapPin className="h-4 w-4 text-muted-foreground shrink-0" />
+            <span>{station.name}</span>
           </div>
         ),
       },
@@ -121,15 +205,55 @@ export const StationManagementPage = () => {
         header: "Địa chỉ",
         cell: (station) => station.address,
       },
+      {
+        key: "actions",
+        header: "",
+        cell: (station) => (
+          <div className="flex justify-end">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="h-8 w-8 p-0">
+                  <span className="sr-only">Open menu</span>
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>Thao tác</DropdownMenuLabel>
+                <DropdownMenuItem onClick={() => handleEdit(station)}>
+                  <Pencil className="mr-2 h-4 w-4" />
+                  Sửa
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => setDeletingStation(station)}
+                  className="text-destructive focus:text-destructive"
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Xóa
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        ),
+      },
     ],
-    [],
+    [handleEdit],
   );
 
   return (
     <div className="flex flex-col gap-4 p-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold tracking-tight">Quản lý Bến xe</h1>
-        <Sheet open={isOpen} onOpenChange={setIsOpen}>
+        <Sheet open={isOpen} onOpenChange={(open) => {
+          setIsOpen(open);
+          if (!open) {
+            setEditingStation(null);
+            reset({
+              name: "",
+              city: "",
+              address: "",
+            });
+          }
+        }}>
           <SheetTrigger asChild>
             <Button>
               <Plus className="mr-2 h-4 w-4" /> Thêm Bến xe
@@ -137,7 +261,7 @@ export const StationManagementPage = () => {
           </SheetTrigger>
           <SheetContent>
             <SheetHeader>
-              <SheetTitle>Thêm Bến xe mới</SheetTitle>
+              <SheetTitle>{editingStation ? "Cập nhật Bến xe" : "Thêm Bến xe mới"}</SheetTitle>
               <SheetDescription>
                 Nhập thông tin chi tiết về bến xe mới.
               </SheetDescription>
@@ -162,9 +286,9 @@ export const StationManagementPage = () => {
                 <Button
                   type="submit"
                   className="w-full"
-                  disabled={createStation.isPending}
+                  disabled={createStation.isPending || updateStation.isPending}
                 >
-                  {createStation.isPending ? "Đang tạo..." : "Tạo Bến xe"}
+                  {createStation.isPending || updateStation.isPending ? "Đang xử lý..." : (editingStation ? "Cập nhật" : "Tạo Bến xe")}
                 </Button>
               </form>
             </div>
@@ -201,6 +325,47 @@ export const StationManagementPage = () => {
           />
         </CardContent>
       </Card>
+
+      <AlertDialog open={!!deletingStation} onOpenChange={(open) => !open && setDeletingStation(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Bạn có chắc chắn muốn xóa?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Hành động này không thể hoàn tác. Bến xe này sẽ bị xóa vĩnh viễn.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Hủy</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={handleDelete}
+            >
+              {deleteStation.isPending ? "Đang xóa..." : "Xóa"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={!!forceDeleteId} onOpenChange={(open) => !open && setForceDeleteId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Cảnh báo: Dữ liệu liên quan</AlertDialogTitle>
+            <AlertDialogDescription>
+              Bến xe này đang được sử dụng trong các tuyến đường hoặc chuyến đi. 
+              Bạn có muốn xóa BẮT BUỘC không? Hành động này sẽ xóa tất cả các dữ liệu liên quan (tuyến đường, chuyến đi, vé).
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Hủy</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={handleForceDelete}
+            >
+              {deleteStation.isPending ? "Đang xóa..." : "Xóa bắt buộc"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

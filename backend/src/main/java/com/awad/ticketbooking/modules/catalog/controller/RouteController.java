@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/routes")
@@ -31,5 +32,19 @@ public class RouteController {
     public ResponseEntity<Route> createRoute(
             @jakarta.validation.Valid @org.springframework.web.bind.annotation.RequestBody com.awad.ticketbooking.modules.catalog.dto.CreateRouteRequest request) {
         return ResponseEntity.ok(routeService.createRoute(request));
+    }
+
+    @org.springframework.web.bind.annotation.PutMapping("/{id}")
+    public ResponseEntity<Route> updateRoute(
+            @org.springframework.web.bind.annotation.PathVariable UUID id,
+            @jakarta.validation.Valid @org.springframework.web.bind.annotation.RequestBody com.awad.ticketbooking.modules.catalog.dto.CreateRouteRequest request) {
+        return ResponseEntity.ok(routeService.updateRoute(id, request));
+    }
+
+    @org.springframework.web.bind.annotation.DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteRoute(@org.springframework.web.bind.annotation.PathVariable UUID id,
+            @org.springframework.web.bind.annotation.RequestParam(defaultValue = "false") boolean force) {
+        routeService.deleteRoute(id, force);
+        return ResponseEntity.noContent().build();
     }
 }

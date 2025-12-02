@@ -115,7 +115,10 @@ export type SearchTripRequest = {
     date?: string;
     minPrice?: number;
     maxPrice?: number;
+    minTime?: string;
+    maxTime?: string;
     amenities?: string[];
+    operatorIds?: string[];
     seatType?: SeatType;
     sortBy?: string;
     page?: number;

@@ -1,12 +1,21 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useCallback } from "react";
+import { AxiosError } from "axios";
+import { useQueryClient } from "@tanstack/react-query";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Plus, Bus as BusIcon } from "lucide-react";
+import { Plus, Bus as BusIcon, Pencil, Trash2, MoreHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Sheet,
   SheetContent,
@@ -19,8 +28,19 @@ import { FormField } from "@/components/ui/form-field";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { GenericTable, type ColumnDef } from "@/components/common/GenericTable";
-import { useBuses, useCreateBus, useOperators } from "../hooks";
+import { useBuses, useCreateBus, useUpdateBus, useDeleteBus, useOperators } from "../hooks";
 import type { Bus } from "../types";
+
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const AMENITIES_LIST = [
   "WiFi",
@@ -42,10 +62,15 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 export const BusManagementPage = () => {
+  const queryClient = useQueryClient();
   const [isOpen, setIsOpen] = useState(false);
   const { data: buses, isLoading: isLoadingBuses } = useBuses();
   const { data: operators } = useOperators();
   const createBus = useCreateBus();
+  const updateBus = useUpdateBus();
+  const deleteBus = useDeleteBus();
+  const [editingBus, setEditingBus] = useState<Bus | null>(null);
+  const [deletingBus, setDeletingBus] = useState<Bus | null>(null);
 
   const {
     register,
@@ -78,12 +103,72 @@ export const BusManagementPage = () => {
   };
 
   const onSubmit = (values: z.infer<typeof formSchema>) => {
-    createBus.mutate(values, {
-      onSuccess: () => {
-        setIsOpen(false);
-        reset();
-      },
+    if (editingBus) {
+      updateBus.mutate(
+        { id: editingBus.id, data: values },
+        {
+          onSuccess: () => {
+            setIsOpen(false);
+            setEditingBus(null);
+            reset();
+          },
+        }
+      );
+    } else {
+      createBus.mutate(values, {
+        onSuccess: () => {
+          setIsOpen(false);
+          reset();
+        },
+      });
+    }
+  };
+
+  const handleEdit = useCallback((bus: Bus) => {
+    setEditingBus(bus);
+    reset({
+      plateNumber: bus.plateNumber,
+      capacity: bus.capacity,
+      operatorId: bus.operator.id,
+      amenities: bus.amenities || [],
     });
+    setIsOpen(true);
+  }, [reset]);
+
+  const [forceDeleteId, setForceDeleteId] = useState<string | null>(null);
+
+  const handleDelete = () => {
+    if (deletingBus) {
+      deleteBus.mutate(
+        { id: deletingBus.id },
+        {
+          onSuccess: () => {
+            setDeletingBus(null);
+          },
+          onError: (error: Error) => {
+            const axiosError = error as AxiosError;
+            if (axiosError.response?.status === 409) {
+              setForceDeleteId(deletingBus.id);
+              setDeletingBus(null);
+            }
+          },
+        }
+      );
+    }
+  };
+
+  const handleForceDelete = () => {
+    if (forceDeleteId) {
+      deleteBus.mutate(
+        { id: forceDeleteId, force: true },
+        {
+          onSuccess: () => {
+            setForceDeleteId(null);
+            queryClient.invalidateQueries({ queryKey: ["buses"] });
+          },
+        }
+      );
+    }
   };
 
   const [pageIndex, setPageIndex] = useState(1);
@@ -91,7 +176,7 @@ export const BusManagementPage = () => {
   const [sorting, setSorting] = useState<{
     key: string | null;
     direction: "asc" | "desc";
-  }>({ key: null, direction: "asc" });
+  }>({ key: "plateNumber", direction: "asc" });
 
   const sortedPaged = useMemo(() => {
     if (!buses) return { data: [], total: 0, totalPages: 1, page: 1 };
@@ -137,8 +222,8 @@ export const BusManagementPage = () => {
         header: "Biển số",
         sortable: true,
         cell: (bus) => (
-          <div className="flex items-center gap-2">
-            <BusIcon className="h-4 w-4 text-muted-foreground" />
+          <div className="flex items-center gap-2 flex-wrap">
+            <BusIcon className="h-4 w-4 text-muted-foreground shrink-0" />
             <span className="font-medium">{bus.plateNumber}</span>
           </div>
         ),
@@ -177,15 +262,56 @@ export const BusManagementPage = () => {
           </Badge>
         ),
       },
+      {
+        key: "actions",
+        header: "",
+        cell: (bus) => (
+          <div className="flex justify-end">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="h-8 w-8 p-0">
+                  <span className="sr-only">Open menu</span>
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>Thao tác</DropdownMenuLabel>
+                <DropdownMenuItem onClick={() => handleEdit(bus)}>
+                  <Pencil className="mr-2 h-4 w-4" />
+                  Sửa
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => setDeletingBus(bus)}
+                  className="text-destructive focus:text-destructive"
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Xóa
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        ),
+      },
     ],
-    [],
+    [handleEdit],
   );
 
   return (
     <div className="flex flex-col gap-4 p-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold tracking-tight">Quản lý Xe</h1>
-        <Sheet open={isOpen} onOpenChange={setIsOpen}>
+        <Sheet open={isOpen} onOpenChange={(open) => {
+          setIsOpen(open);
+          if (!open) {
+            setEditingBus(null);
+            reset({
+              plateNumber: "",
+              capacity: 40,
+              operatorId: "",
+              amenities: [],
+            });
+          }
+        }}>
           <SheetTrigger asChild>
             <Button>
               <Plus className="mr-2 h-4 w-4" /> Thêm Xe
@@ -193,7 +319,7 @@ export const BusManagementPage = () => {
           </SheetTrigger>
           <SheetContent>
             <SheetHeader>
-              <SheetTitle>Thêm Xe mới</SheetTitle>
+              <SheetTitle>{editingBus ? "Cập nhật Xe" : "Thêm Xe mới"}</SheetTitle>
               <SheetDescription>
                 Nhập thông tin chi tiết về xe mới.
               </SheetDescription>
@@ -213,7 +339,10 @@ export const BusManagementPage = () => {
                   label="Sức chứa (ghế)"
                   error={errors.capacity?.message}
                 >
-                  <Input type="number" {...register("capacity")} />
+                  <Input
+                    type="number"
+                    {...register("capacity", { valueAsNumber: true })}
+                  />
                 </FormField>
                 <FormField label="Nhà xe" error={errors.operatorId?.message}>
                   <select
@@ -248,9 +377,9 @@ export const BusManagementPage = () => {
                 <Button
                   type="submit"
                   className="w-full"
-                  disabled={createBus.isPending}
+                  disabled={createBus.isPending || updateBus.isPending}
                 >
-                  {createBus.isPending ? "Đang tạo..." : "Tạo Xe"}
+                  {createBus.isPending || updateBus.isPending ? "Đang xử lý..." : (editingBus ? "Cập nhật" : "Tạo Xe")}
                 </Button>
               </form>
             </div>
@@ -291,6 +420,48 @@ export const BusManagementPage = () => {
           />
         </CardContent>
       </Card>
+
+
+      <AlertDialog open={!!deletingBus} onOpenChange={(open) => !open && setDeletingBus(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Bạn có chắc chắn muốn xóa?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Hành động này không thể hoàn tác. Xe này sẽ bị xóa vĩnh viễn.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Hủy</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={handleDelete}
+            >
+              {deleteBus.isPending ? "Đang xóa..." : "Xóa"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={!!forceDeleteId} onOpenChange={(open) => !open && setForceDeleteId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Cảnh báo: Dữ liệu liên quan</AlertDialogTitle>
+            <AlertDialogDescription>
+              Xe này đang được sử dụng trong các chuyến đi.
+              Bạn có muốn xóa BẮT BUỘC không? Hành động này sẽ xóa tất cả các dữ liệu liên quan (chuyến đi, vé).
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Hủy</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={handleForceDelete}
+            >
+              {deleteBus.isPending ? "Đang xóa..." : "Xóa bắt buộc"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

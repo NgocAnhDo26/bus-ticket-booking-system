@@ -26,4 +26,17 @@ public class StationController {
     public ResponseEntity<List<Station>> getAllStations() {
         return ResponseEntity.ok(stationService.getAllStations());
     }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Station> updateStation(@PathVariable java.util.UUID id,
+            @Valid @RequestBody CreateStationRequest request) {
+        return ResponseEntity.ok(stationService.updateStation(id, request));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteStation(@PathVariable java.util.UUID id,
+            @RequestParam(defaultValue = "false") boolean force) {
+        stationService.deleteStation(id, force);
+        return ResponseEntity.noContent().build();
+    }
 }

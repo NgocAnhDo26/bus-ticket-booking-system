@@ -1,4 +1,5 @@
 import { createBrowserRouter, Navigate } from "react-router-dom";
+import { useState, useEffect } from "react";
 import { LoginPage, RegisterPage } from "@/features/auth";
 import { DashboardLayout } from "@/components/layout";
 import { DashboardPage } from "@/features/dashboard";
@@ -14,19 +15,36 @@ import {
 import { PublicRoute, ProtectedRoute } from "@/components/common";
 import { useAuthStore } from "@/store/auth-store";
 import { useHydrateAuth } from "@/features/auth/hooks";
+import { getDashboardPath } from "@/lib/navigation";
 
 const AuthenticatedRedirect = () => {
   const token = useAuthStore((state) => state.accessToken);
   const user = useAuthStore((state) => state.user);
+  const [isHydrating, setIsHydrating] = useState(true);
 
   useHydrateAuth();
+
+  useEffect(() => {
+    // Small delay to allow hydration to complete if token exists
+    const timer = setTimeout(() => setIsHydrating(false), 100);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (isHydrating && token && !user) {
+    return null; // Show nothing while hydrating user
+  }
 
   if (!token) {
     return <Navigate to="/login" replace />;
   }
 
   if (!user) {
-    return null;
+    // If token exists but user is still null after hydration attempt, redirect to login
+    // Or potentially wait longer? But for now, let's assume if hydration failed, user is null.
+    // However, useHydrateAuth fetches user asynchronously.
+    // Better approach: useHydrateAuth should expose loading state or we check query status.
+    // For now, let's rely on the token check. If token exists, we expect user to be there eventually.
+    return null; 
   }
 
   return <Navigate to={getDashboardPath(user.role)} replace />;

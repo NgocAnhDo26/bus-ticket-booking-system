@@ -1,6 +1,15 @@
 import { SearchForm } from "../components/SearchForm";
+import { useAuthStore } from "@/store/auth-store";
+import { Navigate } from "react-router-dom";
+import { getDashboardPath } from "@/lib/navigation";
 
 export const HomePage = () => {
+  const user = useAuthStore((state) => state.user);
+
+  if (user?.role === "ADMIN") {
+    return <Navigate to={getDashboardPath("ADMIN")} replace />;
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
       {/* Hero Section */}

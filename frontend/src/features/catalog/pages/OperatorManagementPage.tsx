@@ -1,10 +1,19 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useCallback } from "react";
+import { AxiosError } from "axios";
+import { useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Plus, Phone, Building2, Mail, Globe } from "lucide-react";
+import { Plus, Phone, Building2, Mail, Globe, Pencil, Trash2, MoreHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Sheet,
   SheetContent,
@@ -17,8 +26,18 @@ import { FormField } from "@/components/ui/form-field";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { GenericTable, type ColumnDef } from "@/components/common";
-import { useOperators, useCreateOperator } from "../hooks";
+import { useOperators, useCreateOperator, useUpdateOperator, useDeleteOperator } from "../hooks";
 import type { Operator } from "../types";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const formSchema = z.object({
   name: z.string().min(1, "Tên nhà xe là bắt buộc"),
@@ -28,9 +47,14 @@ const formSchema = z.object({
 });
 
 export const OperatorManagementPage = () => {
+  const queryClient = useQueryClient();
   const [isOpen, setIsOpen] = useState(false);
   const { data: operators, isLoading } = useOperators();
   const createOperator = useCreateOperator();
+  const updateOperator = useUpdateOperator();
+  const deleteOperator = useDeleteOperator();
+  const [editingOperator, setEditingOperator] = useState<Operator | null>(null);
+  const [deletingOperator, setDeletingOperator] = useState<Operator | null>(null);
 
   const {
     register,
@@ -48,22 +72,81 @@ export const OperatorManagementPage = () => {
   });
 
   const onSubmit = (values: z.infer<typeof formSchema>) => {
-    createOperator.mutate(
-      {
-        name: values.name,
-        contactInfo: {
-          phone: values.phone,
-          email: values.email || undefined,
-          website: values.website || undefined,
-        },
+    const payload = {
+      name: values.name,
+      contactInfo: {
+        phone: values.phone,
+        email: values.email || undefined,
+        website: values.website || undefined,
       },
-      {
+    };
+
+    if (editingOperator) {
+      updateOperator.mutate(
+        { id: editingOperator.id, data: payload },
+        {
+          onSuccess: () => {
+            setIsOpen(false);
+            setEditingOperator(null);
+            reset();
+          },
+        }
+      );
+    } else {
+      createOperator.mutate(payload, {
         onSuccess: () => {
           setIsOpen(false);
           reset();
         },
-      },
-    );
+      });
+    }
+  };
+
+  const handleEdit = useCallback((operator: Operator) => {
+    setEditingOperator(operator);
+    reset({
+      name: operator.name,
+      phone: operator.contactInfo?.phone || "",
+      email: operator.contactInfo?.email || "",
+      website: operator.contactInfo?.website || "",
+    });
+    setIsOpen(true);
+  }, [reset]);
+
+  const [forceDeleteId, setForceDeleteId] = useState<string | null>(null);
+
+  const handleDelete = () => {
+    if (deletingOperator) {
+      deleteOperator.mutate(
+        { id: deletingOperator.id },
+        {
+          onSuccess: () => {
+            setDeletingOperator(null);
+          },
+          onError: (error: Error) => {
+            const axiosError = error as AxiosError;
+            if (axiosError.response?.status === 409) {
+              setForceDeleteId(deletingOperator.id);
+              setDeletingOperator(null);
+            }
+          },
+        }
+      );
+    }
+  };
+
+  const handleForceDelete = () => {
+    if (forceDeleteId) {
+      deleteOperator.mutate(
+        { id: forceDeleteId, force: true },
+        {
+          onSuccess: () => {
+            setForceDeleteId(null);
+            queryClient.invalidateQueries({ queryKey: ["operators"] });
+          },
+        }
+      );
+    }
   };
 
   const [pageIndex, setPageIndex] = useState(1);
@@ -71,7 +154,7 @@ export const OperatorManagementPage = () => {
   const [sorting, setSorting] = useState<{
     key: string | null;
     direction: "asc" | "desc";
-  }>({ key: null, direction: "asc" });
+  }>({ key: "name", direction: "asc" });
 
   const sortedPaged = useMemo(() => {
     if (!operators) return { data: [], total: 0, totalPages: 1, page: 1 };
@@ -117,9 +200,9 @@ export const OperatorManagementPage = () => {
         header: "Tên nhà xe",
         sortable: true,
         cell: (operator) => (
-          <div className="flex items-center gap-2">
-            <Building2 className="h-4 w-4 text-muted-foreground" />
-            {operator.name}
+          <div className="flex items-center gap-2 flex-wrap">
+            <Building2 className="h-4 w-4 text-muted-foreground shrink-0" />
+            <span>{operator.name}</span>
           </div>
         ),
       },
@@ -166,15 +249,56 @@ export const OperatorManagementPage = () => {
           </Badge>
         ),
       },
+      {
+        key: "actions",
+        header: "",
+        cell: (operator) => (
+          <div className="flex justify-end">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="h-8 w-8 p-0">
+                  <span className="sr-only">Open menu</span>
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>Thao tác</DropdownMenuLabel>
+                <DropdownMenuItem onClick={() => handleEdit(operator)}>
+                  <Pencil className="mr-2 h-4 w-4" />
+                  Sửa
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => setDeletingOperator(operator)}
+                  className="text-destructive focus:text-destructive"
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Xóa
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        ),
+      },
     ],
-    [],
+    [handleEdit],
   );
 
   return (
     <div className="flex flex-col gap-4 p-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold tracking-tight">Quản lý Nhà xe</h1>
-        <Sheet open={isOpen} onOpenChange={setIsOpen}>
+        <Sheet open={isOpen} onOpenChange={(open) => {
+          setIsOpen(open);
+          if (!open) {
+            setEditingOperator(null);
+            reset({
+              name: "",
+              phone: "",
+              email: "",
+              website: "",
+            });
+          }
+        }}>
           <SheetTrigger asChild>
             <Button>
               <Plus className="mr-2 h-4 w-4" /> Thêm Nhà xe
@@ -182,7 +306,7 @@ export const OperatorManagementPage = () => {
           </SheetTrigger>
           <SheetContent>
             <SheetHeader>
-              <SheetTitle>Thêm Nhà xe mới</SheetTitle>
+              <SheetTitle>{editingOperator ? "Cập nhật Nhà xe" : "Thêm Nhà xe mới"}</SheetTitle>
               <SheetDescription>
                 Nhập thông tin chi tiết về nhà xe mới.
               </SheetDescription>
@@ -210,9 +334,9 @@ export const OperatorManagementPage = () => {
                 <Button
                   type="submit"
                   className="w-full"
-                  disabled={createOperator.isPending}
+                  disabled={createOperator.isPending || updateOperator.isPending}
                 >
-                  {createOperator.isPending ? "Đang tạo..." : "Tạo Nhà xe"}
+                  {createOperator.isPending || updateOperator.isPending ? "Đang xử lý..." : (editingOperator ? "Cập nhật" : "Tạo Nhà xe")}
                 </Button>
               </form>
             </div>
@@ -249,6 +373,47 @@ export const OperatorManagementPage = () => {
           />
         </CardContent>
       </Card>
+
+      <AlertDialog open={!!deletingOperator} onOpenChange={(open) => !open && setDeletingOperator(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Bạn có chắc chắn muốn xóa?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Hành động này không thể hoàn tác. Nhà xe này sẽ bị xóa vĩnh viễn.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Hủy</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={handleDelete}
+            >
+              {deleteOperator.isPending ? "Đang xóa..." : "Xóa"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={!!forceDeleteId} onOpenChange={(open) => !open && setForceDeleteId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Cảnh báo: Dữ liệu liên quan</AlertDialogTitle>
+            <AlertDialogDescription>
+              Nhà xe này đang có các xe buýt và chuyến đi liên quan.
+              Bạn có muốn xóa BẮT BUỘC không? Hành động này sẽ xóa tất cả các dữ liệu liên quan (xe buýt, chuyến đi, vé).
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Hủy</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={handleForceDelete}
+            >
+              {deleteOperator.isPending ? "Đang xóa..." : "Xóa bắt buộc"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

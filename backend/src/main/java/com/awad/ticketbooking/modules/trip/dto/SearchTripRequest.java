@@ -12,7 +12,7 @@ import java.util.List;
 public class SearchTripRequest {
     private String origin;
     private String destination;
-    
+
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
     private LocalDate date;
 
@@ -26,7 +26,8 @@ public class SearchTripRequest {
     private BigDecimal maxPrice;
 
     private List<String> amenities;
-    
+    private List<java.util.UUID> operatorIds;
+
     private String sortBy; // e.g., "price,asc" or "departureTime,desc"
     private int page = 0;
     private int size = 10;

@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/buses")
@@ -20,6 +21,17 @@ public class BusController {
     @PostMapping
     public ResponseEntity<Bus> createBus(@Valid @RequestBody CreateBusRequest request) {
         return ResponseEntity.ok(busService.createBus(request));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Bus> updateBus(@PathVariable UUID id, @Valid @RequestBody CreateBusRequest request) {
+        return ResponseEntity.ok(busService.updateBus(id, request));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteBus(@PathVariable UUID id, @RequestParam(defaultValue = "false") boolean force) {
+        busService.deleteBus(id, force);
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping

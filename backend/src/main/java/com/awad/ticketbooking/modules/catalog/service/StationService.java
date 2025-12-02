@@ -14,6 +14,9 @@ import java.util.List;
 public class StationService {
 
     private final StationRepository stationRepository;
+    private final com.awad.ticketbooking.modules.catalog.repository.RouteRepository routeRepository;
+    private final com.awad.ticketbooking.modules.trip.repository.TripRepository tripRepository;
+    private final com.awad.ticketbooking.modules.booking.repository.BookingRepository bookingRepository;
 
     @Transactional
     public Station createStation(CreateStationRequest request) {
@@ -26,5 +29,49 @@ public class StationService {
 
     public List<Station> getAllStations() {
         return stationRepository.findAll();
+    }
+
+    @Transactional
+    public Station updateStation(java.util.UUID id, CreateStationRequest request) {
+        Station station = stationRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Station not found"));
+        station.setName(request.getName());
+        station.setCity(request.getCity());
+        station.setAddress(request.getAddress());
+        return stationRepository.save(station);
+    }
+
+    @Transactional
+    public void deleteStation(java.util.UUID id, boolean force) {
+        if (force) {
+            // 1. Handle Routes where this station is Origin
+            List<com.awad.ticketbooking.modules.catalog.entity.Route> originRoutes = routeRepository
+                    .findByOriginStationId(id);
+            for (com.awad.ticketbooking.modules.catalog.entity.Route route : originRoutes) {
+                // Delete trips for this route
+                List<com.awad.ticketbooking.modules.trip.entity.Trip> trips = tripRepository
+                        .findByRouteId(route.getId());
+                for (com.awad.ticketbooking.modules.trip.entity.Trip trip : trips) {
+                    bookingRepository.deleteByTripId(trip.getId());
+                }
+                tripRepository.deleteByRouteId(route.getId());
+            }
+            routeRepository.deleteByOriginStationId(id);
+
+            // 2. Handle Routes where this station is Destination
+            List<com.awad.ticketbooking.modules.catalog.entity.Route> destRoutes = routeRepository
+                    .findByDestinationStationId(id);
+            for (com.awad.ticketbooking.modules.catalog.entity.Route route : destRoutes) {
+                // Delete trips for this route
+                List<com.awad.ticketbooking.modules.trip.entity.Trip> trips = tripRepository
+                        .findByRouteId(route.getId());
+                for (com.awad.ticketbooking.modules.trip.entity.Trip trip : trips) {
+                    bookingRepository.deleteByTripId(trip.getId());
+                }
+                tripRepository.deleteByRouteId(route.getId());
+            }
+            routeRepository.deleteByDestinationStationId(id);
+        }
+        stationRepository.deleteById(id);
     }
 }

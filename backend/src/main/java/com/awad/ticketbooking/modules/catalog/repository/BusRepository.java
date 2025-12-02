@@ -8,4 +8,7 @@ import java.util.UUID;
 
 @Repository
 public interface BusRepository extends JpaRepository<Bus, UUID> {
+    void deleteByOperatorId(UUID operatorId);
+
+    java.util.List<Bus> findByOperatorId(UUID operatorId);
 }

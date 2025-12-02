@@ -13,11 +13,14 @@ export const SearchResultsPage = () => {
   const navigate = useNavigate();
   const { user } = useAuthStore();
   
-  const origin = searchParams.get("origin");
-  const destination = searchParams.get("destination");
-  const date = searchParams.get("date");
+  const origin = searchParams.get("origin") || undefined;
+  const destination = searchParams.get("destination") || undefined;
+  const date = searchParams.get("date") || undefined;
   const minPrice = searchParams.get("minPrice") ? Number(searchParams.get("minPrice")) : undefined;
   const maxPrice = searchParams.get("maxPrice") ? Number(searchParams.get("maxPrice")) : undefined;
+  const minTime = searchParams.get("minTime") || undefined;
+  const maxTime = searchParams.get("maxTime") || undefined;
+  const operatorIds = searchParams.getAll("operatorIds");
 
   const { data: trips, isLoading } = useSearchTrips({
     origin,
@@ -25,6 +28,9 @@ export const SearchResultsPage = () => {
     date,
     minPrice,
     maxPrice,
+    minTime,
+    maxTime,
+    operatorIds: operatorIds.length > 0 ? operatorIds : undefined,
   });
 
   const handleSelectTrip = (trip: Trip) => {

@@ -8,4 +8,11 @@ import java.util.UUID;
 
 @Repository
 public interface RouteRepository extends JpaRepository<Route, UUID> {
+    void deleteByOriginStationId(UUID originStationId);
+
+    void deleteByDestinationStationId(UUID destinationStationId);
+
+    java.util.List<Route> findByOriginStationId(UUID originStationId);
+
+    java.util.List<Route> findByDestinationStationId(UUID destinationStationId);
 }

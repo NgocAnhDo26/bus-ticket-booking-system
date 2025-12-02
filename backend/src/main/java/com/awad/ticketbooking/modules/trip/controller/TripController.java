@@ -37,4 +37,15 @@ public class TripController {
     public ResponseEntity<TripResponse> createTrip(@RequestBody CreateTripRequest request) {
         return ResponseEntity.ok(tripService.createTrip(request));
     }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<TripResponse> updateTrip(@PathVariable UUID id, @RequestBody CreateTripRequest request) {
+        return ResponseEntity.ok(tripService.updateTrip(id, request));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteTrip(@PathVariable UUID id, @RequestParam(defaultValue = "false") boolean force) {
+        tripService.deleteTrip(id, force);
+        return ResponseEntity.noContent().build();
+    }
 }
