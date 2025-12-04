@@ -84,7 +84,7 @@ class TripServiceTest {
         // Assert
         assertNotNull(result);
         assertEquals(1, result.getTotalElements());
-        assertEquals("Hanoi", result.getContent().get(0).getOrigin());
+        assertEquals("Hanoi", result.getContent().get(0).getRoute().getOriginStation().getCity());
 
         verify(tripRepository).findAll(any(Specification.class), any(Pageable.class));
     }
@@ -127,7 +127,7 @@ class TripServiceTest {
         // Assert
         assertNotNull(result);
         assertEquals(tripId, result.getId());
-        assertEquals("Hanoi", result.getOrigin());
+        assertEquals("Hanoi", result.getRoute().getOriginStation().getCity());
 
         verify(tripRepository).findById(tripId);
     }
