@@ -1,9 +1,9 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
-import { AuthLayout } from "../components/auth-layout";
+import { AuthLayout } from "../components/AuthLayout";
 import { register as registerApi } from "../api";
-import { RegisterForm } from "../components/register-form";
+import { RegisterForm } from "../components/RegisterForm";
 import { registerSchema, type RegisterFormValues } from "../schema";
 import { useAuthStore } from "@/store/auth-store";
 import { useNavigate } from "react-router-dom";

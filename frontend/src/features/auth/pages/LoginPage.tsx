@@ -4,10 +4,10 @@ import { useMutation } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import type { AxiosError } from "axios";
-import { LoginForm } from "@/features/auth/components/login-form";
+import { LoginForm } from "@/features/auth/components/LoginForm";
 import { useAuthStore } from "@/store/auth-store";
 import { login, loginWithGoogle } from "../api";
-import { AuthLayout } from "../components/auth-layout";
+import { AuthLayout } from "../components/AuthLayout";
 import { loginSchema, type LoginFormValues } from "../schema";
 import { getDashboardPath } from "@/lib/navigation";
 

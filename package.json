@@ -7,7 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "prepare": "husky",
     "---------------- INFRASTRUCTURE ----------------": "",
-    "infra:up": "docker-compose up -d",
+    "infra:up": "docker compose up -d",
     "infra:down": "docker-compose down",
     "infra:logs": "docker-compose logs -f",
     "infra:nuke": "docker-compose down -v",
