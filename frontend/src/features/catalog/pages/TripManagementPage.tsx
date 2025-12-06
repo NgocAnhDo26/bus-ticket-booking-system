@@ -48,7 +48,7 @@ const formSchema = z.object({
   arrivalTime: z.string().min(1, "Thời gian đến là bắt buộc"),
   pricings: z.array(
     z.object({
-      seatType: z.enum([SeatType.NORMAL, SeatType.VIP, SeatType.SLEEPER]),
+      seatType: z.enum([SeatType.NORMAL, SeatType.VIP]),
       price: z.number().min(0, "Giá vé phải lớn hơn hoặc bằng 0"),
     })
   ),
@@ -83,7 +83,6 @@ export const TripManagementPage = () => {
       pricings: [
         { seatType: SeatType.NORMAL, price: 0 },
         { seatType: SeatType.VIP, price: 0 },
-        { seatType: SeatType.SLEEPER, price: 0 },
       ],
     },
   });
@@ -339,7 +338,7 @@ export const TripManagementPage = () => {
   );
 
   return (
-    <div className="flex flex-col gap-4 p-4">
+    <div className="flex flex-col gap-8 p-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold tracking-tight">Quản lý Chuyến đi</h1>
         <Sheet open={isOpen} onOpenChange={(open) => {
@@ -354,7 +353,6 @@ export const TripManagementPage = () => {
               pricings: [
                 { seatType: SeatType.NORMAL, price: 0 },
                 { seatType: SeatType.VIP, price: 0 },
-                { seatType: SeatType.SLEEPER, price: 0 },
               ],
             });
           }

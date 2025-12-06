@@ -3,6 +3,7 @@ package com.awad.ticketbooking.modules.catalog.service;
 import com.awad.ticketbooking.modules.catalog.dto.CreateBusRequest;
 import com.awad.ticketbooking.modules.catalog.entity.Bus;
 import com.awad.ticketbooking.modules.catalog.entity.Operator;
+import com.awad.ticketbooking.modules.catalog.repository.BusLayoutRepository;
 import com.awad.ticketbooking.modules.catalog.repository.BusRepository;
 import com.awad.ticketbooking.modules.catalog.repository.OperatorRepository;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +18,7 @@ public class BusService {
 
     private final BusRepository busRepository;
     private final OperatorRepository operatorRepository;
+    private final BusLayoutRepository busLayoutRepository;
     private final com.awad.ticketbooking.modules.trip.repository.TripRepository tripRepository;
     private final com.awad.ticketbooking.modules.booking.repository.BookingRepository bookingRepository;
 
@@ -24,11 +26,13 @@ public class BusService {
     public Bus createBus(CreateBusRequest request) {
         Operator operator = operatorRepository.findById(request.getOperatorId())
                 .orElseThrow(() -> new RuntimeException("Operator not found"));
+        com.awad.ticketbooking.modules.catalog.entity.BusLayout busLayout = busLayoutRepository.findById(request.getBusLayoutId())
+                .orElseThrow(() -> new RuntimeException("Bus layout not found"));
 
         Bus bus = new Bus();
         bus.setOperator(operator);
+        bus.setBusLayout(busLayout);
         bus.setPlateNumber(request.getPlateNumber());
-        bus.setCapacity(request.getCapacity());
         bus.setAmenities(request.getAmenities());
 
         return busRepository.save(bus);
@@ -41,10 +45,12 @@ public class BusService {
 
         Operator operator = operatorRepository.findById(request.getOperatorId())
                 .orElseThrow(() -> new RuntimeException("Operator not found"));
+        com.awad.ticketbooking.modules.catalog.entity.BusLayout busLayout = busLayoutRepository.findById(request.getBusLayoutId())
+                .orElseThrow(() -> new RuntimeException("Bus layout not found"));
 
         bus.setOperator(operator);
+        bus.setBusLayout(busLayout);
         bus.setPlateNumber(request.getPlateNumber());
-        bus.setCapacity(request.getCapacity());
         bus.setAmenities(request.getAmenities());
 
         return busRepository.save(bus);

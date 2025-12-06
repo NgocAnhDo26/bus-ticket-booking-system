@@ -13,6 +13,9 @@ public interface TripRepository extends JpaRepository<Trip, UUID>, JpaSpecificat
     boolean existsByBusIdAndDepartureTimeLessThanAndArrivalTimeGreaterThan(UUID busId, Instant arrivalTime,
             Instant departureTime);
 
+    boolean existsByBusIdAndDepartureTimeLessThanAndArrivalTimeGreaterThanAndIdNot(UUID busId, Instant arrivalTime,
+            Instant departureTime, UUID id);
+
     void deleteByRouteId(UUID routeId);
 
     void deleteByBusId(UUID busId);

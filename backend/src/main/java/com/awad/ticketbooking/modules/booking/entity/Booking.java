@@ -9,6 +9,8 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "bookings")
@@ -24,8 +26,8 @@ public class Booking extends BaseEntity {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Column(name = "seat_number", nullable = false)
-    private String seatNumber;
+    @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Ticket> tickets = new ArrayList<>();
 
     @Column(name = "total_price", nullable = false)
     private BigDecimal totalPrice;

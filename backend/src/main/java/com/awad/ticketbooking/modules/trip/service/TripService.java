@@ -1,6 +1,5 @@
 package com.awad.ticketbooking.modules.trip.service;
 
-import com.awad.ticketbooking.common.enums.SeatType;
 import com.awad.ticketbooking.modules.catalog.entity.Bus;
 import com.awad.ticketbooking.modules.catalog.entity.Route;
 import com.awad.ticketbooking.modules.catalog.repository.BusRepository;
@@ -83,6 +82,11 @@ public class TripService {
         Trip trip = tripRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Trip not found"));
 
+        // Check if trip has any bookings
+        if (bookingRepository.existsByTripId(id)) {
+            throw new RuntimeException("Cannot update trip that has existing bookings");
+        }
+
         Bus bus = busRepository.findById(request.getBusId())
                 .orElseThrow(() -> new RuntimeException("Bus not found"));
 
@@ -90,21 +94,19 @@ public class TripService {
                 .orElseThrow(() -> new RuntimeException("Route not found"));
 
         // Check for conflicts (excluding current trip)
-        // Note: This conflict check is simplified and might need a custom query to
-        // exclude current trip ID
-        // For now, we'll assume the user checks this or we can implement a proper check
-        // later
-        // boolean hasConflict =
-        // tripRepository.existsByBusIdAndDepartureTimeLessThanAndArrivalTimeGreaterThanAndIdNot(
-        // bus.getId(), request.getArrivalTime(), request.getDepartureTime(), id);
+        boolean hasConflict = tripRepository.existsByBusIdAndDepartureTimeLessThanAndArrivalTimeGreaterThanAndIdNot(
+                bus.getId(), request.getArrivalTime(), request.getDepartureTime(), id);
+
+        if (hasConflict) {
+            throw new RuntimeException("Bus is already assigned to another trip during this time");
+        }
 
         trip.setBus(bus);
         trip.setRoute(route);
         trip.setDepartureTime(request.getDepartureTime());
         trip.setArrivalTime(request.getArrivalTime());
 
-        // Update pricings: Delete old, create new
-        tripPricingRepository.deleteAll(trip.getTripPricings());
+        // Update pricings
         trip.getTripPricings().clear();
 
         if (request.getPricings() != null) {
@@ -115,8 +117,7 @@ public class TripService {
                 pricing.setPrice(p.getPrice());
                 return pricing;
             }).collect(Collectors.toList());
-            tripPricingRepository.saveAll(pricings);
-            trip.setTripPricings(pricings);
+            trip.getTripPricings().addAll(pricings);
         }
 
         return mapToResponse(tripRepository.save(trip));
@@ -246,7 +247,7 @@ public class TripService {
                                 .id(trip.getBus().getOperator().getId())
                                 .name(trip.getBus().getOperator().getName())
                                 .build())
-                        .capacity(trip.getBus().getCapacity())
+                        .totalSeats(trip.getBus().getBusLayout().getTotalSeats())
                         .amenities(trip.getBus().getAmenities())
                         .build())
                 .departureTime(trip.getDepartureTime())

@@ -261,7 +261,7 @@ export const RouteManagementPage = () => {
   );
 
   return (
-    <div className="flex flex-col gap-4 p-4">
+    <div className="flex flex-col gap-8 p-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold tracking-tight">Quản lý Tuyến đường</h1>
         <Sheet open={isOpen} onOpenChange={(open) => {

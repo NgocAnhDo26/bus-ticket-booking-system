@@ -40,7 +40,14 @@ export type Bus = {
     id: string;
     operator: Operator;
     plateNumber: string;
-    capacity: number;
+    busLayout: {
+        id: string;
+        name: string;
+        busType: string;
+        totalSeats: number;
+        totalFloors: number;
+        description?: string;
+    };
     amenities: string[];
     isActive: boolean;
     createdAt: string;
@@ -48,8 +55,8 @@ export type Bus = {
 
 export type CreateBusRequest = {
     operatorId: string;
+    busLayoutId: string;
     plateNumber: string;
-    capacity: number;
     amenities: string[];
     isActive?: boolean;
 };
@@ -74,7 +81,6 @@ export type CreateRouteRequest = {
 export const SeatType = {
     NORMAL: "NORMAL",
     VIP: "VIP",
-    SLEEPER: "SLEEPER",
 } as const;
 
 export type SeatType = (typeof SeatType)[keyof typeof SeatType];

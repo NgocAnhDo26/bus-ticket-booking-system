@@ -64,6 +64,10 @@ const allAdminNavItems: AdminNavItem[] = [
         url: "/admin/catalog/buses",
       },
       {
+        title: "Sơ đồ xe",
+        url: "/admin/catalog/layouts",
+      },
+      {
         title: "Tuyến đường",
         url: "/admin/catalog/routes",
       },

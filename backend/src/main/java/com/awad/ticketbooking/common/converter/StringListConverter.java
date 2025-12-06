@@ -30,9 +30,36 @@ public class StringListConverter implements AttributeConverter<List<String>, Str
         if (dbData == null) {
             return Collections.emptyList();
         }
+
         try {
-            return objectMapper.readValue(dbData, new TypeReference<List<String>>() {
-            });
+            // Handle both JSON arrays (preferred) and legacy JSON objects where
+            // amenities were stored as {"wifi": true, ...}. For objects we return
+            // the keys whose values are truthy to preserve intent.
+            com.fasterxml.jackson.databind.JsonNode node = objectMapper.readTree(dbData);
+
+            if (node.isArray()) {
+                return objectMapper.convertValue(node, new TypeReference<List<String>>() {
+                });
+            }
+
+            if (node.isObject()) {
+                List<String> keys = new java.util.ArrayList<>();
+                java.util.Iterator<String> fieldNames = node.fieldNames();
+                while (fieldNames.hasNext()) {
+                    String key = fieldNames.next();
+                    com.fasterxml.jackson.databind.JsonNode value = node.get(key);
+                    if (value != null && (!value.isBoolean() || value.asBoolean())) {
+                        keys.add(key);
+                    }
+                }
+                return keys;
+            }
+
+            if (node.isTextual()) {
+                return java.util.Collections.singletonList(node.asText());
+            }
+
+            return Collections.emptyList();
         } catch (Exception e) {
             throw new RuntimeException("Error converting JSON to list", e);
         }

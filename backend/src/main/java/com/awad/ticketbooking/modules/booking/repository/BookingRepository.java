@@ -51,4 +51,6 @@ public interface BookingRepository extends JpaRepository<Booking, java.util.UUID
         List<Booking> findRecentBookingsByUser(@Param("email") String email, Pageable pageable);
 
         void deleteByTripId(java.util.UUID tripId);
+
+        boolean existsByTripId(java.util.UUID tripId);
 }

@@ -50,6 +50,9 @@ public class SecurityConfig {
                         .requestMatchers("/api/admin/**").permitAll()
                         .requestMatchers(HttpMethod.PUT, "/api/routes/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/routes/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/bus-layouts/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/bus-layouts/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/bus-layouts/**").hasRole("ADMIN")
                         .anyRequest().authenticated())
                 .authenticationProvider(daoAuthenticationProvider())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

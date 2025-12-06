@@ -1,12 +1,14 @@
 package com.awad.ticketbooking.modules.booking.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.Data;
 
 import java.math.BigDecimal;
 import java.util.UUID;
+import java.util.List;
 
 @Data
 public class CreateBookingRequest {
@@ -15,9 +17,6 @@ public class CreateBookingRequest {
 
     @NotNull(message = "User ID is required")
     private UUID userId;
-
-    @NotBlank(message = "Seat number is required")
-    private String seatNumber;
 
     @NotBlank(message = "Passenger name is required")
     private String passengerName;
@@ -28,4 +27,7 @@ public class CreateBookingRequest {
     @NotNull(message = "Total price is required")
     @Positive(message = "Total price must be positive")
     private BigDecimal totalPrice;
+
+    @NotEmpty(message = "At least one ticket is required")
+    private List<TicketRequest> tickets;
 }

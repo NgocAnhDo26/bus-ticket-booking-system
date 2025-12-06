@@ -12,6 +12,7 @@ import {
   RouteManagementPage,
   TripManagementPage,
 } from "@/features/catalog";
+import { BusLayoutCreatePage, BusLayoutManagementPage } from "@/features/bus-layout";
 import { PublicRoute, ProtectedRoute } from "@/components/common";
 import { useAuthStore } from "@/store/auth-store";
 import { useHydrateAuth } from "@/features/auth/hooks";
@@ -109,6 +110,18 @@ export const router = createBrowserRouter([
           {
             path: "/admin/catalog/trips",
             element: <TripManagementPage />,
+          },
+          {
+            path: "/admin/catalog/layouts",
+            element: <BusLayoutManagementPage />,
+          },
+          {
+            path: "/admin/catalog/layouts/create",
+            element: <BusLayoutCreatePage />,
+          },
+          {
+            path: "/admin/catalog/layouts/edit/:id",
+            element: <BusLayoutCreatePage />,
           },
           {
             path: "/admin",
