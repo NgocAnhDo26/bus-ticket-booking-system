@@ -35,7 +35,8 @@ public class BusController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Bus>> getAllBuses() {
-        return ResponseEntity.ok(busService.getAllBuses());
+    public ResponseEntity<org.springframework.data.domain.Page<Bus>> getAllBuses(
+            org.springframework.data.domain.Pageable pageable) {
+        return ResponseEntity.ok(busService.getAllBuses(pageable));
     }
 }

@@ -3,6 +3,7 @@ import { GoogleOAuthProvider } from "@react-oauth/google";
 import { type ReactNode, useMemo } from "react";
 import { useHydrateAuth } from "@/features/auth/hooks";
 import { ThemeProvider } from "@/components/theme-provider";
+import { Toaster } from "@/components/ui/sonner";
 
 type Props = {
   children: ReactNode;
@@ -34,6 +35,7 @@ export const AppProviders = ({ children }: Props) => {
       <GoogleOAuthProvider clientId={googleClientId}>
         <QueryClientProvider client={queryClient}>
           <AuthHydrator>{children}</AuthHydrator>
+          <Toaster position="top-center" richColors />
         </QueryClientProvider>
       </GoogleOAuthProvider>
     </ThemeProvider>

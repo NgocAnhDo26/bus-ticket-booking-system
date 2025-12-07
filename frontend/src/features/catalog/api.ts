@@ -15,8 +15,15 @@ import {
 
 // Stations
 export const fetchStations = async (): Promise<Station[]> => {
-    const response = await apiClient.get<Station[]>("/stations");
-    return response.data;
+    const response = await apiClient.get<{ content: Station[] } | Station[]>("/stations");
+    
+    // Handle Spring Data Page response
+    if (response.data && 'content' in response.data) {
+        return (response.data as { content: Station[] }).content;
+    }
+    
+    // Fallback if it returns a list directly
+    return Array.isArray(response.data) ? response.data : [];
 };
 
 export const createStation = async (
@@ -37,8 +44,13 @@ export const deleteStation = async (id: string, force?: boolean): Promise<void> 
 
 // Operators
 export const fetchOperators = async (): Promise<Operator[]> => {
-    const response = await apiClient.get<Operator[]>("/operators");
-    return response.data;
+    const response = await apiClient.get<{ content: Operator[] } | Operator[]>("/operators");
+    // Handle Spring Data Page response
+    if (response.data && 'content' in response.data) {
+        return (response.data as { content: Operator[] }).content;
+    }
+    // Fallback if it returns a list directly
+    return Array.isArray(response.data) ? response.data : [];
 };
 
 export const createOperator = async (
@@ -59,8 +71,13 @@ export const deleteOperator = async (id: string, force?: boolean): Promise<void>
 
 // Buses
 export const fetchBuses = async (): Promise<Bus[]> => {
-    const response = await apiClient.get<Bus[]>("/buses");
-    return response.data;
+    const response = await apiClient.get<{ content: Bus[] } | Bus[]>("/buses");
+    // Handle Spring Data Page response
+    if (response.data && 'content' in response.data) {
+        return (response.data as { content: Bus[] }).content;
+    }
+    // Fallback if it returns a list directly
+    return Array.isArray(response.data) ? response.data : [];
 };
 
 export const createBus = async (data: CreateBusRequest): Promise<Bus> => {
@@ -79,8 +96,13 @@ export const deleteBus = async (id: string, force?: boolean): Promise<void> => {
 
 // Routes
 export const fetchRoutes = async (): Promise<Route[]> => {
-    const response = await apiClient.get<Route[]>("/routes");
-    return response.data;
+    const response = await apiClient.get<{ content: Route[] } | Route[]>("/routes");
+    // Handle Spring Data Page response
+    if (response.data && 'content' in response.data) {
+        return (response.data as { content: Route[] }).content;
+    }
+    // Fallback if it returns a list directly
+    return Array.isArray(response.data) ? response.data : [];
 };
 
 export const createRoute = async (data: CreateRouteRequest): Promise<Route> => {
@@ -99,7 +121,17 @@ export const deleteRoute = async (id: string, force?: boolean): Promise<void> =>
 
 // Trips
 export const fetchTrips = async (): Promise<Trip[]> => {
-    const response = await apiClient.get<Trip[]>("/trips");
+    const response = await apiClient.get<{ content: Trip[] } | Trip[]>("/trips");
+    // Handle Spring Data Page response
+    if (response.data && 'content' in response.data) {
+        return (response.data as { content: Trip[] }).content;
+    }
+    // Fallback if it returns a list directly
+    return Array.isArray(response.data) ? response.data : [];
+};
+
+export const getTripById = async (id: string): Promise<Trip> => {
+    const response = await apiClient.get<Trip>(`/trips/${id}`);
     return response.data;
 };
 

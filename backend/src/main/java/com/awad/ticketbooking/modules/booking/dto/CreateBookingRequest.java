@@ -1,23 +1,23 @@
 package com.awad.ticketbooking.modules.booking.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Email;
 import lombok.Data;
 
 import java.math.BigDecimal;
 import java.util.UUID;
+import java.util.List;
 
 @Data
 public class CreateBookingRequest {
     @NotNull(message = "Trip ID is required")
     private UUID tripId;
 
-    @NotNull(message = "User ID is required")
+    // Optional - can be null for guest bookings
     private UUID userId;
-
-    @NotBlank(message = "Seat number is required")
-    private String seatNumber;
 
     @NotBlank(message = "Passenger name is required")
     private String passengerName;
@@ -25,7 +25,14 @@ public class CreateBookingRequest {
     @NotBlank(message = "Passenger phone is required")
     private String passengerPhone;
 
+    // Email for guest users (optional if logged in)
+    @Email(message = "Invalid email format")
+    private String passengerEmail;
+
     @NotNull(message = "Total price is required")
     @Positive(message = "Total price must be positive")
     private BigDecimal totalPrice;
+
+    @NotEmpty(message = "At least one ticket is required")
+    private List<TicketRequest> tickets;
 }

@@ -9,6 +9,8 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "bookings")
@@ -21,11 +23,11 @@ public class Booking extends BaseEntity {
     private Trip trip;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "user_id", nullable = true)
     private User user;
 
-    @Column(name = "seat_number", nullable = false)
-    private String seatNumber;
+    @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Ticket> tickets = new ArrayList<>();
 
     @Column(name = "total_price", nullable = false)
     private BigDecimal totalPrice;
@@ -39,4 +41,10 @@ public class Booking extends BaseEntity {
 
     @Column(name = "passenger_phone", nullable = false)
     private String passengerPhone;
+
+    @Column(name = "passenger_email")
+    private String passengerEmail;
+
+    @Column(name = "code", unique = true, nullable = false)
+    private String code;
 }

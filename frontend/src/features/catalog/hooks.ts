@@ -10,6 +10,7 @@ import {
     fetchStations,
     fetchRoutes,
     fetchTrips,
+    getTripById,
     searchTrips,
     updateBus,
     deleteBus,
@@ -195,6 +196,14 @@ export const useTrips = () => {
     });
 };
 
+export const useTripById = (id: string | undefined) => {
+    return useQuery({
+        queryKey: ["trip", id],
+        queryFn: () => getTripById(id!),
+        enabled: !!id,
+    });
+};
+
 export const useCreateTrip = () => {
     const queryClient = useQueryClient();
     return useMutation({
@@ -234,3 +243,4 @@ export const useSearchTrips = (params: SearchTripRequest) => {
         enabled: !!params.origin && !!params.destination && !!params.date,
     });
 };
+

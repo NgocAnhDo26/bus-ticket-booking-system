@@ -27,8 +27,9 @@ public class OperatorService {
     }
 
     @Transactional(readOnly = true)
-    public List<Operator> getAllOperators() {
-        return operatorRepository.findAll();
+    public org.springframework.data.domain.Page<Operator> getAllOperators(
+            org.springframework.data.domain.Pageable pageable) {
+        return operatorRepository.findAll(pageable);
     }
 
     @Transactional

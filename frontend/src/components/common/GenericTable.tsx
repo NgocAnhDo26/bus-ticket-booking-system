@@ -5,9 +5,17 @@ import {
   ChevronsLeft,
   ChevronsRight,
   ArrowUpDown,
+  ArrowDown,
+  ArrowUp,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Combobox } from "@/components/ui/combobox";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -72,7 +80,7 @@ export function GenericTable<TData>({
               {columns.map((col) => (
                 <TableHead
                   key={col.key as string}
-                  className={`h-12 px-4 text-left align-middle font-medium text-slate-500 [&:has([role=checkbox])]:pr-0 ${
+                  className={`h-12 pr-4 text-left text-md align-middle font-medium text-slate-500 [&:has([role=checkbox])]:pr-0 ${
                     col.className || ""
                   }`}
                 >
@@ -80,15 +88,16 @@ export function GenericTable<TData>({
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="-ml-3 h-8 data-[state=open]:bg-accent"
+                      className="-ml-3 h-8 data-[state=open]:bg-accent font-medium text-md"
                       onClick={() => onSort(col.key as string)}
                     >
                       {col.header}
-                      <ArrowUpDown className="ml-2 h-4 w-4" />
-                      {sorting.key === col.key && (
-                        <span className="ml-1 text-xs text-slate-400">
-                          ({sorting.direction.toUpperCase()})
-                        </span>
+                      {sorting.key !== col.key ? (
+                        <ArrowUpDown />
+                      ) : sorting.direction === "asc" ? (
+                        <ArrowUp/>
+                      ) : (
+                        <ArrowDown/>
                       )}
                     </Button>
                   ) : (
@@ -105,7 +114,7 @@ export function GenericTable<TData>({
                   colSpan={columns.length}
                   className="p-4 text-center h-24 text-slate-500"
                 >
-                  Refreshing...
+                  Đang tải dữ liệu...
                 </TableCell>
               </TableRow>
             ) : data.length > 0 ? (
@@ -134,7 +143,7 @@ export function GenericTable<TData>({
                   colSpan={columns.length}
                   className="h-24 text-center align-middle text-slate-500"
                 >
-                  No results.
+                  Không có kết quả.
                 </TableCell>
               </TableRow>
             )}
@@ -144,28 +153,33 @@ export function GenericTable<TData>({
 
       <div className="flex items-center justify-between px-2">
         <div className="flex-1 text-sm text-slate-500 hidden md:block">
-          Showing {(meta.page - 1) * meta.pageSize + 1} to{" "}
-          {Math.min(meta.page * meta.pageSize, meta.total)} of {meta.total}{" "}
-          entries
+          Đang xem {(meta.page - 1) * meta.pageSize + 1} -{" "}
+          {Math.min(meta.page * meta.pageSize, meta.total)} trong tổng{" "}
+          {meta.total} dữ liệu
         </div>
         <div className="flex items-center space-x-6 lg:space-x-8">
           <div className="flex items-center space-x-2">
-            <p className="text-sm font-medium">Rows per page</p>
+            <p className="text-sm font-medium">Số dòng trên trang</p>
             <div className="w-[70px]">
-              <Combobox
+              <Select
                 value={String(pageSize)}
-                onSelect={(val) => onPageSizeChange(Number(val))}
-                options={[
-                  { label: "5", value: "5" },
-                  { label: "10", value: "10" },
-                  { label: "20", value: "20" },
-                  { label: "50", value: "50" },
-                ]}
-              />
+                onValueChange={(val) => onPageSizeChange(Number(val))}
+              >
+                <SelectTrigger className="h-8 w-full">
+                  <SelectValue placeholder={String(pageSize)} />
+                </SelectTrigger>
+                <SelectContent side="top">
+                  {[5, 10, 20, 50].map((size) => (
+                    <SelectItem key={size} value={String(size)}>
+                      {size}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
           <div className="flex w-[100px] items-center justify-center text-sm font-medium">
-            Page {meta.page} of {meta.totalPages}
+            Trang {meta.page} / {meta.totalPages}
           </div>
           <div className="flex items-center space-x-2">
             <Button

@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
 
+import jakarta.validation.Valid;
+
 @RestController
 @RequestMapping("/api/trips")
 @RequiredArgsConstructor
@@ -24,8 +26,8 @@ public class TripController {
     }
 
     @GetMapping
-    public ResponseEntity<java.util.List<TripResponse>> getAllTrips() {
-        return ResponseEntity.ok(tripService.getAllTrips());
+    public ResponseEntity<Page<TripResponse>> getAllTrips(org.springframework.data.domain.Pageable pageable) {
+        return ResponseEntity.ok(tripService.getAllTrips(pageable));
     }
 
     @GetMapping("/{id}")
@@ -34,12 +36,13 @@ public class TripController {
     }
 
     @PostMapping
-    public ResponseEntity<TripResponse> createTrip(@RequestBody CreateTripRequest request) {
+    public ResponseEntity<TripResponse> createTrip(@RequestBody @Valid CreateTripRequest request) {
         return ResponseEntity.ok(tripService.createTrip(request));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<TripResponse> updateTrip(@PathVariable UUID id, @RequestBody CreateTripRequest request) {
+    public ResponseEntity<TripResponse> updateTrip(@PathVariable UUID id,
+            @RequestBody @Valid CreateTripRequest request) {
         return ResponseEntity.ok(tripService.updateTrip(id, request));
     }
 

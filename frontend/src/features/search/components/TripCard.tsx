@@ -56,7 +56,7 @@ export const TripCard = ({ trip, onSelect }: TripCardProps) => {
                     <span className="text-sm font-medium">{trip.bus.operator.name}</span>
                 </div>
                 <Badge className="text-xs">
-                    {trip.bus.capacity} chỗ
+                    {trip.bus.totalSeats} chỗ
                 </Badge>
             </div>
           </div>

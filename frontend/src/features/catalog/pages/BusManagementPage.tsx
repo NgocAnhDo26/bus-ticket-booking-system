@@ -54,8 +54,8 @@ const AMENITIES_LIST = [
 
 const formSchema = z.object({
   plateNumber: z.string().min(1, "Biển số xe là bắt buộc"),
-  capacity: z.number().min(1, "Sức chứa phải lớn hơn 0"),
   operatorId: z.string().min(1, "Vui lòng chọn nhà xe"),
+  busLayoutId: z.string().min(1, "Vui lòng nhập layout ID"),
   amenities: z.array(z.string()),
 });
 
@@ -83,8 +83,8 @@ export const BusManagementPage = () => {
     resolver: zodResolver(formSchema),
     defaultValues: {
       plateNumber: "",
-      capacity: 40,
       operatorId: "",
+      busLayoutId: "",
       amenities: [],
     },
   });
@@ -128,8 +128,8 @@ export const BusManagementPage = () => {
     setEditingBus(bus);
     reset({
       plateNumber: bus.plateNumber,
-      capacity: bus.capacity,
       operatorId: bus.operator.id,
+      busLayoutId: bus.busLayout.id,
       amenities: bus.amenities || [],
     });
     setIsOpen(true);
@@ -234,10 +234,10 @@ export const BusManagementPage = () => {
         cell: (bus) => bus.operator?.name ?? "-",
       },
       {
-        key: "capacity",
-        header: "Sức chứa",
+        key: "busLayout",
+        header: "Số ghế",
         sortable: true,
-        cell: (bus) => <span>{bus.capacity} ghế</span>,
+        cell: (bus) => <span>{bus.busLayout?.totalSeats ?? "-"} ghế</span>,
       },
       {
         key: "amenities",
@@ -297,7 +297,7 @@ export const BusManagementPage = () => {
   );
 
   return (
-    <div className="flex flex-col gap-4 p-4">
+    <div className="flex flex-col gap-8 p-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold tracking-tight">Quản lý Xe</h1>
         <Sheet open={isOpen} onOpenChange={(open) => {
@@ -306,8 +306,8 @@ export const BusManagementPage = () => {
             setEditingBus(null);
             reset({
               plateNumber: "",
-              capacity: 40,
               operatorId: "",
+              busLayoutId: "",
               amenities: [],
             });
           }
@@ -336,12 +336,13 @@ export const BusManagementPage = () => {
                   />
                 </FormField>
                 <FormField
-                  label="Sức chứa (ghế)"
-                  error={errors.capacity?.message}
+                  label="Layout ID"
+                  hint="Nhập UUID của layout đã tạo"
+                  error={errors.busLayoutId?.message}
                 >
                   <Input
-                    type="number"
-                    {...register("capacity", { valueAsNumber: true })}
+                    placeholder="Layout UUID"
+                    {...register("busLayoutId")}
                   />
                 </FormField>
                 <FormField label="Nhà xe" error={errors.operatorId?.message}>

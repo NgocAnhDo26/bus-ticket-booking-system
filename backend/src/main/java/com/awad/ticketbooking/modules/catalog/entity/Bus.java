@@ -25,11 +25,12 @@ public class Bus {
     @JoinColumn(name = "operator_id", nullable = false)
     private Operator operator;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "bus_layout_id", nullable = false)
+    private BusLayout busLayout;
+
     @Column(name = "plate_number", nullable = false, unique = true)
     private String plateNumber;
-
-    @Column(nullable = false)
-    private Integer capacity;
 
     @Column(columnDefinition = "JSONB")
     @Convert(converter = StringListConverter.class)

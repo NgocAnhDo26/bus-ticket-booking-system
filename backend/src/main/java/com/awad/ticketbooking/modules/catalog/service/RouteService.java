@@ -34,10 +34,10 @@ public class RouteService {
         }
 
         @Transactional(readOnly = true)
-        public List<com.awad.ticketbooking.modules.catalog.dto.RouteResponse> getAllRoutes() {
-                return routeRepository.findAll().stream()
-                                .map(this::mapToRouteResponse)
-                                .collect(java.util.stream.Collectors.toList());
+        public org.springframework.data.domain.Page<com.awad.ticketbooking.modules.catalog.dto.RouteResponse> getAllRoutes(
+                        org.springframework.data.domain.Pageable pageable) {
+                return routeRepository.findAll(pageable)
+                                .map(this::mapToRouteResponse);
         }
 
         private com.awad.ticketbooking.modules.catalog.dto.RouteResponse mapToRouteResponse(Route route) {

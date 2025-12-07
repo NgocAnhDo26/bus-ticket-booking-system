@@ -40,6 +40,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/actuator/**").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/ws/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/health").permitAll()
                         .requestMatchers("/api/trips/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/routes/**").permitAll()
@@ -48,6 +49,22 @@ public class SecurityConfig {
                         .requestMatchers("/api/buses/**").permitAll()
                         .requestMatchers("/api/stations/**").permitAll()
                         .requestMatchers("/api/admin/**").permitAll()
+
+                        // Bus Layouts
+                        .requestMatchers(HttpMethod.GET, "/api/bus-layouts/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/bus-layouts/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/bus-layouts/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/bus-layouts/**").hasRole("ADMIN")
+
+                        // Bookings
+                        .requestMatchers("/api/bookings/seats/**").permitAll() // Lock/Unlock/View seats
+                        .requestMatchers(HttpMethod.GET, "/api/bookings/**").permitAll() // View booking details
+                                                                                         // (confirmation)
+                        .requestMatchers(HttpMethod.POST, "/api/bookings").permitAll() // Create booking
+                        .requestMatchers(HttpMethod.POST, "/api/bookings/lookup").permitAll() // Lookup booking
+                        .requestMatchers(HttpMethod.PUT, "/api/bookings/*/confirm").permitAll() // Confirm booking (pay)
+                        .requestMatchers(HttpMethod.PUT, "/api/bookings/*/cancel").permitAll() // Cancel booking
+
                         .requestMatchers(HttpMethod.PUT, "/api/routes/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/routes/**").hasRole("ADMIN")
                         .anyRequest().authenticated())

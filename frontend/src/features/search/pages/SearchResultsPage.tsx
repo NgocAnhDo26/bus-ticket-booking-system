@@ -5,13 +5,10 @@ import { TripCard } from "../components/TripCard";
 import { FilterSidebar } from "../components/FilterSidebar";
 import type { Trip } from "@/features/catalog/types";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useAuthStore } from "@/store/auth-store";
-import { toast } from "@/hooks/use-toast";
 
 export const SearchResultsPage = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { user } = useAuthStore();
   
   const origin = searchParams.get("origin") || undefined;
   const destination = searchParams.get("destination") || undefined;
@@ -34,18 +31,7 @@ export const SearchResultsPage = () => {
   });
 
   const handleSelectTrip = (trip: Trip) => {
-    if (!user) {
-        toast({
-            title: "Vui lòng đăng nhập",
-            description: "Bạn cần đăng nhập để đặt vé.",
-            variant: "destructive",
-        });
-        navigate("/login", { state: { from: `/search?${searchParams.toString()}` } });
-        return;
-    }
-    // Navigate to booking page (to be implemented)
-    // For now, just show a toast or log
-    console.log("Selected trip:", trip);
+    // Allow guests to proceed to booking page
     navigate(`/booking/${trip.id}`);
   };
 

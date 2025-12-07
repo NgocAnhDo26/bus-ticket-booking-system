@@ -12,6 +12,10 @@ import {
   RouteManagementPage,
   TripManagementPage,
 } from "@/features/catalog";
+import {
+  BusLayoutCreatePage,
+  BusLayoutManagementPage,
+} from "@/features/bus-layout";
 import { PublicRoute, ProtectedRoute } from "@/components/common";
 import { useAuthStore } from "@/store/auth-store";
 import { useHydrateAuth } from "@/features/auth/hooks";
@@ -25,13 +29,12 @@ const AuthenticatedRedirect = () => {
   useHydrateAuth();
 
   useEffect(() => {
-    // Small delay to allow hydration to complete if token exists
     const timer = setTimeout(() => setIsHydrating(false), 100);
     return () => clearTimeout(timer);
   }, []);
 
   if (isHydrating && token && !user) {
-    return null; // Show nothing while hydrating user
+    return null;
   }
 
   if (!token) {
@@ -39,12 +42,7 @@ const AuthenticatedRedirect = () => {
   }
 
   if (!user) {
-    // If token exists but user is still null after hydration attempt, redirect to login
-    // Or potentially wait longer? But for now, let's assume if hydration failed, user is null.
-    // However, useHydrateAuth fetches user asynchronously.
-    // Better approach: useHydrateAuth should expose loading state or we check query status.
-    // For now, let's rely on the token check. If token exists, we expect user to be there eventually.
-    return null; 
+    return null;
   }
 
   return <Navigate to={getDashboardPath(user.role)} replace />;
@@ -52,8 +50,9 @@ const AuthenticatedRedirect = () => {
 
 import { HomePage } from "@/features/home/pages/HomePage";
 import { SearchResultsPage } from "@/features/search/pages/SearchResultsPage";
-
-// ... existing imports
+import { BookingPage, PassengerInfoPage, BookingLookupPage } from "@/features/booking";
+import { BookingConfirmationPage } from "@/features/booking/pages/BookingConfirmationPage";
+import { BookingHistoryPage } from "@/features/booking/pages/BookingHistoryPage";
 
 export const router = createBrowserRouter([
   {
@@ -68,9 +67,26 @@ export const router = createBrowserRouter([
         element: <SearchResultsPage />,
       },
       {
+        path: "/booking/:tripId",
+        element: <BookingPage />,
+      },
+      {
+        path: "/booking/:tripId/details",
+        element: <PassengerInfoPage />,
+      },
+      {
+        path: "/booking/confirmation/:bookingId",
+        element: <BookingConfirmationPage />,
+      },
+      {
+        path: "/booking/lookup",
+        element: <BookingLookupPage />,
+      },
+      {
         element: <ProtectedRoute allowedRoles={["PASSENGER"]} />,
         children: [
           { path: "/dashboard", element: <DashboardPage /> },
+          { path: "/dashboard/bookings", element: <BookingHistoryPage /> },
           {
             path: "/dashboard/*",
             element: <Navigate to="/dashboard" replace />,
@@ -109,6 +125,18 @@ export const router = createBrowserRouter([
           {
             path: "/admin/catalog/trips",
             element: <TripManagementPage />,
+          },
+          {
+            path: "/admin/catalog/layouts",
+            element: <BusLayoutManagementPage />,
+          },
+          {
+            path: "/admin/catalog/layouts/create",
+            element: <BusLayoutCreatePage />,
+          },
+          {
+            path: "/admin/catalog/layouts/edit/:id",
+            element: <BusLayoutCreatePage />,
           },
           {
             path: "/admin",

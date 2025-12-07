@@ -29,6 +29,7 @@ import {
 import { useTheme } from "./theme-provider";
 import { useAuthStore } from "@/store/auth-store";
 import { useNavigate } from "react-router-dom";
+import { logout } from "@/features/auth/api";
 
 export function NavUser({
   user,
@@ -44,9 +45,15 @@ export function NavUser({
   const theme = useTheme();
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    clearAuth();
-    navigate("/login");
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (error) {
+      console.error("Logout failed:", error);
+    } finally {
+      clearAuth();
+      navigate("/login");
+    }
   };
 
   return (

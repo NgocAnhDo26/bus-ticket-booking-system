@@ -27,8 +27,10 @@ public class StationService {
         return stationRepository.save(station);
     }
 
-    public List<Station> getAllStations() {
-        return stationRepository.findAll();
+    @Transactional(readOnly = true)
+    public org.springframework.data.domain.Page<Station> getAllStations(
+            org.springframework.data.domain.Pageable pageable) {
+        return stationRepository.findAll(pageable);
     }
 
     @Transactional

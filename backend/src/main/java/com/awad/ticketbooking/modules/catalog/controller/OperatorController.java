@@ -23,8 +23,9 @@ public class OperatorController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Operator>> getAllOperators() {
-        return ResponseEntity.ok(operatorService.getAllOperators());
+    public ResponseEntity<org.springframework.data.domain.Page<Operator>> getAllOperators(
+            org.springframework.data.domain.Pageable pageable) {
+        return ResponseEntity.ok(operatorService.getAllOperators(pageable));
     }
 
     @PutMapping("/{id}")

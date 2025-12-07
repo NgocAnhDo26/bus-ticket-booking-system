@@ -6,7 +6,9 @@ export const AdminDashboardLayout = () => (
   <SidebarProvider>
     <AdminDashboardSidebar />
     <SidebarInset>
-      <Outlet />
+      <section className="pt-6 p-4">
+        <Outlet />
+      </section>
     </SidebarInset>
   </SidebarProvider>
 );

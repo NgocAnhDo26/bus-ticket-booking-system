@@ -1,56 +1,265 @@
 package com.awad.ticketbooking.modules.booking.service;
 
 import com.awad.ticketbooking.common.enums.BookingStatus;
+import com.awad.ticketbooking.common.service.EmailService;
 import com.awad.ticketbooking.modules.auth.entity.User;
 import com.awad.ticketbooking.modules.auth.repository.UserRepository;
+import com.awad.ticketbooking.modules.booking.dto.BookingResponse;
 import com.awad.ticketbooking.modules.booking.dto.CreateBookingRequest;
+import com.awad.ticketbooking.modules.booking.dto.TicketRequest;
 import com.awad.ticketbooking.modules.booking.entity.Booking;
+import com.awad.ticketbooking.modules.booking.entity.Ticket;
 import com.awad.ticketbooking.modules.booking.repository.BookingRepository;
+import com.awad.ticketbooking.modules.booking.repository.TicketRepository;
 import com.awad.ticketbooking.modules.trip.entity.Trip;
 import com.awad.ticketbooking.modules.trip.repository.TripRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class BookingService {
 
-    private final BookingRepository bookingRepository;
-    private final TripRepository tripRepository;
-    private final UserRepository userRepository;
+        private final BookingRepository bookingRepository;
+        private final TripRepository tripRepository;
+        private final UserRepository userRepository;
+        private final TicketRepository ticketRepository;
+        private final EmailService emailService;
 
-    @Transactional
-    public Booking createBooking(CreateBookingRequest request) {
-        Trip trip = tripRepository.findById(request.getTripId())
-                .orElseThrow(() -> new RuntimeException("Trip not found"));
+        @Transactional
+        public BookingResponse createBooking(CreateBookingRequest request) {
+                Trip trip = tripRepository.findById(request.getTripId())
+                                .orElseThrow(() -> new RuntimeException("Trip not found"));
 
-        User user = userRepository.findById(request.getUserId())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                // User is optional - can be null for guest bookings
+                User user = null;
+                if (request.getUserId() != null) {
+                        user = userRepository.findById(request.getUserId()).orElse(null);
+                }
 
-        // Basic validation: Check if seat is already booked (simplified)
-        // In real app, check against existing bookings for this trip and seat
+                // Validate seats are not already booked
+                List<String> bookedSeats = ticketRepository.findBookedSeatCodesByTripId(request.getTripId());
+                List<String> requestedSeats = request.getTickets().stream()
+                                .map(TicketRequest::getSeatCode)
+                                .collect(Collectors.toList());
 
-        Booking booking = new Booking();
-        booking.setTrip(trip);
-        booking.setUser(user);
-        booking.setSeatNumber(request.getSeatNumber());
-        booking.setPassengerName(request.getPassengerName());
-        booking.setPassengerPhone(request.getPassengerPhone());
-        booking.setTotalPrice(request.getTotalPrice()); // Should be calculated from TripPricing
-        booking.setStatus(BookingStatus.PENDING);
+                for (String seatCode : requestedSeats) {
+                        if (bookedSeats.contains(seatCode)) {
+                                throw new RuntimeException("Seat " + seatCode + " is already booked");
+                        }
+                }
 
-        return bookingRepository.save(booking);
-    }
+                Booking booking = new Booking();
+                booking.setTrip(trip);
+                booking.setUser(user); // Can be null for guest
+                booking.setPassengerName(request.getPassengerName());
+                booking.setPassengerPhone(request.getPassengerPhone());
+                booking.setPassengerEmail(request.getPassengerEmail());
+                booking.setStatus(BookingStatus.PENDING);
 
-    @Transactional
-    public Booking confirmBooking(UUID bookingId) {
-        Booking booking = bookingRepository.findById(bookingId)
-                .orElseThrow(() -> new RuntimeException("Booking not found"));
-        booking.setStatus(BookingStatus.CONFIRMED);
-        return bookingRepository.save(booking);
-    }
+                // Generate unique booking code with retry
+                String bookingCode = generateBookingCode();
+                int maxRetries = 5;
+                while (bookingRepository.findByCode(bookingCode).isPresent() && maxRetries > 0) {
+                        bookingCode = generateBookingCode();
+                        maxRetries--;
+                }
+                if (maxRetries == 0) {
+                        throw new RuntimeException("Failed to generate unique booking code. Please try again.");
+                }
+                booking.setCode(bookingCode);
+
+                booking.setTickets(request.getTickets().stream()
+                                .map(ticketReq -> mapTicket(ticketReq, booking))
+                                .collect(Collectors.toList()));
+
+                BigDecimal calculatedTotal = booking.getTickets().stream()
+                                .map(Ticket::getPrice)
+                                .reduce(BigDecimal.ZERO, BigDecimal::add);
+                booking.setTotalPrice(calculatedTotal);
+
+                Booking savedBooking = bookingRepository.save(booking);
+
+                return toBookingResponse(savedBooking);
+        }
+
+        private String generateBookingCode() {
+                String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+                StringBuilder code = new StringBuilder("BK-");
+                java.util.Random rnd = new java.util.Random();
+                for (int i = 0; i < 6; i++) {
+                        code.append(chars.charAt(rnd.nextInt(chars.length())));
+                }
+                return code.toString();
+        }
+
+        @Transactional(readOnly = true)
+        public BookingResponse lookupBooking(String code, String email) {
+                Booking booking = bookingRepository.findByCode(code)
+                                .orElseThrow(() -> new RuntimeException("Booking not found"));
+
+                // Check if email matches either user email or passenger email (if stored
+                // separately)
+                // For now, checking against user email if exists, or just assuming passenger
+                // email is stored?
+                // Wait, Booking entity has passengerEmail, let's use that first.
+                String bookingEmail = booking.getPassengerEmail();
+                if (bookingEmail == null && booking.getUser() != null) {
+                        bookingEmail = booking.getUser().getEmail();
+                }
+
+                if (bookingEmail == null || !bookingEmail.equalsIgnoreCase(email)) {
+                        throw new RuntimeException("Booking not found or email does not match");
+                }
+
+                return toBookingResponse(booking);
+        }
+
+        @Transactional(readOnly = true)
+        public BookingResponse getBookingById(UUID bookingId) {
+                Booking booking = bookingRepository.findById(bookingId)
+                                .orElseThrow(() -> new RuntimeException("Booking not found"));
+                return toBookingResponse(booking);
+        }
+
+        @Transactional(readOnly = true)
+        public Page<BookingResponse> getUserBookings(UUID userId, Pageable pageable) {
+                return bookingRepository.findByUserIdOrderByCreatedAtDesc(userId, pageable)
+                                .map(this::toBookingResponse);
+        }
+
+        @Transactional(readOnly = true)
+        public List<String> getBookedSeatsForTrip(UUID tripId) {
+                return ticketRepository.findBookedSeatCodesByTripId(tripId);
+        }
+
+        public BookingResponse confirmBooking(UUID bookingId) {
+                Booking booking = bookingRepository.findById(bookingId)
+                                .orElseThrow(() -> new RuntimeException("Booking not found"));
+
+                if (booking.getStatus() != BookingStatus.PENDING) {
+                        throw new RuntimeException("Only pending bookings can be confirmed");
+                }
+
+                booking.setStatus(BookingStatus.CONFIRMED);
+                Booking savedBooking = bookingRepository.save(booking);
+
+                // Determine email for confirmation
+                String recipientEmail = booking.getPassengerEmail();
+                if (recipientEmail == null && booking.getUser() != null) {
+                        recipientEmail = booking.getUser().getEmail();
+                }
+
+                // Send confirmation email if we have an email
+                if (recipientEmail != null && !recipientEmail.isBlank()) {
+                        Booking bookingForEmail = bookingRepository.findByIdWithFullDetails(savedBooking.getId())
+                                        .orElse(savedBooking);
+                        emailService.sendBookingConfirmationEmail(bookingForEmail, recipientEmail);
+                }
+
+                return toBookingResponse(savedBooking);
+        }
+
+        @Transactional
+        public BookingResponse cancelBooking(UUID bookingId) {
+                Booking booking = bookingRepository.findById(bookingId)
+                                .orElseThrow(() -> new RuntimeException("Booking not found"));
+
+                if (booking.getStatus() == BookingStatus.CANCELLED) {
+                        throw new RuntimeException("Booking is already cancelled");
+                }
+
+                if (booking.getStatus() == BookingStatus.CONFIRMED) {
+                        // Check if trip hasn't departed yet
+                        if (booking.getTrip().getDepartureTime().isBefore(java.time.Instant.now())) {
+                                throw new RuntimeException("Cannot cancel booking for departed trip");
+                        }
+                }
+
+                booking.setStatus(BookingStatus.CANCELLED);
+                return toBookingResponse(bookingRepository.save(booking));
+        }
+
+        private Ticket mapTicket(TicketRequest ticketReq, Booking booking) {
+                Ticket ticket = new Ticket();
+                ticket.setBooking(booking);
+                ticket.setSeatCode(ticketReq.getSeatCode());
+                ticket.setPassengerName(ticketReq.getPassengerName());
+                ticket.setPassengerPhone(ticketReq.getPassengerPhone());
+                ticket.setPrice(ticketReq.getPrice());
+                return ticket;
+        }
+
+        private BookingResponse toBookingResponse(Booking booking) {
+                Trip trip = booking.getTrip();
+
+                return BookingResponse.builder()
+                                .id(booking.getId())
+                                .code(booking.getCode())
+                                .status(booking.getStatus())
+                                .totalPrice(booking.getTotalPrice())
+                                .passengerName(booking.getPassengerName())
+                                .passengerPhone(booking.getPassengerPhone())
+                                .createdAt(booking.getCreatedAt())
+                                .updatedAt(booking.getUpdatedAt())
+                                .trip(BookingResponse.TripInfo.builder()
+                                                .id(trip.getId())
+                                                .departureTime(trip.getDepartureTime())
+                                                .arrivalTime(trip.getArrivalTime())
+                                                .route(BookingResponse.RouteInfo.builder()
+                                                                .id(trip.getRoute().getId())
+                                                                .originStation(BookingResponse.StationInfo.builder()
+                                                                                .id(trip.getRoute().getOriginStation()
+                                                                                                .getId())
+                                                                                .name(trip.getRoute().getOriginStation()
+                                                                                                .getName())
+                                                                                .city(trip.getRoute().getOriginStation()
+                                                                                                .getCity())
+                                                                                .address(trip.getRoute()
+                                                                                                .getOriginStation()
+                                                                                                .getAddress())
+                                                                                .build())
+                                                                .destinationStation(BookingResponse.StationInfo
+                                                                                .builder()
+                                                                                .id(trip.getRoute()
+                                                                                                .getDestinationStation()
+                                                                                                .getId())
+                                                                                .name(trip.getRoute()
+                                                                                                .getDestinationStation()
+                                                                                                .getName())
+                                                                                .city(trip.getRoute()
+                                                                                                .getDestinationStation()
+                                                                                                .getCity())
+                                                                                .address(trip.getRoute()
+                                                                                                .getDestinationStation()
+                                                                                                .getAddress())
+                                                                                .build())
+                                                                .durationMinutes(trip.getRoute().getDurationMinutes())
+                                                                .build())
+                                                .bus(BookingResponse.BusInfo.builder()
+                                                                .id(trip.getBus().getId())
+                                                                .plateNumber(trip.getBus().getPlateNumber())
+                                                                .operatorName(trip.getBus().getOperator().getName())
+                                                                .amenities(trip.getBus().getAmenities())
+                                                                .build())
+                                                .build())
+                                .tickets(booking.getTickets().stream()
+                                                .map(ticket -> BookingResponse.TicketInfo.builder()
+                                                                .id(ticket.getId())
+                                                                .seatCode(ticket.getSeatCode())
+                                                                .passengerName(ticket.getPassengerName())
+                                                                .passengerPhone(ticket.getPassengerPhone())
+                                                                .price(ticket.getPrice())
+                                                                .build())
+                                                .collect(Collectors.toList()))
+                                .build();
+        }
 }

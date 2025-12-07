@@ -2,7 +2,6 @@ package com.awad.ticketbooking.modules.booking.repository;
 
 import com.awad.ticketbooking.common.enums.BookingStatus;
 import com.awad.ticketbooking.modules.booking.entity.Booking;
-import com.awad.ticketbooking.modules.catalog.entity.Route;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -12,9 +11,15 @@ import org.springframework.stereotype.Repository;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface BookingRepository extends JpaRepository<Booking, java.util.UUID> {
+
+        org.springframework.data.domain.Page<Booking> findByUserIdOrderByCreatedAtDesc(java.util.UUID userId,
+                        org.springframework.data.domain.Pageable pageable);
+
+        Optional<Booking> findByCode(String code);
 
         @Query("SELECT SUM(b.totalPrice) FROM Booking b WHERE b.createdAt BETWEEN :start AND :end AND b.status = :status")
         BigDecimal sumTotalPriceByCreatedAtBetweenAndStatus(@Param("start") Instant start, @Param("end") Instant end,
@@ -51,4 +56,26 @@ public interface BookingRepository extends JpaRepository<Booking, java.util.UUID
         List<Booking> findRecentBookingsByUser(@Param("email") String email, Pageable pageable);
 
         void deleteByTripId(java.util.UUID tripId);
+
+        boolean existsByTripId(java.util.UUID tripId);
+
+        boolean existsByTripIdAndTicketsSeatCodeAndStatusNot(java.util.UUID tripId, String seatCode,
+                        BookingStatus status);
+
+        List<Booking> findAllByTripIdAndStatusNot(java.util.UUID tripId, BookingStatus status);
+
+        // For Scheduler
+        @Query("SELECT b FROM Booking b WHERE b.status = 'PENDING' AND b.createdAt < :cutoffTime")
+        List<Booking> findExpiredPendingBookings(@Param("cutoffTime") Instant cutoffTime);
+
+        @Query("SELECT b FROM Booking b " +
+                        "JOIN FETCH b.trip t " +
+                        "JOIN FETCH t.route r " +
+                        "JOIN FETCH r.originStation " +
+                        "JOIN FETCH r.destinationStation " +
+                        "JOIN FETCH t.bus bus " +
+                        "JOIN FETCH bus.operator " +
+                        "LEFT JOIN FETCH b.tickets " +
+                        "WHERE b.id = :bookingId")
+        Optional<Booking> findByIdWithFullDetails(@Param("bookingId") java.util.UUID bookingId);
 }

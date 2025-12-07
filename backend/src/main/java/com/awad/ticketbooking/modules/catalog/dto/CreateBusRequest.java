@@ -1,6 +1,5 @@
 package com.awad.ticketbooking.modules.catalog.dto;
 
-import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
@@ -13,12 +12,11 @@ public class CreateBusRequest {
     @NotNull
     private UUID operatorId;
 
+    @NotNull
+    private UUID busLayoutId;
+
     @NotBlank
     private String plateNumber;
-
-    @NotNull
-    @Min(1)
-    private Integer capacity;
 
     private List<String> amenities;
 }
