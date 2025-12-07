@@ -24,8 +24,8 @@ public class TripController {
     }
 
     @GetMapping
-    public ResponseEntity<java.util.List<TripResponse>> getAllTrips() {
-        return ResponseEntity.ok(tripService.getAllTrips());
+    public ResponseEntity<Page<TripResponse>> getAllTrips(org.springframework.data.domain.Pageable pageable) {
+        return ResponseEntity.ok(tripService.getAllTrips(pageable));
     }
 
     @GetMapping("/{id}")

@@ -26,7 +26,8 @@ public class BusService {
     public Bus createBus(CreateBusRequest request) {
         Operator operator = operatorRepository.findById(request.getOperatorId())
                 .orElseThrow(() -> new RuntimeException("Operator not found"));
-        com.awad.ticketbooking.modules.catalog.entity.BusLayout busLayout = busLayoutRepository.findById(request.getBusLayoutId())
+        com.awad.ticketbooking.modules.catalog.entity.BusLayout busLayout = busLayoutRepository
+                .findById(request.getBusLayoutId())
                 .orElseThrow(() -> new RuntimeException("Bus layout not found"));
 
         Bus bus = new Bus();
@@ -45,7 +46,8 @@ public class BusService {
 
         Operator operator = operatorRepository.findById(request.getOperatorId())
                 .orElseThrow(() -> new RuntimeException("Operator not found"));
-        com.awad.ticketbooking.modules.catalog.entity.BusLayout busLayout = busLayoutRepository.findById(request.getBusLayoutId())
+        com.awad.ticketbooking.modules.catalog.entity.BusLayout busLayout = busLayoutRepository
+                .findById(request.getBusLayoutId())
                 .orElseThrow(() -> new RuntimeException("Bus layout not found"));
 
         bus.setOperator(operator);
@@ -72,7 +74,7 @@ public class BusService {
     }
 
     @Transactional(readOnly = true)
-    public List<Bus> getAllBuses() {
-        return busRepository.findAll();
+    public org.springframework.data.domain.Page<Bus> getAllBuses(org.springframework.data.domain.Pageable pageable) {
+        return busRepository.findAll(pageable);
     }
 }

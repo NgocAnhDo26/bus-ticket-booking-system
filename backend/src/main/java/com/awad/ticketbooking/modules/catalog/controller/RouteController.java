@@ -24,8 +24,9 @@ public class RouteController {
     }
 
     @GetMapping
-    public ResponseEntity<List<com.awad.ticketbooking.modules.catalog.dto.RouteResponse>> getAllRoutes() {
-        return ResponseEntity.ok(routeService.getAllRoutes());
+    public ResponseEntity<org.springframework.data.domain.Page<com.awad.ticketbooking.modules.catalog.dto.RouteResponse>> getAllRoutes(
+            org.springframework.data.domain.Pageable pageable) {
+        return ResponseEntity.ok(routeService.getAllRoutes(pageable));
     }
 
     @org.springframework.web.bind.annotation.PostMapping
