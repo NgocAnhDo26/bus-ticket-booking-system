@@ -96,10 +96,22 @@ export type TripPricing = {
     price: number;
 };
 
+export type BusInfo = {
+    id: string;
+    plateNumber: string;
+    operator: {
+        id: string;
+        name: string;
+    };
+    totalSeats: number;
+    busLayoutId: string;
+    amenities: string[];
+};
+
 export type Trip = {
     id: string;
     route: Route;
-    bus: Bus;
+    bus: BusInfo;
     departureTime: string;
     arrivalTime: string;
     status: string;

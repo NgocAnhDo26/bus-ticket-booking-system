@@ -45,6 +45,7 @@ public class TripResponse {
         private String plateNumber;
         private OperatorInfo operator;
         private Integer totalSeats;
+        private UUID busLayoutId;
         private List<String> amenities;
     }
 

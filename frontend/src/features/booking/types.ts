@@ -74,3 +74,17 @@ export type PassengerInfo = {
     passengerPhone: string;
     price: number;
 };
+
+// Teammate's seat locking types
+export type SeatStatus = "LOCKED" | "AVAILABLE" | "BOOKED";
+
+export type SeatStatusMessage = {
+    seatCode: string;
+    status: SeatStatus;
+    lockedByUserId?: string;
+};
+
+export type LockSeatRequest = {
+    tripId: string;
+    seatCode: string;
+};

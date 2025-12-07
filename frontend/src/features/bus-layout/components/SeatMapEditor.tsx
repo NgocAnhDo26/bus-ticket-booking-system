@@ -2,13 +2,11 @@ import { useMemo, useState, type ElementType } from "react";
 import {
   Crown,
   Eraser,
-  LifeBuoy,
   MousePointerSquareDashed,
   Square,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   Popover,
   PopoverContent,
@@ -35,6 +33,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { SeatGrid } from "../../../components/common/SeatGrid";
 
 const seatTypeStyles: Record<SeatType, string> = {
   NORMAL: "bg-emerald-500/80 border-emerald-600 text-white",
@@ -161,148 +160,124 @@ export const SeatMapEditor = ({ className }: SeatMapEditorProps) => {
   };
 
   const renderGrid = (floor: number) => (
-    <div className="space-y-3 md:mt-4">
-      <div className="flex justify-between">
-        <div className="flex items-center justify-center gap-2">
-          <Square className="text-emerald-500" />
-          <p className="text-sm">Ghế thường</p>
-        </div>
-        <div className="flex items-center justify-center gap-2">
-          <Square className="text-amber-600" />
-          <p className="text-sm">Ghế VIP</p>
-        </div>
-        <div className="flex items-center justify-center gap-2">
-          <Square className="text-muted-foreground" />
-          <p className="text-sm">Ô trống</p>
-        </div>
-      </div>
-
-      <div
-        className="grid gap-2 rounded-lg border bg-background p-6 shadow-sm min-w-[320px]"
-        style={{
-          gridTemplateColumns: `repeat(${gridDimensions.cols}, minmax(52px, 1fr))`,
-        }}
-      >
-        <div
-          className="flex items-center justify-between mb-3"
-          style={{ gridColumn: "1 / -1" }}
-        >
-          <div className="flex items-center justify-center ml-3">
-            <LifeBuoy className="rotate-90" /> {/* Rotate steering wheel */}
+    <SeatGrid
+      rows={gridDimensions.rows}
+      cols={gridDimensions.cols}
+      floor={floor}
+      seats={seats}
+      renderLegend={() => (
+        <>
+          <div className="flex items-center justify-center gap-2">
+            <Square className="text-emerald-500" />
+            <p className="text-sm">Ghế thường</p>
           </div>
-          <div className="flex items-center justify-center">
-            <Badge className="bg-primary/10 text-primary">
-              {seats.filter((s) => s.floor === floor).length} ghế
-            </Badge>
+          <div className="flex items-center justify-center gap-2">
+            <Square className="text-amber-600" />
+            <p className="text-sm">Ghế VIP</p>
           </div>
-        </div>
+          <div className="flex items-center justify-center gap-2">
+            <Square className="text-muted-foreground" />
+            <p className="text-sm">Ô trống</p>
+          </div>
+        </>
+      )}
+      renderCell={(rowIdx, colIdx, floor, seat) => {
+        const key = seatKey(floor, rowIdx, colIdx);
+        const isEditing = editingKey === key;
 
-        {Array.from({ length: gridDimensions.rows }).map((_, rowIdx) =>
-          Array.from({ length: gridDimensions.cols }).map((__, colIdx) => {
-            const key = seatKey(floor, rowIdx, colIdx);
-            const seat = seatMap.get(key);
-            const isEditing = editingKey === key;
-
-            return (
-              <Popover
-                key={key}
-                open={isEditing}
-                onOpenChange={(open) => !open && setEditingKey(null)}
+        return (
+          <Popover
+            key={key}
+            open={isEditing}
+            onOpenChange={(open) => !open && setEditingKey(null)}
+          >
+            <PopoverTrigger asChild>
+              <button
+                type="button"
+                onClick={() => handleCellClick(rowIdx, colIdx, floor)}
+                className={cn(
+                  "flex h-14 w-full max-w-14 flex-col items-center justify-center rounded-md border text-xs transition-colors",
+                  "mx-auto",
+                  seat
+                    ? (seatTypeStyles[seat.type] ??
+                        "bg-indigo-500/80 border-indigo-700 text-white")
+                    : "bg-muted/40 hover:bg-muted/60",
+                  selectedTool === "ERASER"
+                    ? "hover:border-destructive"
+                    : "hover:border-primary",
+                )}
               >
-                <PopoverTrigger asChild>
-                  <button
-                    type="button"
-                    onClick={() => handleCellClick(rowIdx, colIdx, floor)}
-                    className={cn(
-                      "flex h-14 w-full max-w-14 flex-col items-center justify-center rounded-md border text-xs transition-colors",
-                      "mx-auto",
-                      seat
-                        ? (seatTypeStyles[seat.type] ??
-                            "bg-indigo-500/80 border-indigo-700 text-white")
-                        : "bg-muted/40 hover:bg-muted/60",
-                      selectedTool === "ERASER"
-                        ? "hover:border-destructive"
-                        : "hover:border-primary",
-                    )}
+                <span className="font-semibold">
+                  {seat ? seat.seatCode : ""}
+                </span>
+                <span className="text-[10px] text-muted-foreground">
+                  C{colIdx + 1} • H{rowIdx + 1}
+                </span>
+              </button>
+            </PopoverTrigger>
+            {seat ? (
+              <PopoverContent className="w-64 space-y-3" align="center">
+                <div className="space-y-2">
+                  <Label>Mã ghế</Label>
+                  <Input
+                    value={editingValues.seatCode}
+                    onChange={(event) =>
+                      setEditingValues((prev) => ({
+                        ...prev,
+                        seatCode: event.target.value,
+                      }))
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Loại ghế</Label>
+                  <Select
+                    value={editingValues.type}
+                    onValueChange={(value) =>
+                      setEditingValues((prev) => ({
+                        ...prev,
+                        type: value as SeatType,
+                      }))
+                    }
                   >
-                    <span className="font-semibold">
-                      {seat ? seat.seatCode : ""}
-                    </span>
-                    <span className="text-[10px] text-muted-foreground">
-                      C{colIdx + 1} • H{rowIdx + 1}
-                    </span>
-                  </button>
-                </PopoverTrigger>
-                {seat ? (
-                  <PopoverContent className="w-64 space-y-3" align="center">
-                    <div className="space-y-2">
-                      <Label>Mã ghế</Label>
-                      <Input
-                        value={editingValues.seatCode}
-                        onChange={(event) =>
-                          setEditingValues((prev) => ({
-                            ...prev,
-                            seatCode: event.target.value,
-                          }))
-                        }
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Loại ghế</Label>
-                      <Select
-                        value={editingValues.type}
-                        onValueChange={(value) =>
-                          setEditingValues((prev) => ({
-                            ...prev,
-                            type: value as SeatType,
-                          }))
-                        }
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Chọn loại ghế" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {(["NORMAL", "VIP"] satisfies SeatType[]).map(
-                            (type) => {
-                              const tool = tools.find((t) => t.key === type);
-                              const ToolIcon = tool?.icon ?? Square;
-                              const label = tool?.label ?? type;
-                              return (
-                                <SelectItem key={type} value={type}>
-                                  <div className="flex items-center gap-2">
-                                    <ToolIcon className="h-4 w-4" />
-                                    <span>{label}</span>
-                                  </div>
-                                </SelectItem>
-                              );
-                            },
-                          )}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="flex justify-end pt-2 gap-2">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => setEditingKey(null)}
-                      >
-                        Đóng
-                      </Button>
-                      <Button
-                        type="button"
-                        onClick={() => handleUpdateSeat(seat)}
-                      >
-                        Cập nhật
-                      </Button>
-                    </div>
-                  </PopoverContent>
-                ) : null}
-              </Popover>
-            );
-          }),
-        )}
-      </div>
-    </div>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Chọn loại ghế" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {(["NORMAL", "VIP"] satisfies SeatType[]).map((type) => {
+                        const tool = tools.find((t) => t.key === type);
+                        const ToolIcon = tool?.icon ?? Square;
+                        const label = tool?.label ?? type;
+                        return (
+                          <SelectItem key={type} value={type}>
+                            <div className="flex items-center gap-2">
+                              <ToolIcon className="h-4 w-4" />
+                              <span>{label}</span>
+                            </div>
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex justify-end pt-2 gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setEditingKey(null)}
+                  >
+                    Đóng
+                  </Button>
+                  <Button type="button" onClick={() => handleUpdateSeat(seat)}>
+                    Cập nhật
+                  </Button>
+                </div>
+              </PopoverContent>
+            ) : null}
+          </Popover>
+        );
+      }}
+    />
   );
 
   return (
