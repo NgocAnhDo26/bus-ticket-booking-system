@@ -26,11 +26,11 @@ public class DashboardController {
 
                 List<ActivityItem> activity = List.of(
                                 new ActivityItem("1", "Booking confirmed", "10 min ago",
-                                                "Passenger secured 2 seats SG → HN", "success"),
+                                                "Passenger secured 2 seats SG → HN", "success", "1"),
                                 new ActivityItem("2", "Seat map updated", "35 min ago",
-                                                "Admin adjusted VIP prices for FUTA", "info"),
+                                                "Admin adjusted VIP prices for FUTA", "info", null),
                                 new ActivityItem("3", "Payment pending", "1 hr ago",
-                                                "Awaiting MoMo confirmation for #BK-9841", "warning"));
+                                                "Awaiting MoMo confirmation for #BK-9841", "warning", "2"));
 
                 RoleWidget roleWidget = new RoleWidget(
                                 "Upcoming operations",

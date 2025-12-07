@@ -1,1 +1,1 @@
-cd frontend && npx nx run-many --target=lint --all
+cd frontend && npm run lint

@@ -30,9 +30,16 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), request);
     }
 
+    @ExceptionHandler(org.springframework.dao.DataIntegrityViolationException.class)
+    public ResponseEntity<ApiError> handleDataIntegrityViolation(
+            org.springframework.dao.DataIntegrityViolationException ex, HttpServletRequest request) {
+        return buildResponse(HttpStatus.CONFLICT, "Cannot perform operation because data is in use by other records.",
+                request);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiError> handleGeneric(Exception ex, HttpServletRequest request) {
-        return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error", request);
+        return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error: " + ex.getMessage(), request);
     }
 
     private ResponseEntity<ApiError> buildResponse(HttpStatus status, String message, HttpServletRequest request) {
@@ -40,4 +47,3 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(status).body(apiError);
     }
 }
-

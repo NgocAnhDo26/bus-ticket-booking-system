@@ -3,6 +3,7 @@ import { GoogleOAuthProvider } from "@react-oauth/google";
 import { type ReactNode, useMemo } from "react";
 import { useHydrateAuth } from "@/features/auth/hooks";
 import { ThemeProvider } from "@/components/theme-provider";
+import { Toaster } from "@/components/ui/sonner";
 
 type Props = {
   children: ReactNode;
@@ -30,10 +31,11 @@ export const AppProviders = ({ children }: Props) => {
   const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID ?? "";
 
   return (
-    <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+    <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
       <GoogleOAuthProvider clientId={googleClientId}>
         <QueryClientProvider client={queryClient}>
           <AuthHydrator>{children}</AuthHydrator>
+          <Toaster position="top-center" richColors />
         </QueryClientProvider>
       </GoogleOAuthProvider>
     </ThemeProvider>

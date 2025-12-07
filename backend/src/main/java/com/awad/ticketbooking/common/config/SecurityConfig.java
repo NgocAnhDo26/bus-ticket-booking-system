@@ -41,6 +41,18 @@ public class SecurityConfig {
                         .requestMatchers("/actuator/**").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/health").permitAll()
+                        .requestMatchers("/api/trips/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/routes/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/routes/**").permitAll()
+                        .requestMatchers("/api/operators/**").permitAll()
+                        .requestMatchers("/api/buses/**").permitAll()
+                        .requestMatchers("/api/stations/**").permitAll()
+                        .requestMatchers("/api/admin/**").permitAll()
+                        .requestMatchers(HttpMethod.PUT, "/api/routes/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/routes/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/bus-layouts/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/bus-layouts/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/bus-layouts/**").hasRole("ADMIN")
                         .anyRequest().authenticated())
                 .authenticationProvider(daoAuthenticationProvider())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
@@ -79,4 +91,3 @@ public class SecurityConfig {
         return source;
     }
 }
-

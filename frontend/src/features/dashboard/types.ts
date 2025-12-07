@@ -21,3 +21,17 @@ export type DashboardResponse = {
     items: Array<{ label: string; value: string; helper?: string }>;
   };
 };
+
+export type UserDashboardSummary = {
+  totalTrips: number;
+  upcomingTrips: number;
+  totalSpent: number;
+};
+
+export type UserRecentTrip = {
+  origin: string;
+  destination: string;
+  departureTime: string;
+  distance: number;
+  status: string;
+};
