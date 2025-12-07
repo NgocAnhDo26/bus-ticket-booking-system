@@ -53,8 +53,9 @@ const AuthenticatedRedirect = () => {
 
 import { HomePage } from "@/features/home/pages/HomePage";
 import { SearchResultsPage } from "@/features/search/pages/SearchResultsPage";
-
-// ... existing imports
+import { BookingPage } from "@/features/booking/pages/BookingPage";
+import { BookingConfirmationPage } from "@/features/booking/pages/BookingConfirmationPage";
+import { BookingHistoryPage } from "@/features/booking/pages/BookingHistoryPage";
 
 export const router = createBrowserRouter([
   {
@@ -69,9 +70,18 @@ export const router = createBrowserRouter([
         element: <SearchResultsPage />,
       },
       {
+        path: "/booking/:tripId",
+        element: <BookingPage />,
+      },
+      {
+        path: "/booking/confirmation/:bookingId",
+        element: <BookingConfirmationPage />,
+      },
+      {
         element: <ProtectedRoute allowedRoles={["PASSENGER"]} />,
         children: [
           { path: "/dashboard", element: <DashboardPage /> },
+          { path: "/dashboard/bookings", element: <BookingHistoryPage /> },
           {
             path: "/dashboard/*",
             element: <Navigate to="/dashboard" replace />,
@@ -137,3 +147,4 @@ export const router = createBrowserRouter([
   },
   { path: "*", element: <AuthenticatedRedirect /> },
 ]);
+

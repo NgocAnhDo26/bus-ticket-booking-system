@@ -12,9 +12,13 @@ import org.springframework.stereotype.Repository;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface BookingRepository extends JpaRepository<Booking, java.util.UUID> {
+
+        org.springframework.data.domain.Page<Booking> findByUserIdOrderByCreatedAtDesc(java.util.UUID userId,
+                        org.springframework.data.domain.Pageable pageable);
 
         @Query("SELECT SUM(b.totalPrice) FROM Booking b WHERE b.createdAt BETWEEN :start AND :end AND b.status = :status")
         BigDecimal sumTotalPriceByCreatedAtBetweenAndStatus(@Param("start") Instant start, @Param("end") Instant end,

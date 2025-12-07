@@ -103,6 +103,11 @@ export const fetchTrips = async (): Promise<Trip[]> => {
     return response.data;
 };
 
+export const getTripById = async (id: string): Promise<Trip> => {
+    const response = await apiClient.get<Trip>(`/trips/${id}`);
+    return response.data;
+};
+
 export const searchTrips = async (
     params: SearchTripRequest,
 ): Promise<Trip[]> => {
