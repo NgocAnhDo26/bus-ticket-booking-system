@@ -41,6 +41,7 @@ export type TripInfo = {
 
 export type BookingResponse = {
     id: string;
+    code: string;
     status: BookingStatus;
     totalPrice: number;
     passengerName: string;
@@ -60,9 +61,10 @@ export type TicketRequest = {
 
 export type CreateBookingRequest = {
     tripId: string;
-    userId: string;
+    userId?: string; // Optional for guests
     passengerName: string;
     passengerPhone: string;
+    passengerEmail?: string; // For guests to receive tickets
     totalPrice: number;
     tickets: TicketRequest[];
 };
@@ -87,4 +89,5 @@ export type SeatStatusMessage = {
 export type LockSeatRequest = {
     tripId: string;
     seatCode: string;
+    guestId?: string;
 };

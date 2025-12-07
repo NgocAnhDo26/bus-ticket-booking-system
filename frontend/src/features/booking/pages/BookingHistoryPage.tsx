@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -7,7 +8,7 @@ import { BookingCard } from "../components/BookingCard";
 import { toast } from "@/hooks/use-toast";
 import { Ticket, ChevronLeft, ChevronRight } from "lucide-react";
 
-export function BookingHistoryPage() {
+export const BookingHistoryPage = () => {
   const [page, setPage] = useState(0);
   const pageSize = 5;
   
@@ -32,8 +33,8 @@ export function BookingHistoryPage() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <Skeleton className="h-8 w-64 mb-6" />
+      <div className="container mx-auto p-8 max-w-6xl space-y-6">
+        <Skeleton className="h-8 w-64" />
         <div className="space-y-4">
           {[1, 2, 3].map((i) => (
             <Skeleton key={i} className="h-48 w-full" />
@@ -45,7 +46,7 @@ export function BookingHistoryPage() {
 
   if (error) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto p-8 max-w-6xl space-y-6">
         <Card>
           <CardContent className="pt-6 text-center">
             <p className="text-destructive">Có lỗi xảy ra khi tải lịch sử đặt vé.</p>
@@ -55,13 +56,14 @@ export function BookingHistoryPage() {
     );
   }
 
-  const bookings = data?.content ?? [];
+  // Include PENDING so users can see them. Logic in BookingCard handles actions.
+  const bookings = (data?.content ?? []).filter((b) => ["CONFIRMED", "CANCELLED", "PENDING"].includes(b.status));
   const totalPages = data?.totalPages ?? 0;
   const totalElements = data?.totalElements ?? 0;
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex items-center gap-3 mb-6">
+    <div className="container mx-auto p-8 max-w-6xl space-y-6">
+      <div className="flex items-center gap-3">
         <Ticket className="h-8 w-8 text-primary" />
         <div>
           <h1 className="text-2xl font-bold">Lịch sử đặt vé</h1>
@@ -80,7 +82,7 @@ export function BookingHistoryPage() {
               Đặt vé ngay để bắt đầu hành trình của bạn.
             </p>
             <Button asChild>
-              <a href="/">Tìm chuyến xe</a>
+              <Link to="/">Tìm chuyến xe</Link>
             </Button>
           </CardContent>
         </Card>
@@ -99,7 +101,7 @@ export function BookingHistoryPage() {
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="flex items-center justify-center gap-4 mt-6">
+            <div className="flex items-center justify-center gap-4">
               <Button
                 variant="outline"
                 size="sm"
@@ -127,4 +129,4 @@ export function BookingHistoryPage() {
       )}
     </div>
   );
-}
+};

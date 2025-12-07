@@ -27,6 +27,12 @@ public class BookingController {
         return ResponseEntity.ok(bookingService.createBooking(request));
     }
 
+    @PostMapping("/lookup")
+    public ResponseEntity<BookingResponse> lookupBooking(
+            @Valid @RequestBody com.awad.ticketbooking.modules.booking.dto.BookingLookupRequest request) {
+        return ResponseEntity.ok(bookingService.lookupBooking(request.getCode(), request.getEmail()));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<BookingResponse> getBookingById(@PathVariable UUID id) {
         return ResponseEntity.ok(bookingService.getBookingById(id));

@@ -1,7 +1,7 @@
 package com.awad.ticketbooking.modules.booking.controller;
 
 import com.awad.ticketbooking.common.config.security.ApplicationUserDetails;
-import com.awad.ticketbooking.modules.auth.entity.User;
+
 import com.awad.ticketbooking.modules.booking.dto.LockSeatRequest;
 import com.awad.ticketbooking.modules.booking.service.SeatLockService;
 import com.awad.ticketbooking.modules.booking.repository.BookingRepository;
@@ -28,23 +28,26 @@ public class SeatController {
     private final TripRepository tripRepository; // To validate trip exists
 
     @PostMapping("/lock")
-    public ResponseEntity<?> lockSeat(@Valid @RequestBody LockSeatRequest request, 
-                                      @AuthenticationPrincipal ApplicationUserDetails userDetails) {
-        if (userDetails == null) {
-            return ResponseEntity.status(401).build();
+    public ResponseEntity<?> lockSeat(@Valid @RequestBody LockSeatRequest request,
+            @AuthenticationPrincipal ApplicationUserDetails userDetails) {
+        UUID userId;
+        if (userDetails != null) {
+            userId = userDetails.getUser().getId();
+        } else if (request.getGuestId() != null && !request.getGuestId().isBlank()) {
+            userId = UUID.fromString(request.getGuestId());
+        } else {
+            return ResponseEntity.status(401).body("User must be logged in or provide guest ID");
         }
-        User user = userDetails.getUser();
-        
+
         // Check if seat is already booked (persistent check)
-        // This requires a method in BookingRepository to check seat availability for a trip
         boolean isBooked = bookingRepository.existsByTripIdAndTicketsSeatCodeAndStatusNot(
                 request.getTripId(), request.getSeatCode(), BookingStatus.CANCELLED);
-        
+
         if (isBooked) {
             return ResponseEntity.badRequest().body("Seat is already booked");
         }
 
-        boolean locked = seatLockService.lockSeat(request.getTripId(), request.getSeatCode(), user.getId());
+        boolean locked = seatLockService.lockSeat(request.getTripId(), request.getSeatCode(), userId);
         if (locked) {
             return ResponseEntity.ok().build();
         } else {
@@ -53,13 +56,18 @@ public class SeatController {
     }
 
     @PostMapping("/unlock")
-    public ResponseEntity<?> unlockSeat(@Valid @RequestBody LockSeatRequest request, 
-                                        @AuthenticationPrincipal ApplicationUserDetails userDetails) {
-        if (userDetails == null) {
-            return ResponseEntity.status(401).build();
+    public ResponseEntity<?> unlockSeat(@Valid @RequestBody LockSeatRequest request,
+            @AuthenticationPrincipal ApplicationUserDetails userDetails) {
+        UUID userId;
+        if (userDetails != null) {
+            userId = userDetails.getUser().getId();
+        } else if (request.getGuestId() != null && !request.getGuestId().isBlank()) {
+            userId = UUID.fromString(request.getGuestId());
+        } else {
+            return ResponseEntity.status(401).body("User must be logged in or provide guest ID");
         }
-        User user = userDetails.getUser();
-        seatLockService.unlockSeat(request.getTripId(), request.getSeatCode(), user.getId());
+
+        seatLockService.unlockSeat(request.getTripId(), request.getSeatCode(), userId);
         return ResponseEntity.ok().build();
     }
 
@@ -84,4 +92,3 @@ public class SeatController {
         return ResponseEntity.ok(statusMap);
     }
 }
-

@@ -31,6 +31,7 @@ export const PublicHeader = () => {
         <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
             <Link to="/" className="transition-colors hover:text-primary">Trang chủ</Link>
             <Link to="/search" className="transition-colors hover:text-primary">Tìm chuyến</Link>
+            <Link to="/booking/lookup" className="transition-colors hover:text-primary">Tra cứu vé</Link>
             <Link to="/about" className="transition-colors hover:text-primary">Về chúng tôi</Link>
             <Link to="/contact" className="transition-colors hover:text-primary">Liên hệ</Link>
         </nav>
@@ -64,7 +65,7 @@ export const PublicHeader = () => {
                         </DropdownMenuItem>
                         {user.role === "PASSENGER" && (
                             <DropdownMenuItem asChild>
-                                <Link to="/my-tickets">
+                                <Link to="/dashboard/bookings">
                                     <Ticket className="mr-2 h-4 w-4" />
                                     Vé của tôi
                                 </Link>

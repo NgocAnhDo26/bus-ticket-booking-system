@@ -11,28 +11,28 @@ type BookingCardProps = {
   isCancelling?: boolean;
 };
 
-function formatDate(dateString: string) {
+const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleDateString("vi-VN", {
     weekday: "short",
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
   });
-}
+};
 
-function formatTime(dateString: string) {
+const formatTime = (dateString: string) => {
   return new Date(dateString).toLocaleTimeString("vi-VN", {
     hour: "2-digit",
     minute: "2-digit",
   });
-}
+};
 
-function formatCurrency(amount: number) {
+const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat("vi-VN", {
     style: "currency",
     currency: "VND",
   }).format(amount);
-}
+};
 
 const statusConfig = {
   PENDING: {
@@ -52,11 +52,11 @@ const statusConfig = {
   },
 };
 
-export function BookingCard({
+export const BookingCard = ({
   booking,
   onCancel,
   isCancelling,
-}: BookingCardProps) {
+}: BookingCardProps) => {
   const status = statusConfig[booking.status];
   const canCancel =
     booking.status !== "CANCELLED" &&
@@ -73,7 +73,7 @@ export function BookingCard({
               <div>
                 <span className="text-sm text-muted-foreground">Mã đặt vé</span>
                 <p className="font-mono font-bold text-lg">
-                  #{booking.id.slice(0, 8).toUpperCase()}
+                  #{booking.code}
                 </p>
               </div>
               <Badge className={status.className}>{status.label}</Badge>
@@ -156,4 +156,4 @@ export function BookingCard({
       </CardContent>
     </Card>
   );
-}
+};

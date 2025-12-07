@@ -23,7 +23,7 @@ public class Booking extends BaseEntity {
     private Trip trip;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "user_id", nullable = true)
     private User user;
 
     @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -41,4 +41,10 @@ public class Booking extends BaseEntity {
 
     @Column(name = "passenger_phone", nullable = false)
     private String passengerPhone;
+
+    @Column(name = "passenger_email")
+    private String passengerEmail;
+
+    @Column(name = "code", unique = true, nullable = false)
+    private String code;
 }

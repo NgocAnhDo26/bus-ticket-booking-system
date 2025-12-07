@@ -39,8 +39,11 @@ public class BookingService {
                 Trip trip = tripRepository.findById(request.getTripId())
                                 .orElseThrow(() -> new RuntimeException("Trip not found"));
 
-                User user = userRepository.findById(request.getUserId())
-                                .orElseThrow(() -> new RuntimeException("User not found"));
+                // User is optional - can be null for guest bookings
+                User user = null;
+                if (request.getUserId() != null) {
+                        user = userRepository.findById(request.getUserId()).orElse(null);
+                }
 
                 // Validate seats are not already booked
                 List<String> bookedSeats = ticketRepository.findBookedSeatCodesByTripId(request.getTripId());
@@ -56,10 +59,23 @@ public class BookingService {
 
                 Booking booking = new Booking();
                 booking.setTrip(trip);
-                booking.setUser(user);
+                booking.setUser(user); // Can be null for guest
                 booking.setPassengerName(request.getPassengerName());
                 booking.setPassengerPhone(request.getPassengerPhone());
+                booking.setPassengerEmail(request.getPassengerEmail());
                 booking.setStatus(BookingStatus.PENDING);
+
+                // Generate unique booking code with retry
+                String bookingCode = generateBookingCode();
+                int maxRetries = 5;
+                while (bookingRepository.findByCode(bookingCode).isPresent() && maxRetries > 0) {
+                        bookingCode = generateBookingCode();
+                        maxRetries--;
+                }
+                if (maxRetries == 0) {
+                        throw new RuntimeException("Failed to generate unique booking code. Please try again.");
+                }
+                booking.setCode(bookingCode);
 
                 booking.setTickets(request.getTickets().stream()
                                 .map(ticketReq -> mapTicket(ticketReq, booking))
@@ -72,10 +88,39 @@ public class BookingService {
 
                 Booking savedBooking = bookingRepository.save(booking);
 
-                // Send confirmation email asynchronously
-                emailService.sendBookingConfirmationEmail(savedBooking, user.getEmail());
-
                 return toBookingResponse(savedBooking);
+        }
+
+        private String generateBookingCode() {
+                String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+                StringBuilder code = new StringBuilder("BK-");
+                java.util.Random rnd = new java.util.Random();
+                for (int i = 0; i < 6; i++) {
+                        code.append(chars.charAt(rnd.nextInt(chars.length())));
+                }
+                return code.toString();
+        }
+
+        @Transactional(readOnly = true)
+        public BookingResponse lookupBooking(String code, String email) {
+                Booking booking = bookingRepository.findByCode(code)
+                                .orElseThrow(() -> new RuntimeException("Booking not found"));
+
+                // Check if email matches either user email or passenger email (if stored
+                // separately)
+                // For now, checking against user email if exists, or just assuming passenger
+                // email is stored?
+                // Wait, Booking entity has passengerEmail, let's use that first.
+                String bookingEmail = booking.getPassengerEmail();
+                if (bookingEmail == null && booking.getUser() != null) {
+                        bookingEmail = booking.getUser().getEmail();
+                }
+
+                if (bookingEmail == null || !bookingEmail.equalsIgnoreCase(email)) {
+                        throw new RuntimeException("Booking not found or email does not match");
+                }
+
+                return toBookingResponse(booking);
         }
 
         @Transactional(readOnly = true)
@@ -96,7 +141,6 @@ public class BookingService {
                 return ticketRepository.findBookedSeatCodesByTripId(tripId);
         }
 
-        @Transactional
         public BookingResponse confirmBooking(UUID bookingId) {
                 Booking booking = bookingRepository.findById(bookingId)
                                 .orElseThrow(() -> new RuntimeException("Booking not found"));
@@ -106,7 +150,22 @@ public class BookingService {
                 }
 
                 booking.setStatus(BookingStatus.CONFIRMED);
-                return toBookingResponse(bookingRepository.save(booking));
+                Booking savedBooking = bookingRepository.save(booking);
+
+                // Determine email for confirmation
+                String recipientEmail = booking.getPassengerEmail();
+                if (recipientEmail == null && booking.getUser() != null) {
+                        recipientEmail = booking.getUser().getEmail();
+                }
+
+                // Send confirmation email if we have an email
+                if (recipientEmail != null && !recipientEmail.isBlank()) {
+                        Booking bookingForEmail = bookingRepository.findByIdWithFullDetails(savedBooking.getId())
+                                        .orElse(savedBooking);
+                        emailService.sendBookingConfirmationEmail(bookingForEmail, recipientEmail);
+                }
+
+                return toBookingResponse(savedBooking);
         }
 
         @Transactional
@@ -144,6 +203,7 @@ public class BookingService {
 
                 return BookingResponse.builder()
                                 .id(booking.getId())
+                                .code(booking.getCode())
                                 .status(booking.getStatus())
                                 .totalPrice(booking.getTotalPrice())
                                 .passengerName(booking.getPassengerName())

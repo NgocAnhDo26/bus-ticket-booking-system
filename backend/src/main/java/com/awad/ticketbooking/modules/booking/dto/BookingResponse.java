@@ -13,6 +13,7 @@ import java.util.UUID;
 @Builder
 public class BookingResponse {
     private UUID id;
+    private String code;
     private BookingStatus status;
     private BigDecimal totalPrice;
     private String passengerName;

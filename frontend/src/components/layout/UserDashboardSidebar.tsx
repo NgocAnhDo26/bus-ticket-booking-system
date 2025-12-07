@@ -31,9 +31,9 @@ export function UserDashboardSidebar({
     },
     {
         title: "Vé của tôi",
-        url: "/my-tickets",
+        url: "/dashboard/bookings",
         icon: Ticket,
-        isActive: location.pathname === "/my-tickets",
+        isActive: location.pathname === "/dashboard/bookings",
         isCollapsible: false,
     },
     {

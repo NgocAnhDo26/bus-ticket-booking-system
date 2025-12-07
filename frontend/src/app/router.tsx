@@ -50,7 +50,7 @@ const AuthenticatedRedirect = () => {
 
 import { HomePage } from "@/features/home/pages/HomePage";
 import { SearchResultsPage } from "@/features/search/pages/SearchResultsPage";
-import { BookingPage } from "@/features/booking";
+import { BookingPage, PassengerInfoPage, BookingLookupPage } from "@/features/booking";
 import { BookingConfirmationPage } from "@/features/booking/pages/BookingConfirmationPage";
 import { BookingHistoryPage } from "@/features/booking/pages/BookingHistoryPage";
 
@@ -71,8 +71,16 @@ export const router = createBrowserRouter([
         element: <BookingPage />,
       },
       {
+        path: "/booking/:tripId/details",
+        element: <PassengerInfoPage />,
+      },
+      {
         path: "/booking/confirmation/:bookingId",
         element: <BookingConfirmationPage />,
+      },
+      {
+        path: "/booking/lookup",
+        element: <BookingLookupPage />,
       },
       {
         element: <ProtectedRoute allowedRoles={["PASSENGER"]} />,

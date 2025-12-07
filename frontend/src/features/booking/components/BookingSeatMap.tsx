@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { getBusLayout } from "@/features/bus-layout/api";
 import { SeatGrid } from "@/components/common/SeatGrid";
-import { useAuthStore } from "@/store/auth-store";
+// import { useAuthStore } from "@/store/auth-store";
 import { useBookingStore } from "../store";
 
 type BookingSeatMapProps = {
@@ -14,11 +14,13 @@ type BookingSeatMapProps = {
 };
 
 export const BookingSeatMap = ({ busLayoutId }: BookingSeatMapProps) => {
-  const { user } = useAuthStore();
-  const { seatStatusMap, toggleSeat } = useBookingStore(
+  // const { user } = useAuthStore(); // Unused variable removed
+
+  const { seatStatusMap, toggleSeat, selectedSeats } = useBookingStore(
     useShallow((state) => ({
       seatStatusMap: state.seatStatusMap,
       toggleSeat: state.toggleSeat,
+      selectedSeats: state.selectedSeats,
     })),
   );
 
@@ -45,13 +47,19 @@ export const BookingSeatMap = ({ busLayoutId }: BookingSeatMapProps) => {
   const cols = totalCols || 4;
 
   const getSeatStatus = (seatCode: string) => {
+    // Correctly identify MY selection using the persistent array
+    if (selectedSeats.includes(seatCode)) return "SELECTED";
+
     const statusString = seatStatusMap[seatCode];
     if (!statusString) return "AVAILABLE";
     if (statusString === "BOOKED") return "BOOKED";
+    
+    // If it's locked but NOT by me (since I checked selectedSeats above), then it's LOCKED (gray)
     if (statusString.startsWith("LOCKED:")) {
-      const lockedBy = statusString.split(":")[1];
-      return lockedBy === user?.id ? "SELECTED" : "LOCKED";
+       // Optional: Double check generic ID if logged in, but selectedSeats should suffice
+       return "LOCKED"; 
     }
+    
     return "AVAILABLE";
   };
 
@@ -139,7 +147,7 @@ export const BookingSeatMap = ({ busLayoutId }: BookingSeatMapProps) => {
                     // >
                     //   <X className="text-muted-foreground/30" />
                     // </div>
-                    <div className="h-14 w-full max-w-14 mx-auto relative"/>
+                    <div key={`empty-${_row}-${col}`} className="h-14 w-full max-w-14 mx-auto relative"/>
                   );
                 }
 

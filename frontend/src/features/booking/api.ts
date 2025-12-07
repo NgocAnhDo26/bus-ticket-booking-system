@@ -35,12 +35,17 @@ export const getBookedSeatsForTrip = async (tripId: string): Promise<string[]> =
 };
 
 export const confirmBooking = async (id: string): Promise<BookingResponse> => {
-    const response = await apiClient.put<BookingResponse>(`/bookings/${id}/confirm`);
+    const response = await apiClient.put<BookingResponse>(`/bookings/${id}/confirm`, {});
     return response.data;
 };
 
 export const cancelBooking = async (id: string): Promise<BookingResponse> => {
-    const response = await apiClient.put<BookingResponse>(`/bookings/${id}/cancel`);
+    const response = await apiClient.put<BookingResponse>(`/bookings/${id}/cancel`, {});
+    return response.data;
+};
+
+export const lookupBooking = async (code: string, email: string): Promise<BookingResponse> => {
+    const response = await apiClient.post<BookingResponse>("/bookings/lookup", { code, email });
     return response.data;
 };
 

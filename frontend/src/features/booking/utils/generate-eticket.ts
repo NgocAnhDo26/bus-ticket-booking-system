@@ -1,247 +1,137 @@
 import { jsPDF } from "jspdf";
 import type { BookingResponse } from "../types";
 
-function formatDate(dateString: string) {
-    return new Date(dateString).toLocaleDateString("vi-VN", {
-        weekday: "long",
-        day: "2-digit",
-        month: "long",
-        year: "numeric",
-    });
+// Helper to remove Vietnamese accents for PDF compatibility
+function removeAccents(str: string): string {
+    return str.normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/đ/g, "d").replace(/Đ/g, "D");
 }
 
-function formatTime(dateString: string) {
-    return new Date(dateString).toLocaleTimeString("vi-VN", {
-        hour: "2-digit",
-        minute: "2-digit",
-    });
+function formatDateDisplay(dateString: string): string {
+    const date = new Date(dateString);
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
 }
 
-function formatCurrency(amount: number) {
-    return new Intl.NumberFormat("vi-VN", {
-        style: "currency",
-        currency: "VND",
-    }).format(amount);
+function formatTimeDisplay(dateString: string): string {
+    const date = new Date(dateString);
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    return `${hours}:${minutes}`;
+}
+
+function formatCurrencyDisplay(amount: number): string {
+    return new Intl.NumberFormat("vi-VN").format(amount) + " VND";
 }
 
 export function generateETicketPDF(booking: BookingResponse) {
-    const doc = new jsPDF();
-    const pageWidth = doc.internal.pageSize.getWidth();
+    // A5 size for compact ticket (148 x 210 mm)
+    const doc = new jsPDF({
+        format: 'a5',
+        unit: 'mm'
+    }) as jsPDF & { setLineDash: (dashArray: number[], dashPhase?: number) => void };
 
-    // Colors
-    const textColor = "#1f2937";
-    const mutedColor = "#6b7280";
+    const PageWidth = doc.internal.pageSize.getWidth();
+    let y = 10;
+    const leftMargin = 10;
+    // const contentWidth = PageWidth - 20;
 
-    let yPos = 20;
+    // Helper for centered text
+    const centerText = (text: string, yPos: number, size: number = 10, isBold: boolean = false) => {
+        doc.setFontSize(size);
+        doc.setFont("courier", isBold ? "bold" : "normal");
+        doc.text(removeAccents(text), PageWidth / 2, yPos, { align: "center" });
+    };
 
-    // Header
-    doc.setFillColor(37, 99, 235); // Primary blue
-    doc.rect(0, 0, pageWidth, 45, "F");
+    // Helper for left-right text row
+    const row = (label: string, value: string, yPos: number, isBoldValue: boolean = false) => {
+        doc.setFontSize(9);
+        doc.setFont("courier", "normal");
+        doc.text(removeAccents(label), leftMargin, yPos);
 
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(24);
-    doc.setFont("helvetica", "bold");
-    doc.text("VE XE DIEN TU", pageWidth / 2, 25, { align: "center" });
+        doc.setFont("courier", isBoldValue ? "bold" : "normal");
+        doc.text(removeAccents(value), PageWidth - leftMargin, yPos, { align: "right" });
+    };
 
-    doc.setFontSize(12);
-    doc.setFont("helvetica", "normal");
-    doc.text("E-TICKET", pageWidth / 2, 35, { align: "center" });
+    // --- HEADER ---
+    centerText("VE XE KHACH DIEN TU", y, 14, true);
+    y += 5;
+    centerText("E-TICKET", y, 10);
+    y += 10;
 
-    yPos = 60;
+    centerText("Ma ve: " + booking.code, y, 12, true);
+    y += 10;
 
-    // Booking ID
-    doc.setTextColor(textColor);
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "normal");
-    doc.text("Ma dat ve:", 20, yPos);
+    // Dashed line
+    doc.setLineDash([1, 1], 0);
+    doc.line(leftMargin, y, PageWidth - leftMargin, y);
+    doc.setLineDash([], 0);
+    y += 7;
+
+    // --- JOURNEY INFO ---
+    centerText(booking.trip.bus.operatorName.toUpperCase(), y, 11, true);
+    y += 8;
+
+    row("Di tu (From):", booking.trip.route.originStation.city, y);
+    y += 5;
+    row("Den (To):", booking.trip.route.destinationStation.city, y);
+    y += 8;
+
+    row("Ngay di (Date):", formatDateDisplay(booking.trip.departureTime), y);
+    y += 5;
+    row("Gio di (Time):", formatTimeDisplay(booking.trip.departureTime), y);
+    y += 8;
+
+    row("Xe (Bus):", booking.trip.bus.plateNumber, y);
+    y += 8;
+
+    // Dashed line
+    doc.setLineDash([1, 1], 0);
+    doc.line(leftMargin, y, PageWidth - leftMargin, y);
+    doc.setLineDash([], 0);
+    y += 7;
+
+    // --- PASSENGER INFO ---
+    row("Hanh khach:", booking.passengerName, y, true);
+    y += 5;
+    row("SDT:", booking.passengerPhone, y);
+    y += 5;
+    if (booking.id) { // using id check as proxy
+        // skip email check to keep it simple
+    }
+
+    y += 5;
+
+    const seats = booking.tickets.map(t => t.seatCode).join(", ");
     doc.setFontSize(14);
-    doc.setFont("helvetica", "bold");
-    doc.text(`#${booking.id.slice(0, 8).toUpperCase()}`, 55, yPos);
+    doc.setFont("courier", "bold");
+    doc.text(`GHE (SEATS): ${seats}`, PageWidth / 2, y, { align: 'center' });
+    y += 10;
 
-    yPos += 15;
+    // Dashed line
+    doc.setLineDash([1, 1], 0);
+    doc.line(leftMargin, y, PageWidth - leftMargin, y);
+    doc.setLineDash([], 0);
+    y += 7;
 
-    // Status badge
-    const statusText =
-        booking.status === "CONFIRMED"
-            ? "DA XAC NHAN"
-            : booking.status === "PENDING"
-                ? "CHO XAC NHAN"
-                : "DA HUY";
-    const statusColorRGB =
-        booking.status === "CONFIRMED"
-            ? [34, 197, 94]
-            : booking.status === "PENDING"
-                ? [234, 179, 8]
-                : [239, 68, 68];
-
-    doc.setFillColor(statusColorRGB[0], statusColorRGB[1], statusColorRGB[2]);
-    doc.roundedRect(20, yPos - 5, 45, 10, 2, 2, "F");
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(8);
-    doc.text(statusText, 42.5, yPos + 2, { align: "center" });
-
-    yPos += 20;
-
-    // Divider
-    doc.setDrawColor(200, 200, 200);
-    doc.line(20, yPos, pageWidth - 20, yPos);
-
-    yPos += 15;
-
-    // Route section
-    doc.setTextColor(mutedColor);
+    // --- PAYMENT ---
     doc.setFontSize(10);
-    doc.text("HANH TRINH", 20, yPos);
+    doc.setFont("courier", "normal");
+    doc.text("TONG TIEN (TOTAL):", leftMargin, y);
 
-    yPos += 10;
-
-    // Origin
-    doc.setTextColor(37, 99, 235);
-    doc.setFontSize(12);
-    doc.setFont("helvetica", "bold");
-    doc.text("O", 22, yPos);
-    doc.setTextColor(textColor);
-    doc.text(booking.trip.route.originStation.name, 30, yPos);
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(9);
-    doc.setTextColor(mutedColor);
-    doc.text(booking.trip.route.originStation.city, 30, yPos + 5);
-
-    yPos += 20;
-
-    // Arrow
-    doc.setDrawColor(200, 200, 200);
-    doc.line(22, yPos - 15, 22, yPos - 5);
-
-    // Destination
-    doc.setTextColor(34, 197, 94);
-    doc.setFontSize(12);
-    doc.setFont("helvetica", "bold");
-    doc.text("O", 22, yPos);
-    doc.setTextColor(textColor);
-    doc.text(booking.trip.route.destinationStation.name, 30, yPos);
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(9);
-    doc.setTextColor(mutedColor);
-    doc.text(booking.trip.route.destinationStation.city, 30, yPos + 5);
-
-    yPos += 25;
-
-    // Divider
-    doc.setDrawColor(200, 200, 200);
-    doc.line(20, yPos, pageWidth - 20, yPos);
-
-    yPos += 15;
-
-    // Trip details in 2 columns
-    doc.setTextColor(mutedColor);
-    doc.setFontSize(10);
-    doc.text("NGAY DI", 20, yPos);
-    doc.text("GIO KHOI HANH", 110, yPos);
-
-    yPos += 8;
-
-    doc.setTextColor(textColor);
-    doc.setFontSize(11);
-    doc.setFont("helvetica", "bold");
-    doc.text(formatDate(booking.trip.departureTime), 20, yPos);
-    doc.text(formatTime(booking.trip.departureTime), 110, yPos);
-
-    yPos += 15;
-
-    doc.setTextColor(mutedColor);
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "normal");
-    doc.text("NHA XE", 20, yPos);
-    doc.text("GIO DEN (DU KIEN)", 110, yPos);
-
-    yPos += 8;
-
-    doc.setTextColor(textColor);
-    doc.setFontSize(11);
-    doc.setFont("helvetica", "bold");
-    doc.text(booking.trip.bus.operatorName, 20, yPos);
-    doc.text(formatTime(booking.trip.arrivalTime), 110, yPos);
-
-    yPos += 20;
-
-    // Divider
-    doc.setDrawColor(200, 200, 200);
-    doc.line(20, yPos, pageWidth - 20, yPos);
-
-    yPos += 15;
-
-    // Passenger info
-    doc.setTextColor(mutedColor);
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "normal");
-    doc.text("THONG TIN HANH KHACH", 20, yPos);
-
-    yPos += 10;
-
-    doc.setTextColor(textColor);
-    doc.setFontSize(11);
-    doc.setFont("helvetica", "bold");
-    doc.text(booking.passengerName, 20, yPos);
-    doc.setFont("helvetica", "normal");
-    doc.setTextColor(mutedColor);
-    doc.text(booking.passengerPhone, 80, yPos);
-
-    yPos += 15;
-
-    // Seats
-    doc.setTextColor(mutedColor);
-    doc.setFontSize(10);
-    doc.text("GHE DA DAT", 20, yPos);
-
-    yPos += 10;
-
-    const seats = booking.tickets.map((t) => t.seatCode).join(", ");
-    doc.setTextColor(textColor);
     doc.setFontSize(14);
-    doc.setFont("helvetica", "bold");
-    doc.text(seats, 20, yPos);
+    doc.setFont("courier", "bold");
+    doc.text(formatCurrencyDisplay(booking.totalPrice), PageWidth - leftMargin, y, { align: "right" });
 
-    yPos += 20;
+    y += 15;
 
-    // Divider
-    doc.setDrawColor(200, 200, 200);
-    doc.line(20, yPos, pageWidth - 20, yPos);
+    centerText("Vui long dua ve nay cho nhan vien nha xe.", y, 8);
+    y += 4;
+    centerText("Cam on quy khach!", y, 8);
 
-    yPos += 15;
-
-    // Total price
-    doc.setFillColor(240, 245, 255);
-    doc.rect(20, yPos - 5, pageWidth - 40, 25, "F");
-
-    doc.setTextColor(mutedColor);
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "normal");
-    doc.text("TONG TIEN", 25, yPos + 5);
-
-    doc.setTextColor(37, 99, 235);
-    doc.setFontSize(18);
-    doc.setFont("helvetica", "bold");
-    doc.text(formatCurrency(booking.totalPrice), pageWidth - 25, yPos + 10, {
-        align: "right",
-    });
-
-    yPos += 40;
-
-    // Footer
-    doc.setTextColor(mutedColor);
-    doc.setFontSize(8);
-    doc.setFont("helvetica", "normal");
-    doc.text(
-        "Vui long xuat trinh ve nay (ban in hoac dien tu) khi len xe.",
-        pageWidth / 2,
-        yPos,
-        { align: "center" }
-    );
-    doc.text(`Ngay dat: ${formatDate(booking.createdAt)}`, pageWidth / 2, yPos + 8, {
-        align: "center",
-    });
-
-    // Download the PDF
-    doc.save(`ve-xe-${booking.id.slice(0, 8).toUpperCase()}.pdf`);
+    // Save
+    doc.save(`ticket-${booking.code}.pdf`);
 }
