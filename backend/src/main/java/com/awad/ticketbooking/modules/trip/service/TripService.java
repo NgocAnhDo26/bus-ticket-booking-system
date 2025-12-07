@@ -247,6 +247,7 @@ public class TripService {
                                 .name(trip.getBus().getOperator().getName())
                                 .build())
                         .totalSeats(trip.getBus().getBusLayout().getTotalSeats())
+                        .busLayoutId(trip.getBus().getBusLayout().getId())
                         .amenities(trip.getBus().getAmenities())
                         .build())
                 .departureTime(trip.getDepartureTime())
