@@ -82,13 +82,13 @@ export const BusLayoutWizard = ({ layoutId }: BusLayoutWizardProps) => {
   }, [error]);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 flex justify-center">
       {step === 1 ? (
-        <LayoutConfigForm onComplete={() => setStep(2)} />
+        <LayoutConfigForm onComplete={() => setStep(2)} className="max-w-lg" />
       ) : (
         <div className="space-y-4">
           <SeatMapEditor />
-          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-end">
             <div className="flex flex-wrap gap-2">
               <Button variant="outline" onClick={() => setStep(1)}>
                 Quay lại cấu hình

@@ -80,7 +80,7 @@ export function GenericTable<TData>({
               {columns.map((col) => (
                 <TableHead
                   key={col.key as string}
-                  className={`h-12 px-4 text-left align-middle font-medium text-slate-500 [&:has([role=checkbox])]:pr-0 ${
+                  className={`h-12 pr-4 text-left text-md align-middle font-medium text-slate-500 [&:has([role=checkbox])]:pr-0 ${
                     col.className || ""
                   }`}
                 >
@@ -88,7 +88,7 @@ export function GenericTable<TData>({
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="-ml-3 h-8 data-[state=open]:bg-accent"
+                      className="-ml-3 h-8 data-[state=open]:bg-accent font-medium text-md"
                       onClick={() => onSort(col.key as string)}
                     >
                       {col.header}

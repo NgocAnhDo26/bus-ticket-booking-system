@@ -5,6 +5,7 @@ import com.awad.ticketbooking.modules.catalog.entity.BusLayout;
 import com.awad.ticketbooking.modules.catalog.entity.LayoutSeat;
 import com.awad.ticketbooking.modules.catalog.repository.BusLayoutRepository;
 import com.awad.ticketbooking.modules.catalog.repository.LayoutSeatRepository;
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +21,7 @@ public class BusLayoutService {
 
     private final BusLayoutRepository busLayoutRepository;
     private final LayoutSeatRepository layoutSeatRepository;
+    private final EntityManager entityManager;
 
     @Transactional
     public BusLayout createLayout(BusLayoutPayload.BusLayoutRequest request) {
@@ -27,6 +29,8 @@ public class BusLayoutService {
         layout.setName(request.getName());
         layout.setBusType(request.getBusType());
         layout.setTotalFloors(request.getTotalFloors());
+        layout.setTotalRows(request.getTotalRows());
+        layout.setTotalCols(request.getTotalCols());
         layout.setDescription(request.getDescription());
         layout.setTotalSeats(0); // Initialize with 0
 
@@ -40,6 +44,8 @@ public class BusLayoutService {
 
         // 1. Wipe existing seats
         layoutSeatRepository.deleteByBusLayoutId(layoutId);
+        // Flush to ensure deletion is committed before insert to avoid unique constraint violation
+        entityManager.flush();
 
         // 2. Insert new seats
         List<LayoutSeat> newSeats = new ArrayList<>();
@@ -68,6 +74,8 @@ public class BusLayoutService {
         layout.setName(request.getName());
         layout.setBusType(request.getBusType());
         layout.setTotalFloors(request.getTotalFloors());
+        layout.setTotalRows(request.getTotalRows());
+        layout.setTotalCols(request.getTotalCols());
         layout.setDescription(request.getDescription());
         
         return busLayoutRepository.save(layout);
@@ -92,6 +100,8 @@ public class BusLayoutService {
         response.setBusType(layout.getBusType());
         response.setTotalSeats(layout.getTotalSeats());
         response.setTotalFloors(layout.getTotalFloors());
+        response.setTotalRows(layout.getTotalRows());
+        response.setTotalCols(layout.getTotalCols());
         response.setDescription(layout.getDescription());
 
         List<BusLayoutPayload.LayoutSeatDto> seatDtos = seats.stream().map(s -> {
@@ -117,6 +127,8 @@ public class BusLayoutService {
             response.setBusType(layout.getBusType());
             response.setTotalSeats(layout.getTotalSeats());
             response.setTotalFloors(layout.getTotalFloors());
+            response.setTotalRows(layout.getTotalRows());
+            response.setTotalCols(layout.getTotalCols());
             response.setDescription(layout.getDescription());
             response.setSeats(List.of()); 
             return response;

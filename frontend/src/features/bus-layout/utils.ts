@@ -6,9 +6,9 @@ export const generateSeatCode = (row: number, col: number) => {
 
 export const generateNextSeatCode = (
   seats: { seatCode: string }[],
-  rowIdx: number, // Was colIndex, now rowIdx determines the letter prefix
+  colIdx: number,
 ) => {
-  const prefix = String.fromCharCode(65 + rowIdx);
+  const prefix = String.fromCharCode(65 + colIdx);
   let max = 0;
   // Regex to match "A1", "A2", "B1" etc. where A is the prefix
   const regex = new RegExp(`^${prefix}(\\d+)$`);

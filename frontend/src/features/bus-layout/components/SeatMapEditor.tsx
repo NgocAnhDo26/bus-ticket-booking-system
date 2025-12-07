@@ -142,7 +142,7 @@ export const SeatMapEditor = ({ className }: SeatMapEditorProps) => {
     }
 
     const seatType = selectedTool as SeatType;
-    const seatCode = seat?.seatCode ?? generateNextSeatCode(seats, row); // Use row for rotated prefix logic
+    const seatCode = seat?.seatCode ?? generateNextSeatCode(seats, col);
     addSeat({
       id: seat?.id,
       seatCode,
@@ -162,7 +162,7 @@ export const SeatMapEditor = ({ className }: SeatMapEditorProps) => {
 
   const renderGrid = (floor: number) => (
     <div className="space-y-3 md:mt-4">
-      <div className="flex flex-wrap gap-6">
+      <div className="flex justify-between">
         <div className="flex items-center justify-center gap-2">
           <Square className="text-emerald-500" />
           <p className="text-sm">Ghế thường</p>
@@ -180,8 +180,7 @@ export const SeatMapEditor = ({ className }: SeatMapEditorProps) => {
       <div
         className="grid gap-2 rounded-lg border bg-background p-6 shadow-sm min-w-[320px]"
         style={{
-          // Rotate: Use gridDimensions.rows for columns count to flip axis
-          gridTemplateColumns: `repeat(${gridDimensions.rows}, minmax(52px, 1fr))`,
+          gridTemplateColumns: `repeat(${gridDimensions.cols}, minmax(52px, 1fr))`,
         }}
       >
         <div
@@ -198,9 +197,8 @@ export const SeatMapEditor = ({ className }: SeatMapEditorProps) => {
           </div>
         </div>
 
-        {/* Swap loop order: Cols (outer) -> Rows (inner) to rotate grid rendering */}
-        {Array.from({ length: gridDimensions.cols }).map((_, colIdx) =>
-          Array.from({ length: gridDimensions.rows }).map((__, rowIdx) => {
+        {Array.from({ length: gridDimensions.rows }).map((_, rowIdx) =>
+          Array.from({ length: gridDimensions.cols }).map((__, colIdx) => {
             const key = seatKey(floor, rowIdx, colIdx);
             const seat = seatMap.get(key);
             const isEditing = editingKey === key;
@@ -217,8 +215,6 @@ export const SeatMapEditor = ({ className }: SeatMapEditorProps) => {
                     onClick={() => handleCellClick(rowIdx, colIdx, floor)}
                     className={cn(
                       "flex h-14 w-full max-w-14 flex-col items-center justify-center rounded-md border text-xs transition-colors",
-                      // Update margin logic for rotated layout if needed, 
-                      // or just center everything
                       "mx-auto",
                       seat
                         ? (seatTypeStyles[seat.type] ??
@@ -233,7 +229,7 @@ export const SeatMapEditor = ({ className }: SeatMapEditorProps) => {
                       {seat ? seat.seatCode : ""}
                     </span>
                     <span className="text-[10px] text-muted-foreground">
-                      C{rowIdx + 1} • H{colIdx + 1}
+                      C{colIdx + 1} • H{rowIdx + 1}
                     </span>
                   </button>
                 </PopoverTrigger>
