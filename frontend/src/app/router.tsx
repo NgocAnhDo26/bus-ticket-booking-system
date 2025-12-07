@@ -12,7 +12,10 @@ import {
   RouteManagementPage,
   TripManagementPage,
 } from "@/features/catalog";
-import { BusLayoutCreatePage, BusLayoutManagementPage } from "@/features/bus-layout";
+import {
+  BusLayoutCreatePage,
+  BusLayoutManagementPage,
+} from "@/features/bus-layout";
 import { PublicRoute, ProtectedRoute } from "@/components/common";
 import { useAuthStore } from "@/store/auth-store";
 import { useHydrateAuth } from "@/features/auth/hooks";
@@ -45,7 +48,7 @@ const AuthenticatedRedirect = () => {
     // However, useHydrateAuth fetches user asynchronously.
     // Better approach: useHydrateAuth should expose loading state or we check query status.
     // For now, let's rely on the token check. If token exists, we expect user to be there eventually.
-    return null; 
+    return null;
   }
 
   return <Navigate to={getDashboardPath(user.role)} replace />;
@@ -53,6 +56,7 @@ const AuthenticatedRedirect = () => {
 
 import { HomePage } from "@/features/home/pages/HomePage";
 import { SearchResultsPage } from "@/features/search/pages/SearchResultsPage";
+import { BookingPage } from "@/features/booking";
 
 // ... existing imports
 
@@ -67,6 +71,10 @@ export const router = createBrowserRouter([
       {
         path: "/search",
         element: <SearchResultsPage />,
+      },
+      {
+        path: "/booking/:tripId",
+        element: <BookingPage />,
       },
       {
         element: <ProtectedRoute allowedRoles={["PASSENGER"]} />,

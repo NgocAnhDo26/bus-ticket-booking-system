@@ -27,6 +27,7 @@
     "@radix-ui/react-toast": "^1.2.15",
     "@radix-ui/react-tooltip": "^1.2.8",
     "@react-oauth/google": "^0.12.2",
+    "@stomp/stompjs": "^7.2.1",
     "@tanstack/react-query": "^5.90.11",
     "@tanstack/react-table": "^8.21.3",
     "axios": "^1.13.2",
@@ -41,6 +42,7 @@
     "react-dom": "^19.2.0",
     "react-hook-form": "^7.66.1",
     "react-router-dom": "^7.9.6",
+    "sockjs-client": "^1.6.1",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.4.0",
     "tailwindcss-animate": "^1.0.7",
@@ -55,6 +57,7 @@
     "@types/node": "^24.10.1",
     "@types/react": "^19.2.5",
     "@types/react-dom": "^19.2.3",
+    "@types/sockjs-client": "^1.5.4",
     "@vitejs/plugin-react": "^5.1.1",
     "@vitest/coverage-v8": "^4.0.14",
     "autoprefixer": "^10.4.22",
@@ -63,6 +66,7 @@
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.4.24",
     "eslint-plugin-tailwindcss": "^3.18.2",
+    "events": "^3.3.0",
     "globals": "^16.5.0",
     "jsdom": "^27.2.0",
     "lint-staged": "^16.2.7",
@@ -72,6 +76,7 @@
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.46.4",
     "vite": "^7.2.4",
+    "vite-plugin-mkcert": "^1.17.9",
     "vitest": "^4.0.14"
   }
 }
