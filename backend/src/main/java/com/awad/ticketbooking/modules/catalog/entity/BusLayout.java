@@ -32,6 +32,12 @@ public class BusLayout {
     @Column(name = "total_floors")
     private Integer totalFloors = 1;
 
+    @Column(name = "total_rows")
+    private Integer totalRows;
+
+    @Column(name = "total_cols")
+    private Integer totalCols;
+
     @Column
     private String description;
 

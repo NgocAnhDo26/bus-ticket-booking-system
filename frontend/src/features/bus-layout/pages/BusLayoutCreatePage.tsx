@@ -14,13 +14,13 @@ export const BusLayoutCreatePage = () => {
   useEffect(() => {
     if (id && layout) {
       const seatsData = layout.seats || [];
-      const maxRow = seatsData.length > 0 ? Math.max(...seatsData.map((s) => s.row)) : 9;
-      const maxCol = seatsData.length > 0 ? Math.max(...seatsData.map((s) => s.col)) : 3;
 
       const config = {
         name: layout.name,
         busType: layout.busType,
         totalFloors: layout.totalFloors,
+        totalRows: layout.totalRows ?? (seatsData.length > 0 ? Math.max(...seatsData.map((s) => s.row)) + 2 : 10),
+        totalCols: layout.totalCols ?? (seatsData.length > 0 ? Math.max(...seatsData.map((s) => s.col)) + 2 : 3),
         description: layout.description,
       };
 
@@ -33,7 +33,8 @@ export const BusLayoutCreatePage = () => {
         type: s.type as SeatType,
       }));
 
-      loadLayout(config, seats, { rows: maxRow + 2, cols: maxCol + 2 });
+      // loadLayout will handle rotation of gridDimensions from config
+      loadLayout(config, seats);
     } else if (!id) {
       resetStore();
     }

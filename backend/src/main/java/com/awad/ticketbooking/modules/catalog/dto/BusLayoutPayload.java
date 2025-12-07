@@ -11,6 +11,8 @@ public class BusLayoutPayload {
         private String name;
         private String busType;
         private Integer totalFloors;
+        private Integer totalRows;
+        private Integer totalCols;
         private String description;
     }
 
@@ -35,6 +37,8 @@ public class BusLayoutPayload {
         private String busType;
         private Integer totalSeats;
         private Integer totalFloors;
+        private Integer totalRows;
+        private Integer totalCols;
         private String description;
         private List<LayoutSeatDto> seats;
     }

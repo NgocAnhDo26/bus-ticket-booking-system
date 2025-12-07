@@ -52,18 +52,28 @@ export const useBusLayoutStore = create<State & Actions>()((set) => ({
   setConfig: (data) =>
     set((state) => {
       const { totalRows, totalCols, ...apiConfig } = data;
-      const nextConfig = { ...state.config, ...apiConfig };
+      const logicalRows = totalRows ?? state.config.totalRows ?? state.gridDimensions.rows;
+      const logicalCols = totalCols ?? state.config.totalCols ?? state.gridDimensions.cols;
       
       const nextGrid = {
-        rows: totalRows ?? state.gridDimensions.rows,
-        cols: totalCols ?? state.gridDimensions.cols,
+        rows: logicalRows,
+        cols: logicalCols,
+      };
+      
+      // Include logical totalRows and totalCols in config for API
+      const nextConfig = { 
+        ...state.config, 
+        ...apiConfig,
+        totalRows: logicalRows,
+        totalCols: logicalCols,
       };
 
+      // Filter seats using logical dimensions
       const filteredSeats = state.seats.filter(
         (seat) =>
           seat.floor <= nextConfig.totalFloors &&
-          seat.row < nextGrid.rows &&
-          seat.col < nextGrid.cols,
+          seat.row < logicalRows &&
+          seat.col < logicalCols,
       );
 
       return {
@@ -117,7 +127,10 @@ export const useBusLayoutStore = create<State & Actions>()((set) => ({
     set({
       config,
       seats,
-      gridDimensions: gridDims || { rows: 10, cols: 4 },
+      gridDimensions: gridDims || { 
+        rows: config.totalRows || 10,
+        cols: config.totalCols || 4,
+      },
       step: 1,
     }),
 }));

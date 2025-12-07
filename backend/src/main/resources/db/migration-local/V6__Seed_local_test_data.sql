@@ -25,10 +25,10 @@ VALUES
 ON CONFLICT (id) DO NOTHING;
 
 -- Bus layouts
-INSERT INTO bus_layouts (id, name, bus_type, total_seats, total_floors, description, created_at)
+INSERT INTO bus_layouts (id, name, bus_type, total_seats, total_floors, description, created_at, total_rows, total_cols)
 VALUES
-    ('c1a2b3c4-0001-4d5e-9000-000000000001', 'Sleeper 12 (2 floors)', 'SLEEPER', 12, 2, 'Compact 2-floor sleeper demo layout', now()),
-    ('c1a2b3c4-0001-4d5e-9000-000000000002', 'Limousine 8', 'LIMOUSINE', 8, 1, '8-seat VIP limousine layout', now())
+    ('c1a2b3c4-0001-4d5e-9000-000000000001', 'Sleeper 12 (2 floors)', 'SLEEPER', 12, 2, 'Compact 2-floor sleeper demo layout', now(), 2, 6),
+    ('c1a2b3c4-0001-4d5e-9000-000000000002', 'Limousine 8', 'LIMOUSINE', 8, 1, '8-seat VIP limousine layout', now(), 4, 2)
 ON CONFLICT (id) DO NOTHING;
 
 -- Layout seats for Sleeper 12

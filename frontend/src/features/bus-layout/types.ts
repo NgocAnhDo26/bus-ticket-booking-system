@@ -8,6 +8,8 @@ export type BusLayoutConfig = {
   name: string;
   busType: string;
   totalFloors: number;
+  totalRows?: number;
+  totalCols?: number;
   description?: string;
 };
 
@@ -26,6 +28,8 @@ export type BusLayout = {
   busType: string;
   totalSeats: number;
   totalFloors: number;
+  totalRows?: number;
+  totalCols?: number;
   description: string;
   seats?: SeatCell[];
 };
