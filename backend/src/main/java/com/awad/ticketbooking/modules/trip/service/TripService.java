@@ -217,10 +217,9 @@ public class TripService {
     }
 
     @Transactional(readOnly = true)
-    public List<TripResponse> getAllTrips() {
-        return tripRepository.findAll().stream()
-                .map(this::mapToResponse)
-                .collect(Collectors.toList());
+    public Page<TripResponse> getAllTrips(Pageable pageable) {
+        return tripRepository.findAll(pageable)
+                .map(this::mapToResponse);
     }
 
     private TripResponse mapToResponse(Trip trip) {

@@ -23,8 +23,9 @@ public class StationController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Station>> getAllStations() {
-        return ResponseEntity.ok(stationService.getAllStations());
+    public ResponseEntity<org.springframework.data.domain.Page<Station>> getAllStations(
+            org.springframework.data.domain.Pageable pageable) {
+        return ResponseEntity.ok(stationService.getAllStations(pageable));
     }
 
     @PutMapping("/{id}")
