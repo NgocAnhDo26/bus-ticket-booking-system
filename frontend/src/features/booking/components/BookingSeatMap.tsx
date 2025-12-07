@@ -123,7 +123,7 @@ export const BookingSeatMap = ({ busLayoutId }: BookingSeatMapProps) => {
               cols={cols}
               floor={floor}
               seats={seats}
-              renderCell={(row, col, floor, seat) => {
+              renderCell={(_row, col, _floor, seat) => {
                 if (!seat) {
                   return (
                     // <div
