@@ -55,6 +55,13 @@ public class BookingController {
         return ResponseEntity.ok(bookingService.confirmBooking(id));
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<BookingResponse> updateBooking(
+            @PathVariable UUID id,
+            @Valid @RequestBody com.awad.ticketbooking.modules.booking.dto.UpdateBookingRequest request) {
+        return ResponseEntity.ok(bookingService.updateBooking(id, request));
+    }
+
     @PutMapping("/{id}/cancel")
     public ResponseEntity<BookingResponse> cancelBooking(@PathVariable UUID id) {
         return ResponseEntity.ok(bookingService.cancelBooking(id));

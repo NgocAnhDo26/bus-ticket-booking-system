@@ -1,5 +1,5 @@
 import { apiClient } from "@/lib/api-client";
-import type { BookingResponse, CreateBookingRequest, LockSeatRequest } from "./types";
+import type { BookingResponse, CreateBookingRequest, LockSeatRequest, UpdateBookingRequest } from "./types";
 import { type Trip } from "@/features/catalog/types";
 
 // Booking CRUD APIs
@@ -7,6 +7,14 @@ export const createBooking = async (
     request: CreateBookingRequest
 ): Promise<BookingResponse> => {
     const response = await apiClient.post<BookingResponse>("/bookings", request);
+    return response.data;
+};
+
+export const updateBooking = async (
+    id: string,
+    request: UpdateBookingRequest
+): Promise<BookingResponse> => {
+    const response = await apiClient.put<BookingResponse>(`/bookings/${id}`, request);
     return response.data;
 };
 
@@ -66,6 +74,11 @@ export const bookingApi = {
 
     getTrip: async (tripId: string) => {
         const response = await apiClient.get<Trip>(`/trips/${tripId}`);
+        return response.data;
+    },
+
+    getBookingById: async (id: string) => {
+        const response = await apiClient.get<BookingResponse>(`/bookings/${id}`);
         return response.data;
     },
 };

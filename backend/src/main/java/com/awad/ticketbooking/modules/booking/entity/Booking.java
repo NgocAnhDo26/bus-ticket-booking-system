@@ -29,6 +29,14 @@ public class Booking extends BaseEntity {
     @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Ticket> tickets = new ArrayList<>();
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "pickup_station_id")
+    private com.awad.ticketbooking.modules.catalog.entity.Station pickupStation;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "dropoff_station_id")
+    private com.awad.ticketbooking.modules.catalog.entity.Station dropoffStation;
+
     @Column(name = "total_price", nullable = false)
     private BigDecimal totalPrice;
 

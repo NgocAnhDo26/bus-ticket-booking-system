@@ -16,30 +16,32 @@ import java.util.List;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class BookingExpirationScheduler {
+public class BookingCleanupScheduler {
 
     private final BookingRepository bookingRepository;
     private final BookingService bookingService;
 
-    @Scheduled(fixedRate = 30000) // Run every 1 minute
+    // Run every minute (60 * 1000 ms)
+    @Scheduled(fixedRate = 60000)
     @Transactional
-    public void expirePendingBookings() {
-        log.info("Running booking expiration scheduler...");
+    public void cleanupExpiredBookings() {
+        log.debug("Running expired booking cleanup job...");
+
+        // Expire bookings older than 15 minutes
         Instant cutoffTime = Instant.now().minus(15, ChronoUnit.MINUTES);
 
         List<Booking> expiredBookings = bookingRepository.findExpiredPendingBookings(cutoffTime);
 
         if (!expiredBookings.isEmpty()) {
-            log.info("Found {} expired bookings to cancel", expiredBookings.size());
+            log.info("Found {} expired pending bookings to cancel.", expiredBookings.size());
+
             for (Booking booking : expiredBookings) {
                 try {
-                    log.info("Expiring booking: {}", booking.getId());
-                    // We use the service method to ensure any side effects (like email or status
-                    // checks) are handled
-                    // But we catch exceptions to continue processing others
+                    log.info("Cancelling expired booking: {} (Created at: {})", booking.getCode(),
+                            booking.getCreatedAt());
                     bookingService.cancelBooking(booking.getId());
                 } catch (Exception e) {
-                    log.error("Failed to cancel expired booking: " + booking.getId(), e);
+                    log.error("Failed to cancel expired booking {}: {}", booking.getCode(), e.getMessage());
                 }
             }
         }

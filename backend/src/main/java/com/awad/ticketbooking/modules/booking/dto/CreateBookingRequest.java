@@ -29,6 +29,9 @@ public class CreateBookingRequest {
     @Email(message = "Invalid email format")
     private String passengerEmail;
 
+    private UUID pickupStationId;
+    private UUID dropoffStationId;
+
     @NotNull(message = "Total price is required")
     @Positive(message = "Total price must be positive")
     private BigDecimal totalPrice;

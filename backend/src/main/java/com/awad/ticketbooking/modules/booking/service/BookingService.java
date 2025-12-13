@@ -7,10 +7,15 @@ import com.awad.ticketbooking.modules.auth.repository.UserRepository;
 import com.awad.ticketbooking.modules.booking.dto.BookingResponse;
 import com.awad.ticketbooking.modules.booking.dto.CreateBookingRequest;
 import com.awad.ticketbooking.modules.booking.dto.TicketRequest;
+import com.awad.ticketbooking.modules.booking.dto.UpdateBookingRequest;
 import com.awad.ticketbooking.modules.booking.entity.Booking;
 import com.awad.ticketbooking.modules.booking.entity.Ticket;
 import com.awad.ticketbooking.modules.booking.repository.BookingRepository;
 import com.awad.ticketbooking.modules.booking.repository.TicketRepository;
+import java.util.Set;
+import java.util.Map;
+import com.awad.ticketbooking.modules.catalog.entity.Station;
+import com.awad.ticketbooking.modules.catalog.repository.StationRepository;
 import com.awad.ticketbooking.modules.trip.entity.Trip;
 import com.awad.ticketbooking.modules.trip.repository.TripRepository;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +37,7 @@ public class BookingService {
         private final TripRepository tripRepository;
         private final UserRepository userRepository;
         private final TicketRepository ticketRepository;
+        private final StationRepository stationRepository;
         private final EmailService emailService;
 
         @Transactional
@@ -51,9 +57,48 @@ public class BookingService {
                                 .map(TicketRequest::getSeatCode)
                                 .collect(Collectors.toList());
 
-                for (String seatCode : requestedSeats) {
-                        if (bookedSeats.contains(seatCode)) {
-                                throw new RuntimeException("Seat " + seatCode + " is already booked");
+                // Check for seat conflicts with "Self-Correction" logic
+                List<Ticket> conflictingTickets = ticketRepository.findByBookingTripIdAndSeatCodeIn(request.getTripId(),
+                                requestedSeats);
+
+                if (!conflictingTickets.isEmpty()) {
+                        // Check if these conflicts are all from ONE pending booking of THIS user
+                        Map<UUID, List<Ticket>> ticketsByBookingId = conflictingTickets.stream()
+                                        .collect(Collectors.groupingBy(t -> t.getBooking().getId()));
+
+                        for (List<Ticket> tickets : ticketsByBookingId.values()) {
+                                Booking existingBooking = tickets.get(0).getBooking();
+                                boolean isSelfConflict = false;
+
+                                // Check if it's a PENDING booking from the SAME user
+                                if (existingBooking.getStatus() == BookingStatus.PENDING &&
+                                                user != null && existingBooking.getUser() != null &&
+                                                existingBooking.getUser().getId().equals(user.getId())) {
+                                        isSelfConflict = true;
+                                }
+
+                                if (isSelfConflict) {
+                                        // 1. Check if seats are IDENTICAL (Update Case)
+                                        Set<String> existingSeats = existingBooking.getTickets().stream()
+                                                        .map(Ticket::getSeatCode)
+                                                        .collect(Collectors.toSet());
+                                        Set<String> requestedSeatSet = new java.util.HashSet<>(requestedSeats);
+
+                                        if (existingSeats.equals(requestedSeatSet)) {
+                                                // Matches exactly -> Update this booking instead of creating new
+                                                return updatePendingBooking(existingBooking, request);
+                                        } else {
+                                                // 2. Mismatch (User changed seats) -> "Self-Healing": Cancel old,
+                                                // create new
+                                                existingBooking.setStatus(BookingStatus.CANCELLED);
+                                                bookingRepository.save(existingBooking);
+                                        }
+                                } else if (existingBooking.getStatus() == BookingStatus.PENDING
+                                                || existingBooking.getStatus() == BookingStatus.CONFIRMED) {
+                                        // Real conflict with another user/confirmed booking
+                                        throw new RuntimeException(
+                                                        "Seat " + tickets.get(0).getSeatCode() + " is already booked");
+                                }
                         }
                 }
 
@@ -64,6 +109,73 @@ public class BookingService {
                 booking.setPassengerPhone(request.getPassengerPhone());
                 booking.setPassengerEmail(request.getPassengerEmail());
                 booking.setStatus(BookingStatus.PENDING);
+
+                // Validate Pickup/Dropoff
+                Station pickupStation = null;
+                int pickupOrder = -1; // -1 for undefined, 0 for Origin
+
+                if (request.getPickupStationId() != null) {
+                        // Check if it is Origin
+                        if (request.getPickupStationId().equals(trip.getRoute().getOriginStation().getId())) {
+                                pickupStation = trip.getRoute().getOriginStation();
+                                pickupOrder = 0;
+                        } else {
+                                // Check in stops
+                                var stop = trip.getRoute().getStops().stream()
+                                                .filter(s -> s.getStation().getId().equals(request.getPickupStationId())
+                                                                &&
+                                                                (s.getStopType() == com.awad.ticketbooking.common.enums.StopType.PICKUP
+                                                                                ||
+                                                                                s.getStopType() == com.awad.ticketbooking.common.enums.StopType.BOTH))
+                                                .findFirst()
+                                                .orElseThrow(() -> new RuntimeException(
+                                                                "Invalid pickup station for this route"));
+                                pickupStation = stop.getStation();
+                                pickupOrder = stop.getStopOrder();
+                        }
+                        booking.setPickupStation(pickupStation);
+                } else {
+                        // Default to Origin if not specified (or handle as null implies Origin?)
+                        // For now, if null, we might assume Origin but better explicit.
+                        // Let's assume nullable means "standard route" -> Origin.
+                        // But if user explicitly sends ID, we validate.
+                        pickupStation = trip.getRoute().getOriginStation();
+                        pickupOrder = 0;
+                        booking.setPickupStation(pickupStation);
+                }
+
+                Station dropoffStation = null;
+                int dropoffOrder = Integer.MAX_VALUE;
+
+                if (request.getDropoffStationId() != null) {
+                        // Check if it is Destination
+                        if (request.getDropoffStationId().equals(trip.getRoute().getDestinationStation().getId())) {
+                                dropoffStation = trip.getRoute().getDestinationStation();
+                                dropoffOrder = Integer.MAX_VALUE;
+                        } else {
+                                // Check in stops
+                                var stop = trip.getRoute().getStops().stream()
+                                                .filter(s -> s.getStation().getId()
+                                                                .equals(request.getDropoffStationId()) &&
+                                                                (s.getStopType() == com.awad.ticketbooking.common.enums.StopType.DROPOFF
+                                                                                ||
+                                                                                s.getStopType() == com.awad.ticketbooking.common.enums.StopType.BOTH))
+                                                .findFirst()
+                                                .orElseThrow(() -> new RuntimeException(
+                                                                "Invalid dropoff station for this route"));
+                                dropoffStation = stop.getStation();
+                                dropoffOrder = stop.getStopOrder();
+                        }
+                        booking.setDropoffStation(dropoffStation);
+                } else {
+                        dropoffStation = trip.getRoute().getDestinationStation();
+                        dropoffOrder = Integer.MAX_VALUE;
+                        booking.setDropoffStation(dropoffStation);
+                }
+
+                if (pickupOrder >= dropoffOrder) {
+                        throw new RuntimeException("Pickup station must be before dropoff station");
+                }
 
                 // Generate unique booking code with retry
                 String bookingCode = generateBookingCode();
@@ -89,6 +201,58 @@ public class BookingService {
                 Booking savedBooking = bookingRepository.save(booking);
 
                 return toBookingResponse(savedBooking);
+        }
+
+        private BookingResponse updatePendingBooking(Booking booking, CreateBookingRequest request) {
+                booking.setPassengerName(request.getPassengerName());
+                booking.setPassengerPhone(request.getPassengerPhone());
+                booking.setPassengerEmail(request.getPassengerEmail());
+
+                // Update Pickup/Dropoff
+                Trip trip = booking.getTrip();
+                Station pickupStation = null;
+                if (request.getPickupStationId() != null) {
+                        if (request.getPickupStationId().equals(trip.getRoute().getOriginStation().getId())) {
+                                pickupStation = trip.getRoute().getOriginStation();
+                        } else {
+                                var stop = trip.getRoute().getStops().stream()
+                                                .filter(s -> s.getStation().getId()
+                                                                .equals(request.getPickupStationId()))
+                                                .findFirst().orElse(null);
+                                if (stop != null)
+                                        pickupStation = stop.getStation();
+                        }
+                } else {
+                        pickupStation = trip.getRoute().getOriginStation();
+                }
+                booking.setPickupStation(pickupStation);
+
+                Station dropoffStation = null;
+                if (request.getDropoffStationId() != null) {
+                        if (request.getDropoffStationId().equals(trip.getRoute().getDestinationStation().getId())) {
+                                dropoffStation = trip.getRoute().getDestinationStation();
+                        } else {
+                                var stop = trip.getRoute().getStops().stream()
+                                                .filter(s -> s.getStation().getId()
+                                                                .equals(request.getDropoffStationId()))
+                                                .findFirst().orElse(null);
+                                if (stop != null)
+                                        dropoffStation = stop.getStation();
+                        }
+                } else {
+                        dropoffStation = trip.getRoute().getDestinationStation();
+                }
+                booking.setDropoffStation(dropoffStation);
+
+                // Note: We don't update TotalPrice here assuming Price/Seats didn't change
+                // (since seats are identical)
+                // But if ticket prices are dynamic per request? Usually price is tied to seat.
+                // Re-calculating safety:
+                // If seats are same, price should be same unless dynamic pricing changed in 1
+                // minute.
+                // Let's keep price as is or re-calc if needed. User wants "Edit Info".
+
+                return toBookingResponse(bookingRepository.save(booking));
         }
 
         private String generateBookingCode() {
@@ -198,8 +362,143 @@ public class BookingService {
                 return ticket;
         }
 
+        @Transactional
+        public BookingResponse updateBooking(UUID bookingId, UpdateBookingRequest request) {
+                Booking booking = bookingRepository.findById(bookingId)
+                                .orElseThrow(() -> new RuntimeException("Booking not found"));
+
+                if (booking.getStatus() != BookingStatus.PENDING) {
+                        throw new RuntimeException("Only pending bookings can be updated");
+                }
+
+                // Update passenger details
+                booking.setPassengerName(request.getPassengerName());
+                booking.setPassengerPhone(request.getPassengerPhone());
+                booking.setPassengerEmail(request.getPassengerEmail());
+
+                Trip trip = booking.getTrip();
+
+                // Update Pickup Station
+                if (request.getPickupStationId() != null) {
+                        Station pickupStation = null;
+                        if (request.getPickupStationId().equals(trip.getRoute().getOriginStation().getId())) {
+                                pickupStation = trip.getRoute().getOriginStation();
+                        } else {
+                                var stop = trip.getRoute().getStops().stream()
+                                                .filter(s -> s.getStation().getId()
+                                                                .equals(request.getPickupStationId()))
+                                                .findFirst().orElse(null);
+                                if (stop != null) {
+                                        pickupStation = stop.getStation();
+                                }
+                        }
+                        if (pickupStation != null) {
+                                booking.setPickupStation(pickupStation);
+                        }
+                }
+
+                // Update Dropoff Station
+                if (request.getDropoffStationId() != null) {
+                        Station dropoffStation = null;
+                        if (request.getDropoffStationId().equals(trip.getRoute().getDestinationStation().getId())) {
+                                dropoffStation = trip.getRoute().getDestinationStation();
+                        } else {
+                                var stop = trip.getRoute().getStops().stream()
+                                                .filter(s -> s.getStation().getId()
+                                                                .equals(request.getDropoffStationId()))
+                                                .findFirst().orElse(null);
+                                if (stop != null) {
+                                        dropoffStation = stop.getStation();
+                                }
+                        }
+                        if (dropoffStation != null) {
+                                booking.setDropoffStation(dropoffStation);
+                        }
+                }
+
+                // Update tickets (seats) if provided
+                if (request.getTickets() != null && !request.getTickets().isEmpty()) {
+                        List<String> requestedSeats = request.getTickets().stream()
+                                        .map(TicketRequest::getSeatCode)
+                                        .collect(Collectors.toList());
+
+                        // Check for seat conflicts (excluding this booking's tickets)
+                        List<Ticket> conflictingTickets = ticketRepository
+                                        .findByBookingTripIdAndSeatCodeIn(booking.getTrip().getId(), requestedSeats);
+
+                        boolean hasRealConflict = conflictingTickets.stream()
+                                        .anyMatch(t -> !t.getBooking().getId().equals(bookingId));
+
+                        if (hasRealConflict) {
+                                throw new RuntimeException("One or more seats are already booked by another user");
+                        }
+
+                        // Replace tickets
+                        List<Ticket> newTickets = request.getTickets().stream()
+                                        .map(ticketReq -> mapTicket(ticketReq, booking))
+                                        .collect(Collectors.toList());
+
+                        booking.getTickets().clear();
+                        booking.getTickets().addAll(newTickets);
+
+                        // Recalculate total price
+                        BigDecimal calculatedTotal = newTickets.stream()
+                                        .map(Ticket::getPrice)
+                                        .reduce(BigDecimal.ZERO, BigDecimal::add);
+                        booking.setTotalPrice(calculatedTotal);
+                }
+
+                Booking savedBooking = bookingRepository.save(booking);
+                return toBookingResponse(savedBooking);
+        }
+
         private BookingResponse toBookingResponse(Booking booking) {
                 Trip trip = booking.getTrip();
+
+                BookingResponse.TripInfo tripInfo = BookingResponse.TripInfo.builder()
+                                .id(trip.getId())
+                                .departureTime(trip.getDepartureTime())
+                                .arrivalTime(trip.getArrivalTime())
+                                .route(BookingResponse.RouteInfo.builder()
+                                                .id(trip.getRoute().getId())
+                                                .originStation(BookingResponse.StationInfo.builder()
+                                                                .id(trip.getRoute().getOriginStation()
+                                                                                .getId())
+                                                                .name(trip.getRoute().getOriginStation()
+                                                                                .getName())
+                                                                .city(trip.getRoute().getOriginStation()
+                                                                                .getCity())
+                                                                .address(trip.getRoute()
+                                                                                .getOriginStation()
+                                                                                .getAddress())
+                                                                .build())
+                                                .destinationStation(BookingResponse.StationInfo
+                                                                .builder()
+                                                                .id(trip.getRoute()
+                                                                                .getDestinationStation()
+                                                                                .getId())
+                                                                .name(trip.getRoute()
+                                                                                .getDestinationStation()
+                                                                                .getName())
+                                                                .city(trip.getRoute()
+                                                                                .getDestinationStation()
+                                                                                .getCity())
+                                                                .address(trip.getRoute()
+                                                                                .getDestinationStation()
+                                                                                .getAddress())
+                                                                .build())
+                                                .durationMinutes(trip.getRoute().getDurationMinutes())
+                                                .build())
+                                .bus(BookingResponse.BusInfo.builder()
+                                                .id(trip.getBus().getId())
+                                                .plateNumber(trip.getBus().getPlateNumber())
+                                                .operatorName(trip.getBus().getOperator().getName())
+                                                .busLayoutId(trip.getBus().getBusLayout() != null
+                                                                ? trip.getBus().getBusLayout().getId()
+                                                                : null)
+                                                .amenities(trip.getBus().getAmenities())
+                                                .build())
+                                .build();
 
                 return BookingResponse.builder()
                                 .id(booking.getId())
@@ -210,47 +509,7 @@ public class BookingService {
                                 .passengerPhone(booking.getPassengerPhone())
                                 .createdAt(booking.getCreatedAt())
                                 .updatedAt(booking.getUpdatedAt())
-                                .trip(BookingResponse.TripInfo.builder()
-                                                .id(trip.getId())
-                                                .departureTime(trip.getDepartureTime())
-                                                .arrivalTime(trip.getArrivalTime())
-                                                .route(BookingResponse.RouteInfo.builder()
-                                                                .id(trip.getRoute().getId())
-                                                                .originStation(BookingResponse.StationInfo.builder()
-                                                                                .id(trip.getRoute().getOriginStation()
-                                                                                                .getId())
-                                                                                .name(trip.getRoute().getOriginStation()
-                                                                                                .getName())
-                                                                                .city(trip.getRoute().getOriginStation()
-                                                                                                .getCity())
-                                                                                .address(trip.getRoute()
-                                                                                                .getOriginStation()
-                                                                                                .getAddress())
-                                                                                .build())
-                                                                .destinationStation(BookingResponse.StationInfo
-                                                                                .builder()
-                                                                                .id(trip.getRoute()
-                                                                                                .getDestinationStation()
-                                                                                                .getId())
-                                                                                .name(trip.getRoute()
-                                                                                                .getDestinationStation()
-                                                                                                .getName())
-                                                                                .city(trip.getRoute()
-                                                                                                .getDestinationStation()
-                                                                                                .getCity())
-                                                                                .address(trip.getRoute()
-                                                                                                .getDestinationStation()
-                                                                                                .getAddress())
-                                                                                .build())
-                                                                .durationMinutes(trip.getRoute().getDurationMinutes())
-                                                                .build())
-                                                .bus(BookingResponse.BusInfo.builder()
-                                                                .id(trip.getBus().getId())
-                                                                .plateNumber(trip.getBus().getPlateNumber())
-                                                                .operatorName(trip.getBus().getOperator().getName())
-                                                                .amenities(trip.getBus().getAmenities())
-                                                                .build())
-                                                .build())
+                                .trip(tripInfo)
                                 .tickets(booking.getTickets().stream()
                                                 .map(ticket -> BookingResponse.TicketInfo.builder()
                                                                 .id(ticket.getId())
@@ -260,6 +519,22 @@ public class BookingService {
                                                                 .price(ticket.getPrice())
                                                                 .build())
                                                 .collect(Collectors.toList()))
+                                .pickupStation(booking.getPickupStation() != null
+                                                ? BookingResponse.StationInfo.builder()
+                                                                .id(booking.getPickupStation().getId())
+                                                                .name(booking.getPickupStation().getName())
+                                                                .city(booking.getPickupStation().getCity())
+                                                                .address(booking.getPickupStation().getAddress())
+                                                                .build()
+                                                : null)
+                                .dropoffStation(booking.getDropoffStation() != null
+                                                ? BookingResponse.StationInfo.builder()
+                                                                .id(booking.getDropoffStation().getId())
+                                                                .name(booking.getDropoffStation().getName())
+                                                                .city(booking.getDropoffStation().getCity())
+                                                                .address(booking.getDropoffStation().getAddress())
+                                                                .build()
+                                                : null)
                                 .build();
         }
 }

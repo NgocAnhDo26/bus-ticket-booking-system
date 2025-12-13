@@ -173,6 +173,18 @@ export const BookingConfirmationPage = () => {
                         {booking.trip.route.originStation.city} - {booking.trip.route.destinationStation.city}
                     </span>
                  </div>
+                 {booking.pickupStation && (
+                    <div className="flex justify-between">
+                        <span className="text-muted-foreground">Điểm đón</span>
+                        <span className="font-medium text-right">{booking.pickupStation.name}</span>
+                    </div>
+                 )}
+                 {booking.dropoffStation && (
+                    <div className="flex justify-between">
+                        <span className="text-muted-foreground">Điểm trả</span>
+                        <span className="font-medium text-right">{booking.dropoffStation.name}</span>
+                    </div>
+                 )}
                  <div className="flex justify-between">
                     <span className="text-muted-foreground">Khởi hành</span>
                     <span className="font-medium">

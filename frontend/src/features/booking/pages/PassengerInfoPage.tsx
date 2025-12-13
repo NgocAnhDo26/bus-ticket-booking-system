@@ -38,11 +38,15 @@ export const PassengerInfoPage = () => {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  const { seatStatusMap, initialize, selectedSeats } = useBookingStore(
+  const { seatStatusMap, initialize, selectedSeats, pickupStationId, dropoffStationId, setPickupStationId, setDropoffStationId } = useBookingStore(
     useShallow((state) => ({
       seatStatusMap: state.seatStatusMap,
       initialize: state.initialize,
       selectedSeats: state.selectedSeats,
+      pickupStationId: state.pickupStationId,
+      dropoffStationId: state.dropoffStationId,
+      setPickupStationId: state.setPickupStationId,
+      setDropoffStationId: state.setDropoffStationId,
     }))
   );
 
@@ -177,6 +181,8 @@ export const PassengerInfoPage = () => {
         passengerName: contactName.trim(),
         passengerPhone: contactPhone.trim(),
         passengerEmail: !user ? contactEmail.trim() : undefined,
+        pickupStationId: pickupStationId || undefined,
+        dropoffStationId: dropoffStationId || undefined,
         totalPrice: finalTotalPrice,
         tickets: finalSeatDetails.map((d) => ({
           seatCode: d.seatCode,
@@ -193,6 +199,9 @@ export const PassengerInfoPage = () => {
 
       // Save draft state in case user navigates back
       useBookingStore.getState().setPendingBooking(booking.id, finalSeatDetails.map(s => s.seatCode));
+
+      setPickupStationId(null);
+      setDropoffStationId(null);
 
       navigate(`/booking/confirmation/${booking.id}`);
     } catch {

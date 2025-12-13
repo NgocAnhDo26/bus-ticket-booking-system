@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Plus, ArrowRight, Pencil, Trash2, MoreHorizontal } from "lucide-react";
+import { RouteStopsManager } from "../components/RouteStopsManager";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -57,6 +58,8 @@ export const RouteManagementPage = () => {
   const deleteRoute = useDeleteRoute();
   const [editingRoute, setEditingRoute] = useState<Route | null>(null);
   const [deletingRoute, setDeletingRoute] = useState<Route | null>(null);
+
+  const [managingStopsRoute, setManagingStopsRoute] = useState<Route | null>(null);
 
   const {
     register,
@@ -425,6 +428,24 @@ export const RouteManagementPage = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Route Stops Management Sheet */}
+      <Sheet open={!!managingStopsRoute} onOpenChange={(open) => !open && setManagingStopsRoute(null)}>
+        <SheetContent className="overflow-y-auto sm:max-w-xl w-full">
+            <SheetHeader>
+            <SheetTitle>Quản lý trạm dừng</SheetTitle>
+            <SheetDescription>
+                Tuyến: {managingStopsRoute?.originStation.name} - {managingStopsRoute?.destinationStation.name}
+            </SheetDescription>
+            </SheetHeader>
+            <div className="py-4">
+                {managingStopsRoute && <RouteStopsManager route={managingStopsRoute} />}
+            </div>
+        </SheetContent>
+      </Sheet>
     </div>
+
   );
 };
+
+

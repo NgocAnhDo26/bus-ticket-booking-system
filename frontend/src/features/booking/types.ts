@@ -28,6 +28,7 @@ export type BusInfo = {
     id: string;
     plateNumber: string;
     operatorName: string;
+    busLayoutId: string;
     amenities: string[];
 };
 
@@ -50,6 +51,8 @@ export type BookingResponse = {
     updatedAt: string;
     trip: TripInfo;
     tickets: TicketInfo[];
+    pickupStation?: StationInfo;
+    dropoffStation?: StationInfo;
 };
 
 export type TicketRequest = {
@@ -65,8 +68,18 @@ export type CreateBookingRequest = {
     passengerName: string;
     passengerPhone: string;
     passengerEmail?: string; // For guests to receive tickets
+    pickupStationId?: string;
+    dropoffStationId?: string;
     totalPrice: number;
     tickets: TicketRequest[];
+};
+
+
+export type UpdateBookingRequest = {
+    passengerName: string;
+    passengerPhone: string;
+    passengerEmail?: string;
+    tickets?: TicketRequest[];
 };
 
 export type PassengerInfo = {

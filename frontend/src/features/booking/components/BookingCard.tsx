@@ -1,9 +1,11 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, Clock, Eye, X } from "lucide-react";
+import { Calendar, Clock, Eye, X, Edit2 } from "lucide-react";
 import type { BookingResponse } from "../types";
 import { Link } from "react-router-dom";
+import { useState } from "react";
+import { BookingEditDialog } from "./BookingEditDialog";
 
 type BookingCardProps = {
   booking: BookingResponse;
@@ -57,12 +59,16 @@ export const BookingCard = ({
   onCancel,
   isCancelling,
 }: BookingCardProps) => {
+  const [showEdit, setShowEdit] = useState(false);
   const status = statusConfig[booking.status];
   const canCancel =
     booking.status !== "CANCELLED" &&
     new Date(booking.trip.departureTime) > new Date();
+  
+  const canEdit = booking.status === "PENDING";
 
   return (
+    <>
     <Card className="overflow-hidden hover:shadow-md transition-shadow">
       <CardContent className="p-0">
         <div className="flex flex-col md:flex-row">
@@ -96,8 +102,26 @@ export const BookingCard = ({
               </div>
             </div>
 
+            {/* Pickup/Dropoff Details */}
+            {(booking.pickupStation || booking.dropoffStation) && (
+                 <div className="flex items-center gap-3 text-sm text-muted-foreground mt-2">
+                    <div className="flex gap-2">
+                        {booking.pickupStation && (
+                            <div className="bg-blue-50 text-blue-700 px-2 py-0.5 rounded border border-blue-200 text-xs text-nowrap">
+                                Đón: {booking.pickupStation.name}
+                            </div>
+                        )}
+                        {booking.dropoffStation && (
+                            <div className="bg-orange-50 text-orange-700 px-2 py-0.5 rounded border border-orange-200 text-xs text-nowrap">
+                                Trả: {booking.dropoffStation.name}
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
+
             {/* Date and Time */}
-            <div className="flex items-center gap-4 text-sm">
+            <div className="flex items-center gap-4 text-sm mt-3">
               <div className="flex items-center gap-1">
                 <Calendar className="h-4 w-4 text-muted-foreground" />
                 <span>{formatDate(booking.trip.departureTime)}</span>
@@ -138,6 +162,14 @@ export const BookingCard = ({
                   Chi tiết
                 </Link>
               </Button>
+              
+              {canEdit && (
+                  <Button variant="outline" size="sm" onClick={() => setShowEdit(true)}>
+                      <Edit2 className="h-4 w-4 mr-1" />
+                      Sửa
+                  </Button>
+              )}
+
               {canCancel && onCancel && (
                 <Button
                   variant="ghost"
@@ -155,5 +187,12 @@ export const BookingCard = ({
         </div>
       </CardContent>
     </Card>
+
+    <BookingEditDialog 
+        booking={booking} 
+        open={showEdit} 
+        onOpenChange={setShowEdit} 
+    />
+    </>
   );
 };

@@ -22,6 +22,8 @@ import {
     deleteStation,
     updateOperator,
     deleteOperator,
+    addRouteStop,
+    deleteRouteStop,
 } from "./api";
 import type {
     SearchTripRequest,
@@ -29,11 +31,15 @@ import type {
     CreateOperatorRequest,
     CreateBusRequest,
     CreateRouteRequest,
-    CreateTripRequest
+    CreateTripRequest,
+    AddRouteStopRequest
 } from "./types";
+
+
 
 // Stations
 export const useStations = () => {
+
     return useQuery({
         queryKey: ["stations"],
         queryFn: fetchStations,
@@ -182,6 +188,27 @@ export const useDeleteRoute = () => {
     const queryClient = useQueryClient();
     return useMutation({
         mutationFn: ({ id, force }: { id: string; force?: boolean }) => deleteRoute(id, force),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["routes"] });
+        },
+    });
+};
+
+
+export const useAddRouteStop = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ routeId, data }: { routeId: string; data: AddRouteStopRequest }) => addRouteStop(routeId, data),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["routes"] });
+        },
+    });
+};
+
+export const useDeleteRouteStop = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ routeId, stopId }: { routeId: string; stopId: string }) => deleteRouteStop(routeId, stopId),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["routes"] });
         },

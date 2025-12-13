@@ -25,7 +25,6 @@ public class SeatController {
 
     private final SeatLockService seatLockService;
     private final BookingRepository bookingRepository;
-    private final TripRepository tripRepository; // To validate trip exists
 
     @PostMapping("/lock")
     public ResponseEntity<?> lockSeat(@Valid @RequestBody LockSeatRequest request,

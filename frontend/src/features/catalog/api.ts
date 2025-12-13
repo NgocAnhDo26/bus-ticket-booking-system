@@ -11,17 +11,20 @@ import {
     type Trip,
     type CreateTripRequest,
     type SearchTripRequest,
+    type AddRouteStopRequest,
 } from "./types";
+
+
 
 // Stations
 export const fetchStations = async (): Promise<Station[]> => {
     const response = await apiClient.get<{ content: Station[] } | Station[]>("/stations");
-    
+
     // Handle Spring Data Page response
     if (response.data && 'content' in response.data) {
         return (response.data as { content: Station[] }).content;
     }
-    
+
     // Fallback if it returns a list directly
     return Array.isArray(response.data) ? response.data : [];
 };
@@ -117,6 +120,15 @@ export const updateRoute = async (id: string, data: CreateRouteRequest): Promise
 
 export const deleteRoute = async (id: string, force?: boolean): Promise<void> => {
     await apiClient.delete(`/routes/${id}`, { params: { force } });
+};
+
+export const addRouteStop = async (routeId: string, data: AddRouteStopRequest): Promise<Route> => {
+    const response = await apiClient.post<Route>(`/routes/${routeId}/stops`, data);
+    return response.data;
+};
+
+export const deleteRouteStop = async (routeId: string, stopId: string): Promise<void> => {
+    await apiClient.delete(`/routes/${routeId}/stops/${stopId}`);
 };
 
 // Trips
