@@ -1,6 +1,7 @@
-import { type ReactNode } from "react";
-import { SidebarNav } from "./sidebar-nav";
-import { TopBar } from "./top-bar";
+import { type ReactNode } from 'react';
+
+import { SidebarNav } from './sidebar-nav';
+import { TopBar } from './top-bar';
 
 type AppShellProps = {
   children: ReactNode;

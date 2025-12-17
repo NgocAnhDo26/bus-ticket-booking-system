@@ -1,12 +1,15 @@
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation } from "@tanstack/react-query";
-import { AuthLayout } from "../components/AuthLayout";
-import { register as registerApi } from "../api";
-import { RegisterForm } from "../components/RegisterForm";
-import { registerSchema, type RegisterFormValues } from "../schema";
-import { useAuthStore } from "@/store/auth-store";
-import { useNavigate } from "react-router-dom";
+import { useForm } from 'react-hook-form';
+import { useNavigate } from 'react-router-dom';
+
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useMutation } from '@tanstack/react-query';
+
+import { useAuthStore } from '@/store/auth-store';
+
+import { register as registerApi } from '../api';
+import { AuthLayout } from '../components/AuthLayout';
+import { RegisterForm } from '../components/RegisterForm';
+import { type RegisterFormValues, registerSchema } from '../schema';
 
 export const RegisterPage = () => {
   const setAuth = useAuthStore((state) => state.setAuth);
@@ -14,10 +17,10 @@ export const RegisterPage = () => {
   const form = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
-      fullName: "",
-      email: "",
-      password: "",
-      confirmPassword: "",
+      fullName: '',
+      email: '',
+      password: '',
+      confirmPassword: '',
     },
   });
 
@@ -25,7 +28,7 @@ export const RegisterPage = () => {
     mutationFn: registerApi,
     onSuccess: (data) => {
       setAuth(data);
-      navigate("/dashboard");
+      navigate('/dashboard');
     },
   });
 

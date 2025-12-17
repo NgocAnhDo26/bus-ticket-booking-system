@@ -1,8 +1,11 @@
-import { LifeBuoy } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { type SeatCell } from "../../features/bus-layout/types";
-import { seatKey } from "../../features/bus-layout/utils";
-import { useMemo } from "react";
+import { useMemo } from 'react';
+
+import { LifeBuoy } from 'lucide-react';
+
+import { Badge } from '@/components/ui/badge';
+
+import { type SeatCell } from '../../features/bus-layout/types';
+import { seatKey } from '../../features/bus-layout/utils';
 
 type SeatGridProps = {
   rows: number;
@@ -18,14 +21,7 @@ type SeatGridProps = {
   renderLegend?: () => React.ReactNode;
 };
 
-export const SeatGrid = ({
-  rows,
-  cols,
-  floor,
-  seats,
-  renderCell,
-  renderLegend,
-}: SeatGridProps) => {
+export const SeatGrid = ({ rows, cols, floor, seats, renderCell, renderLegend }: SeatGridProps) => {
   const seatMap = useMemo(() => {
     const map = new Map<string, SeatCell>();
     seats.forEach((seat) => {
@@ -38,9 +34,7 @@ export const SeatGrid = ({
 
   return (
     <div className="space-y-3 md:mt-4">
-      {renderLegend && (
-        <div className="flex justify-between">{renderLegend()}</div>
-      )}
+      {renderLegend && <div className="flex justify-between">{renderLegend()}</div>}
 
       <div
         className="grid gap-2 rounded-lg border bg-background p-6 shadow-sm min-w-[320px]"
@@ -48,10 +42,7 @@ export const SeatGrid = ({
           gridTemplateColumns: `repeat(${cols}, minmax(52px, 1fr))`,
         }}
       >
-        <div
-          className="flex items-center justify-between mb-3"
-          style={{ gridColumn: "1 / -1" }}
-        >
+        <div className="flex items-center justify-between mb-3" style={{ gridColumn: '1 / -1' }}>
           <div className="flex items-center justify-center ml-3">
             <LifeBuoy className="rotate-90" /> {/* Steering wheel */}
           </div>
@@ -73,4 +64,3 @@ export const SeatGrid = ({
     </div>
   );
 };
-

@@ -1,21 +1,23 @@
-import React from "react";
+import React from 'react';
+
 import {
+  ArrowDown,
+  ArrowUp,
+  ArrowUpDown,
   ChevronLeft,
   ChevronRight,
   ChevronsLeft,
   ChevronsRight,
-  ArrowUpDown,
-  ArrowDown,
-  ArrowUp,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
+} from 'lucide-react';
+
+import { Button } from '@/components/ui/button';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from '@/components/ui/select';
 import {
   Table,
   TableBody,
@@ -23,10 +25,10 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from '@/components/ui/table';
 
 export interface ColumnDef<TData> {
-  key: keyof TData | "actions";
+  key: keyof TData | 'actions';
   header: string;
   cell?: (item: TData) => React.ReactNode;
   sortable?: boolean;
@@ -45,7 +47,7 @@ export interface GenericTableProps<TData> {
   };
   pageIndex: number;
   pageSize: number;
-  sorting: { key: string | null; direction: "asc" | "desc" };
+  sorting: { key: string | null; direction: 'asc' | 'desc' };
   onPageChange: (page: number) => void;
   onPageSizeChange: (size: number) => void;
   onSort: (key: string) => void;
@@ -66,9 +68,7 @@ export function GenericTable<TData>({
   getRowId,
 }: GenericTableProps<TData>) {
   if (isLoading && data.length === 0) {
-    return (
-      <div className="p-8 text-center text-slate-500">Loading data...</div>
-    );
+    return <div className="p-8 text-center text-slate-500">Loading data...</div>;
   }
 
   return (
@@ -81,7 +81,7 @@ export function GenericTable<TData>({
                 <TableHead
                   key={col.key as string}
                   className={`h-12 pr-4 text-left text-md align-middle font-medium text-slate-500 [&:has([role=checkbox])]:pr-0 ${
-                    col.className || ""
+                    col.className || ''
                   }`}
                 >
                   {col.sortable ? (
@@ -94,10 +94,10 @@ export function GenericTable<TData>({
                       {col.header}
                       {sorting.key !== col.key ? (
                         <ArrowUpDown />
-                      ) : sorting.direction === "asc" ? (
-                        <ArrowUp/>
+                      ) : sorting.direction === 'asc' ? (
+                        <ArrowUp />
                       ) : (
-                        <ArrowDown/>
+                        <ArrowDown />
                       )}
                     </Button>
                   ) : (
@@ -110,10 +110,7 @@ export function GenericTable<TData>({
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="p-4 text-center h-24 text-slate-500"
-                >
+                <TableCell colSpan={columns.length} className="p-4 text-center h-24 text-slate-500">
                   Đang tải dữ liệu...
                 </TableCell>
               </TableRow>
@@ -129,8 +126,8 @@ export function GenericTable<TData>({
                       >
                         {col.cell
                           ? col.cell(row)
-                          : col.key !== "actions"
-                            ? String(row[col.key as keyof TData] ?? "")
+                          : col.key !== 'actions'
+                            ? String(row[col.key as keyof TData] ?? '')
                             : null}
                       </TableCell>
                     ))}
@@ -153,9 +150,8 @@ export function GenericTable<TData>({
 
       <div className="flex items-center justify-between px-2">
         <div className="flex-1 text-sm text-slate-500 hidden md:block">
-          Đang xem {(meta.page - 1) * meta.pageSize + 1} -{" "}
-          {Math.min(meta.page * meta.pageSize, meta.total)} trong tổng{" "}
-          {meta.total} dữ liệu
+          Đang xem {(meta.page - 1) * meta.pageSize + 1} -{' '}
+          {Math.min(meta.page * meta.pageSize, meta.total)} trong tổng {meta.total} dữ liệu
         </div>
         <div className="flex items-center space-x-6 lg:space-x-8">
           <div className="flex items-center space-x-2">

@@ -1,13 +1,15 @@
-import { create } from "zustand";
-import { Client } from "@stomp/stompjs";
-import SockJS from "sockjs-client";
-import { bookingApi } from "./api";
-import { type SeatStatusMessage, type LockSeatRequest } from "./types";
-import { useAuthStore } from "@/store/auth-store";
+import { Client } from '@stomp/stompjs';
+import SockJS from 'sockjs-client';
+import { create } from 'zustand';
+
+import { useAuthStore } from '@/store/auth-store';
+
+import { bookingApi } from './api';
+import { type LockSeatRequest, type SeatStatusMessage } from './types';
 
 const getBaseUrl = () => {
-  const apiUrl = import.meta.env.VITE_API_URL ?? "http://localhost:8080/api";
-  return apiUrl.replace(/\/api\/?$/, "");
+  const apiUrl = import.meta.env.VITE_API_URL ?? 'http://localhost:8080/api';
+  return apiUrl.replace(/\/api\/?$/, '');
 };
 
 type BookingState = {
@@ -75,26 +77,26 @@ export const useBookingStore = create<BookingState>((set, get) => {
 
               set((state) => {
                 const newMap = { ...state.seatStatusMap };
-                if (status === "AVAILABLE") {
+                if (status === 'AVAILABLE') {
                   delete newMap[seatCode];
-                } else if (status === "LOCKED") {
+                } else if (status === 'LOCKED') {
                   newMap[seatCode] = `LOCKED:${lockedByUserId}`;
-                } else if (status === "BOOKED") {
-                  newMap[seatCode] = "BOOKED";
+                } else if (status === 'BOOKED') {
+                  newMap[seatCode] = 'BOOKED';
                 }
                 return { seatStatusMap: newMap };
               });
             });
           },
           onStompError: (frame: { headers: Record<string, string>; body: string }) => {
-            console.error("Broker reported error: " + frame.headers["message"]);
-            console.error("Additional details: " + frame.body);
+            console.error('Broker reported error: ' + frame.headers['message']);
+            console.error('Additional details: ' + frame.body);
           },
         });
 
         stompClient.activate();
       } catch (err) {
-        set({ error: "Failed to initialize booking session" });
+        set({ error: 'Failed to initialize booking session' });
         console.error(err);
       } finally {
         set({ isLoading: false });
@@ -110,7 +112,7 @@ export const useBookingStore = create<BookingState>((set, get) => {
         tripId: null,
         seatStatusMap: {},
         isConnected: false,
-        error: null
+        error: null,
       });
     },
 
@@ -122,15 +124,21 @@ export const useBookingStore = create<BookingState>((set, get) => {
       const currentStatus = seatStatusMap[seatCode];
 
       // Guest ID Logic: Get or Create
-      let guestId = sessionStorage.getItem("guest_id");
+      let guestId = sessionStorage.getItem('guest_id');
       if (!user && !guestId) {
         guestId = crypto.randomUUID();
-        sessionStorage.setItem("guest_id", guestId);
+        sessionStorage.setItem('guest_id', guestId);
       }
 
       // Check ownership: Either explicitly in our selected list OR strictly by ID (fallback)
-      const isMyLock = selectedSeats.includes(seatCode) || (user ? currentStatus === `LOCKED:${user.id}` : (guestId ? currentStatus === `LOCKED:${guestId}` : false));
-      const isAvailable = !currentStatus || currentStatus === "AVAILABLE";
+      const isMyLock =
+        selectedSeats.includes(seatCode) ||
+        (user
+          ? currentStatus === `LOCKED:${user.id}`
+          : guestId
+            ? currentStatus === `LOCKED:${guestId}`
+            : false);
+      const isAvailable = !currentStatus || currentStatus === 'AVAILABLE';
 
       try {
         const payload: LockSeatRequest = { tripId, seatCode };
@@ -141,16 +149,15 @@ export const useBookingStore = create<BookingState>((set, get) => {
         if (isMyLock) {
           // Unlock
           await bookingApi.unlockSeat(payload);
-          set({ selectedSeats: selectedSeats.filter(s => s !== seatCode) });
+          set({ selectedSeats: selectedSeats.filter((s) => s !== seatCode) });
         } else if (isAvailable) {
           // Lock
           await bookingApi.lockSeat(payload);
           set({ selectedSeats: [...selectedSeats, seatCode] });
         }
       } catch (err) {
-        console.error("Failed to toggle seat", err);
+        console.error('Failed to toggle seat', err);
       }
     },
   };
 });
-

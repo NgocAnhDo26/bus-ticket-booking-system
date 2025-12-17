@@ -1,26 +1,24 @@
-import { useForm, useWatch } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import { useNavigate, useSearchParams } from "react-router-dom";
-import { format } from "date-fns";
-import { Calendar as CalendarIcon, MapPin, Search } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent } from "@/components/ui/card";
-import { Combobox } from "@/components/ui/combobox";
-import { useStations } from "@/features/catalog/hooks";
-import { useMemo } from "react";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
+import { useMemo } from 'react';
+import { useForm, useWatch } from 'react-hook-form';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+
+import { zodResolver } from '@hookform/resolvers/zod';
+import { format } from 'date-fns';
+import { Calendar as CalendarIcon, MapPin, Search } from 'lucide-react';
+import * as z from 'zod';
+
+import { Button } from '@/components/ui/button';
+import { Calendar } from '@/components/ui/calendar';
+import { Card, CardContent } from '@/components/ui/card';
+import { Combobox } from '@/components/ui/combobox';
+import { Label } from '@/components/ui/label';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { useStations } from '@/features/catalog/hooks';
 
 const searchSchema = z.object({
-  origin: z.string().min(1, "Vui lòng chọn điểm đi"),
-  destination: z.string().min(1, "Vui lòng chọn điểm đến"),
-  date: z.string().min(1, "Vui lòng chọn ngày đi"),
+  origin: z.string().min(1, 'Vui lòng chọn điểm đi'),
+  destination: z.string().min(1, 'Vui lòng chọn điểm đến'),
+  date: z.string().min(1, 'Vui lòng chọn ngày đi'),
 });
 
 export const SearchForm = () => {
@@ -42,15 +40,15 @@ export const SearchForm = () => {
   } = useForm<z.infer<typeof searchSchema>>({
     resolver: zodResolver(searchSchema),
     defaultValues: {
-      origin: searchParams.get("origin") ?? "",
-      destination: searchParams.get("destination") ?? "",
-      date: searchParams.get("date") ?? "",
+      origin: searchParams.get('origin') ?? '',
+      destination: searchParams.get('destination') ?? '',
+      date: searchParams.get('date') ?? '',
     },
   });
 
-  const origin = useWatch({ control, name: "origin" });
-  const destination = useWatch({ control, name: "destination" });
-  const date = useWatch({ control, name: "date" });
+  const origin = useWatch({ control, name: 'origin' });
+  const destination = useWatch({ control, name: 'destination' });
+  const date = useWatch({ control, name: 'date' });
 
   const onSubmit = (values: z.infer<typeof searchSchema>) => {
     const searchParams = new URLSearchParams({
@@ -76,9 +74,7 @@ export const SearchForm = () => {
               <Combobox
                 options={cityOptions}
                 value={origin}
-                onSelect={(value) =>
-                  setValue("origin", value, { shouldValidate: true })
-                }
+                onSelect={(value) => setValue('origin', value, { shouldValidate: true })}
                 placeholder="Chọn điểm đi"
                 emptyText="Không tìm thấy tỉnh/thành"
                 className="w-full pr-2"
@@ -99,9 +95,7 @@ export const SearchForm = () => {
               <Combobox
                 options={cityOptions}
                 value={destination}
-                onSelect={(value) =>
-                  setValue("destination", value, { shouldValidate: true })
-                }
+                onSelect={(value) => setValue('destination', value, { shouldValidate: true })}
                 placeholder="Chọn điểm đến"
                 emptyText="Không tìm thấy tỉnh/thành"
                 className="w-full pr-2"
@@ -126,11 +120,7 @@ export const SearchForm = () => {
                     data-empty={!date}
                     className="data-[empty=true]:text-muted-foreground w-full justify-between text-left font-normal pr-3"
                   >
-                    {date ? (
-                      format(new Date(date), "PPP")
-                    ) : (
-                      <span>Chọn ngày đi</span>
-                    )}
+                    {date ? format(new Date(date), 'PPP') : <span>Chọn ngày đi</span>}
                     <CalendarIcon />
                   </Button>
                 </PopoverTrigger>
@@ -141,7 +131,7 @@ export const SearchForm = () => {
                     selected={date ? new Date(date) : undefined}
                     onSelect={(selectedDate: Date | undefined) => {
                       if (!selectedDate) return;
-                      setValue("date", format(selectedDate, "yyyy-MM-dd"), {
+                      setValue('date', format(selectedDate, 'yyyy-MM-dd'), {
                         shouldValidate: true,
                       });
                     }}

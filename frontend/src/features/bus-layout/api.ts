@@ -1,8 +1,9 @@
-import { apiClient } from "@/lib/api-client";
-import { type CreateBusLayoutPayload, type BusLayout } from "./types";
+import { apiClient } from '@/lib/api-client';
+
+import { type BusLayout, type CreateBusLayoutPayload } from './types';
 
 export const getBusLayouts = async () => {
-  const response = await apiClient.get<BusLayout[]>("/bus-layouts");
+  const response = await apiClient.get<BusLayout[]>('/bus-layouts');
   return response.data;
 };
 
@@ -13,7 +14,7 @@ export const getBusLayout = async (id: string) => {
 
 export const createBusLayout = async (data: CreateBusLayoutPayload) => {
   // 1. Create layout metadata
-  const layoutResponse = await apiClient.post<BusLayout>("/bus-layouts", data.config);
+  const layoutResponse = await apiClient.post<BusLayout>('/bus-layouts', data.config);
   const layoutId = layoutResponse.data.id;
 
   // 2. Update seats

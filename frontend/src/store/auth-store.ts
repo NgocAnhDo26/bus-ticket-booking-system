@@ -1,6 +1,7 @@
-import { create } from "zustand";
-import { persist } from "zustand/middleware";
-import { type UserProfile } from "@/types/user";
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+
+import { type UserProfile } from '@/types/user';
 
 type AuthState = {
   user: UserProfile | null;
@@ -23,7 +24,7 @@ export const useAuthStore = create<AuthState & AuthActions>()(
       clearAuth: () => set({ user: null, accessToken: null }),
     }),
     {
-      name: "btb-auth",
+      name: 'btb-auth',
       partialize: (state) => ({
         user: state.user,
         accessToken: state.accessToken,

@@ -1,9 +1,13 @@
-import axios, { type AxiosRequestConfig, type AxiosError, type InternalAxiosRequestConfig } from "axios";
-import { useAuthStore } from "@/store/auth-store";
-import { type AuthResponse } from "@/features/auth/types";
+import axios, {
+  type AxiosError,
+  type AxiosRequestConfig,
+  type InternalAxiosRequestConfig,
+} from 'axios';
 
-const API_BASE_URL =
-  import.meta.env.VITE_API_URL ?? "http://localhost:8080/api";
+import { type AuthResponse } from '@/features/auth/types';
+import { useAuthStore } from '@/store/auth-store';
+
+const API_BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8080/api';
 
 type RetryConfig = InternalAxiosRequestConfig & {
   _retry?: boolean;
@@ -23,8 +27,7 @@ let refreshPromise: Promise<string | null> | null = null;
 
 const requestRefresh = async () => {
   try {
-    const refreshResponse =
-      await refreshClient.post<AuthResponse>("/auth/refresh");
+    const refreshResponse = await refreshClient.post<AuthResponse>('/auth/refresh');
     const authData = refreshResponse.data.data;
     useAuthStore.getState().setAuth(authData);
     return authData.accessToken;
@@ -46,11 +49,7 @@ apiClient.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
     const originalRequest = error.config as RetryConfig | undefined;
-    if (
-      error.response?.status === 401 &&
-      originalRequest &&
-      !originalRequest._retry
-    ) {
+    if (error.response?.status === 401 && originalRequest && !originalRequest._retry) {
       originalRequest._retry = true;
       refreshPromise = refreshPromise ?? requestRefresh();
       const newToken = await refreshPromise;
@@ -70,10 +69,10 @@ export { apiClient };
 
 export const customInstance = <T>(
   config: AxiosRequestConfig,
-  options?: AxiosRequestConfig
+  options?: AxiosRequestConfig,
 ): Promise<T> => {
   const source = axios.CancelToken.source();
-  
+
   const promise = apiClient({
     ...config,
     ...options,

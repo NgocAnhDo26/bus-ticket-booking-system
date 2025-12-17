@@ -1,13 +1,16 @@
-import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
-import { useShallow } from "zustand/react/shallow";
-import { Loader2, Square, User } from "lucide-react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { cn } from "@/lib/utils";
-import { getBusLayout } from "@/features/bus-layout/api";
-import { SeatGrid } from "@/components/common/SeatGrid";
+import { useState } from 'react';
+
+import { useQuery } from '@tanstack/react-query';
+import { Loader2, Square, User } from 'lucide-react';
+import { useShallow } from 'zustand/react/shallow';
+
+import { SeatGrid } from '@/components/common/SeatGrid';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { getBusLayout } from '@/features/bus-layout/api';
+import { cn } from '@/lib/utils';
+
 // import { useAuthStore } from "@/store/auth-store";
-import { useBookingStore } from "../store";
+import { useBookingStore } from '../store';
 
 type BookingSeatMapProps = {
   busLayoutId: string;
@@ -27,7 +30,7 @@ export const BookingSeatMap = ({ busLayoutId }: BookingSeatMapProps) => {
   const [currentFloor, setCurrentFloor] = useState(1);
 
   const { data: layout, isLoading } = useQuery({
-    queryKey: ["bus-layout", busLayoutId],
+    queryKey: ['bus-layout', busLayoutId],
     queryFn: () => getBusLayout(busLayoutId),
   });
 
@@ -48,39 +51,39 @@ export const BookingSeatMap = ({ busLayoutId }: BookingSeatMapProps) => {
 
   const getSeatStatus = (seatCode: string) => {
     // Correctly identify MY selection using the persistent array
-    if (selectedSeats.includes(seatCode)) return "SELECTED";
+    if (selectedSeats.includes(seatCode)) return 'SELECTED';
 
     const statusString = seatStatusMap[seatCode];
-    if (!statusString) return "AVAILABLE";
-    if (statusString === "BOOKED") return "BOOKED";
-    
+    if (!statusString) return 'AVAILABLE';
+    if (statusString === 'BOOKED') return 'BOOKED';
+
     // If it's locked but NOT by me (since I checked selectedSeats above), then it's LOCKED (gray)
-    if (statusString.startsWith("LOCKED:")) {
-       // Optional: Double check generic ID if logged in, but selectedSeats should suffice
-       return "LOCKED"; 
+    if (statusString.startsWith('LOCKED:')) {
+      // Optional: Double check generic ID if logged in, but selectedSeats should suffice
+      return 'LOCKED';
     }
-    
-    return "AVAILABLE";
+
+    return 'AVAILABLE';
   };
 
   const getSeatStyle = (status: string, type: string) => {
     switch (status) {
-      case "BOOKED":
-      case "LOCKED":
-        return "bg-muted text-muted-foreground cursor-not-allowed border-muted";
-      case "SELECTED":
-        return "bg-primary border-primary text-primary-foreground";
-      case "AVAILABLE":
+      case 'BOOKED':
+      case 'LOCKED':
+        return 'bg-muted text-muted-foreground cursor-not-allowed border-muted';
+      case 'SELECTED':
+        return 'bg-primary border-primary text-primary-foreground';
+      case 'AVAILABLE':
       default:
-        if (type === "VIP") {
-          return "bg-amber-100 border-amber-500 text-amber-700 hover:bg-amber-200";
+        if (type === 'VIP') {
+          return 'bg-amber-100 border-amber-500 text-amber-700 hover:bg-amber-200';
         }
-        return "bg-emerald-100 border-emerald-500 text-emerald-700 hover:bg-emerald-200";
+        return 'bg-emerald-100 border-emerald-500 text-emerald-700 hover:bg-emerald-200';
     }
   };
 
   const handleSeatClick = (seatCode: string, status: string) => {
-    if (status === "BOOKED" || status === "LOCKED") return;
+    if (status === 'BOOKED' || status === 'LOCKED') return;
     toggleSeat(seatCode);
   };
 
@@ -88,7 +91,7 @@ export const BookingSeatMap = ({ busLayoutId }: BookingSeatMapProps) => {
     <div className="space-y-4">
       <Tabs
         value={`floor-${currentFloor}`}
-        onValueChange={(value) => setCurrentFloor(Number(value.split("-")[1]))}
+        onValueChange={(value) => setCurrentFloor(Number(value.split('-')[1]))}
         className="w-full"
       >
         <div className="flex items-center justify-between gap-4">
@@ -147,7 +150,10 @@ export const BookingSeatMap = ({ busLayoutId }: BookingSeatMapProps) => {
                     // >
                     //   <X className="text-muted-foreground/30" />
                     // </div>
-                    <div key={`empty-${_row}-${col}`} className="h-14 w-full max-w-14 mx-auto relative"/>
+                    <div
+                      key={`empty-${_row}-${col}`}
+                      className="h-14 w-full max-w-14 mx-auto relative"
+                    />
                   );
                 }
 
@@ -159,22 +165,16 @@ export const BookingSeatMap = ({ busLayoutId }: BookingSeatMapProps) => {
                     key={seat.id}
                     type="button"
                     onClick={() => handleSeatClick(seat.seatCode, status)}
-                    disabled={status === "BOOKED" || status === "LOCKED"}
+                    disabled={status === 'BOOKED' || status === 'LOCKED'}
                     className={cn(
-                      "flex h-14 w-full max-w-14 flex-col items-center justify-center rounded-md border text-xs transition-colors",
-                      col === 0
-                        ? "mr-auto"
-                        : col === cols - 1
-                          ? "ml-auto"
-                          : "mx-auto",
-                      "relative",
+                      'flex h-14 w-full max-w-14 flex-col items-center justify-center rounded-md border text-xs transition-colors',
+                      col === 0 ? 'mr-auto' : col === cols - 1 ? 'ml-auto' : 'mx-auto',
+                      'relative',
                       style,
                     )}
                   >
                     <span className="font-semibold">{seat.seatCode}</span>
-                    {status === "SELECTED" && (
-                      <User className="h-3 w-3 absolute top-1 right-1" />
-                    )}
+                    {status === 'SELECTED' && <User className="h-3 w-3 absolute top-1 right-1" />}
                   </button>
                 );
               }}

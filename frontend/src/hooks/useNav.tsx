@@ -1,16 +1,18 @@
-import { useMemo } from "react";
+import { useMemo } from 'react';
+
 import {
   BusFront,
   LayoutDashboard,
+  type LucideIcon,
+  Search,
   Settings2,
+  Sparkles,
   Ticket,
   Users,
-  Sparkles,
-  Search,
-  type LucideIcon,
-} from "lucide-react";
-import { useAuthStore } from "@/store/auth-store";
-import { type UserRole } from "@/types/user";
+} from 'lucide-react';
+
+import { useAuthStore } from '@/store/auth-store';
+import { type UserRole } from '@/types/user';
 
 // Admin navigation item type (for AdminDashboardSideBar)
 export type AdminNavItem = {
@@ -38,95 +40,95 @@ export type UserNavItem = {
 // All available admin menu items
 const allAdminNavItems: AdminNavItem[] = [
   {
-    title: "Tổng quan",
-    url: "/admin/dashboard",
+    title: 'Tổng quan',
+    url: '/admin/dashboard',
     icon: LayoutDashboard,
     isActive: true,
     isCollapsible: false,
     // Both ADMIN and STAFF can see dashboard
   },
   {
-    title: "Vận tải",
-    url: "#",
+    title: 'Vận tải',
+    url: '#',
     icon: BusFront,
     isCollapsible: true,
     items: [
       {
-        title: "Bến xe",
-        url: "/admin/catalog/stations",
+        title: 'Bến xe',
+        url: '/admin/catalog/stations',
       },
       {
-        title: "Nhà xe",
-        url: "/admin/catalog/operators",
+        title: 'Nhà xe',
+        url: '/admin/catalog/operators',
       },
       {
-        title: "Xe",
-        url: "/admin/catalog/buses",
+        title: 'Xe',
+        url: '/admin/catalog/buses',
       },
       {
-        title: "Sơ đồ xe",
-        url: "/admin/catalog/layouts",
+        title: 'Sơ đồ xe',
+        url: '/admin/catalog/layouts',
       },
       {
-        title: "Tuyến đường",
-        url: "/admin/catalog/routes",
+        title: 'Tuyến đường',
+        url: '/admin/catalog/routes',
       },
       {
-        title: "Chuyến đi",
-        url: "/admin/catalog/trips",
+        title: 'Chuyến đi',
+        url: '/admin/catalog/trips',
       },
     ],
     // Both ADMIN and STAFF can see transport
   },
   {
-    title: "Đặt vé",
-    url: "#",
+    title: 'Đặt vé',
+    url: '#',
     icon: Ticket,
     isCollapsible: true,
     items: [
       {
-        title: "Danh sách đặt chỗ",
-        url: "/admin/bookings/list",
+        title: 'Danh sách đặt chỗ',
+        url: '/admin/bookings/list',
       },
       {
-        title: "Giao dịch thanh toán",
-        url: "/admin/bookings/transactions",
+        title: 'Giao dịch thanh toán',
+        url: '/admin/bookings/transactions',
       },
     ],
     // Both ADMIN and STAFF can see bookings
   },
   {
-    title: "Người dùng",
-    url: "/admin/users",
+    title: 'Người dùng',
+    url: '/admin/users',
     icon: Users,
     isCollapsible: true,
     items: [
       {
-        title: "Khách hàng",
-        url: "/admin/users/customers",
+        title: 'Khách hàng',
+        url: '/admin/users/customers',
       },
       {
-        title: "Nhân viên",
-        url: "/admin/users/staffs",
+        title: 'Nhân viên',
+        url: '/admin/users/staffs',
       },
     ],
     // Only ADMIN can see user management
-    allowedRoles: ["ADMIN"],
+    allowedRoles: ['ADMIN'],
   },
   {
-    title: "Phản hồi",
-    url: "/admin/feedbacks",
+    title: 'Phản hồi',
+    url: '/admin/feedbacks',
     icon: Sparkles,
     isCollapsible: false,
     // Both ADMIN and STAFF can see feedbacks
   },
   {
-    title: "Cấu hình",
-    url: "#",
+    title: 'Cấu hình',
+    url: '#',
     icon: Settings2,
     isCollapsible: false,
     // Only ADMIN can see configuration
-    allowedRoles: ["ADMIN"],
+    allowedRoles: ['ADMIN'],
   },
 ];
 
@@ -147,21 +149,21 @@ const filterAdminNavItemsByRole = (
 
 // Get regular user navigation items
 const getUserNavItems = (userRole: UserRole | null): UserNavItem[] => {
-  const isAdmin = userRole === "ADMIN";
-  const dashboardPath = isAdmin ? "/admin/dashboard" : "/dashboard";
-  const sectionPrefix = isAdmin ? "/admin" : "/dashboard";
+  const isAdmin = userRole === 'ADMIN';
+  const dashboardPath = isAdmin ? '/admin/dashboard' : '/dashboard';
+  const sectionPrefix = isAdmin ? '/admin' : '/dashboard';
 
   return [
-    { to: dashboardPath, label: "Dashboard", icon: LayoutDashboard },
+    { to: dashboardPath, label: 'Dashboard', icon: LayoutDashboard },
     {
       to: `${sectionPrefix}/trips`,
-      label: "Trips",
+      label: 'Trips',
       icon: Search,
       disabled: true,
     },
     {
       to: `${sectionPrefix}/bookings`,
-      label: "Bookings",
+      label: 'Bookings',
       icon: Ticket,
       disabled: true,
     },
@@ -187,13 +189,13 @@ export const useNav = () => {
       return {
         name: user.fullName,
         email: user.email,
-        avatar: user.avatarUrl || "/avatars/default.jpg",
+        avatar: user.avatarUrl || '/avatars/default.jpg',
       };
     }
     return {
-      name: "Guest",
-      email: "",
-      avatar: "/avatars/default.jpg",
+      name: 'Guest',
+      email: '',
+      avatar: '/avatars/default.jpg',
     };
   }, [user]);
 

@@ -1,13 +1,10 @@
 export const generateSeatCode = (row: number, col: number) => {
   const rowLetter = String.fromCharCode(65 + row);
-  const colNumber = String(col + 1).padStart(2, "0");
+  const colNumber = String(col + 1).padStart(2, '0');
   return `${rowLetter}${colNumber}`;
 };
 
-export const generateNextSeatCode = (
-  seats: { seatCode: string }[],
-  colIdx: number,
-) => {
+export const generateNextSeatCode = (seats: { seatCode: string }[], colIdx: number) => {
   const prefix = String.fromCharCode(65 + colIdx);
   let max = 0;
   // Regex to match "A1", "A2", "B1" etc. where A is the prefix
@@ -26,9 +23,7 @@ export const generateNextSeatCode = (
   return `${prefix}${max + 1}`;
 };
 
-export const seatKey = (floor: number, row: number, col: number) =>
-  `${floor}-${row}-${col}`;
+export const seatKey = (floor: number, row: number, col: number) => `${floor}-${row}-${col}`;
 
 export const createSeatId = () =>
-  crypto.randomUUID?.() ??
-  `seat-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  crypto.randomUUID?.() ?? `seat-${Date.now()}-${Math.random().toString(16).slice(2)}`;

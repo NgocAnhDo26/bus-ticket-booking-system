@@ -1,43 +1,44 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery } from '@tanstack/react-query';
+
 import {
   fetchMetrics,
   fetchRecentTransactions,
   fetchRevenueChart,
   fetchTopOperators,
   fetchTopRoutes,
-} from "./api";
+} from './api';
 
 export const useAdminMetrics = () => {
   return useQuery({
-    queryKey: ["admin-metrics"],
+    queryKey: ['admin-metrics'],
     queryFn: fetchMetrics,
   });
 };
 
 export const useAdminRevenue = () => {
   return useQuery({
-    queryKey: ["admin-revenue"],
+    queryKey: ['admin-revenue'],
     queryFn: fetchRevenueChart,
   });
 };
 
 export const useAdminTopRoutes = () => {
   return useQuery({
-    queryKey: ["admin-top-routes"],
+    queryKey: ['admin-top-routes'],
     queryFn: fetchTopRoutes,
   });
 };
 
 export const useAdminRecentTransactions = () => {
   return useQuery({
-    queryKey: ["admin-recent-transactions"],
+    queryKey: ['admin-recent-transactions'],
     queryFn: fetchRecentTransactions,
   });
 };
 
 export const useAdminTopOperators = () => {
   return useQuery({
-    queryKey: ["admin-top-operators"],
+    queryKey: ['admin-top-operators'],
     queryFn: fetchTopOperators,
   });
 };

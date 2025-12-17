@@ -1,36 +1,13 @@
-import { useMemo, useState, useCallback } from "react";
-import { AxiosError } from "axios";
-import { useQueryClient } from "@tanstack/react-query";
-import { useForm, useWatch } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import { Plus, Bus as BusIcon, Pencil, Trash2, MoreHorizontal } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
-import { FormField } from "@/components/ui/form-field";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { GenericTable, type ColumnDef } from "@/components/common/GenericTable";
-import { useBuses, useCreateBus, useUpdateBus, useDeleteBus, useOperators } from "../hooks";
-import type { Bus } from "../types";
+import { useCallback, useMemo, useState } from 'react';
+import { useForm, useWatch } from 'react-hook-form';
 
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useQueryClient } from '@tanstack/react-query';
+import { AxiosError } from 'axios';
+import { Bus as BusIcon, MoreHorizontal, Pencil, Plus, Trash2 } from 'lucide-react';
+import * as z from 'zod';
+
+import { type ColumnDef, GenericTable } from '@/components/common/GenericTable';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -40,22 +17,39 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+} from '@/components/ui/alert-dialog';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { FormField } from '@/components/ui/form-field';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet';
 
-const AMENITIES_LIST = [
-  "WiFi",
-  "Máy lạnh",
-  "Cổng USB",
-  "Chăn đắp",
-  "Nước uống",
-  "Toilet",
-  "TV",
-];
+import { useBuses, useCreateBus, useDeleteBus, useOperators, useUpdateBus } from '../hooks';
+import type { Bus } from '../types';
+
+const AMENITIES_LIST = ['WiFi', 'Máy lạnh', 'Cổng USB', 'Chăn đắp', 'Nước uống', 'Toilet', 'TV'];
 
 const formSchema = z.object({
-  plateNumber: z.string().min(1, "Biển số xe là bắt buộc"),
-  operatorId: z.string().min(1, "Vui lòng chọn nhà xe"),
-  busLayoutId: z.string().min(1, "Vui lòng nhập layout ID"),
+  plateNumber: z.string().min(1, 'Biển số xe là bắt buộc'),
+  operatorId: z.string().min(1, 'Vui lòng chọn nhà xe'),
+  busLayoutId: z.string().min(1, 'Vui lòng nhập layout ID'),
   amenities: z.array(z.string()),
 });
 
@@ -82,21 +76,21 @@ export const BusManagementPage = () => {
   } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      plateNumber: "",
-      operatorId: "",
-      busLayoutId: "",
+      plateNumber: '',
+      operatorId: '',
+      busLayoutId: '',
       amenities: [],
     },
   });
 
-  const selectedAmenities = useWatch({ control, name: "amenities" }) ?? [];
+  const selectedAmenities = useWatch({ control, name: 'amenities' }) ?? [];
 
   const handleAmenityChange = (amenity: string, checked: boolean) => {
     if (checked) {
-      setValue("amenities", [...selectedAmenities, amenity]);
+      setValue('amenities', [...selectedAmenities, amenity]);
     } else {
       setValue(
-        "amenities",
+        'amenities',
         selectedAmenities.filter((item) => item !== amenity),
       );
     }
@@ -112,7 +106,7 @@ export const BusManagementPage = () => {
             setEditingBus(null);
             reset();
           },
-        }
+        },
       );
     } else {
       createBus.mutate(values, {
@@ -124,16 +118,19 @@ export const BusManagementPage = () => {
     }
   };
 
-  const handleEdit = useCallback((bus: Bus) => {
-    setEditingBus(bus);
-    reset({
-      plateNumber: bus.plateNumber,
-      operatorId: bus.operator.id,
-      busLayoutId: bus.busLayout.id,
-      amenities: bus.amenities || [],
-    });
-    setIsOpen(true);
-  }, [reset]);
+  const handleEdit = useCallback(
+    (bus: Bus) => {
+      setEditingBus(bus);
+      reset({
+        plateNumber: bus.plateNumber,
+        operatorId: bus.operator.id,
+        busLayoutId: bus.busLayout.id,
+        amenities: bus.amenities || [],
+      });
+      setIsOpen(true);
+    },
+    [reset],
+  );
 
   const [forceDeleteId, setForceDeleteId] = useState<string | null>(null);
 
@@ -152,7 +149,7 @@ export const BusManagementPage = () => {
               setDeletingBus(null);
             }
           },
-        }
+        },
       );
     }
   };
@@ -164,9 +161,9 @@ export const BusManagementPage = () => {
         {
           onSuccess: () => {
             setForceDeleteId(null);
-            queryClient.invalidateQueries({ queryKey: ["buses"] });
+            queryClient.invalidateQueries({ queryKey: ['buses'] });
           },
-        }
+        },
       );
     }
   };
@@ -175,8 +172,8 @@ export const BusManagementPage = () => {
   const [pageSize, setPageSize] = useState(10);
   const [sorting, setSorting] = useState<{
     key: string | null;
-    direction: "asc" | "desc";
-  }>({ key: "plateNumber", direction: "asc" });
+    direction: 'asc' | 'desc';
+  }>({ key: 'plateNumber', direction: 'asc' });
 
   const sortedPaged = useMemo(() => {
     if (!buses) return { data: [], total: 0, totalPages: 1, page: 1 };
@@ -188,8 +185,8 @@ export const BusManagementPage = () => {
         const aVal = a[key] as unknown;
         const bVal = b[key] as unknown;
         if (aVal == null || bVal == null) return 0;
-        if (aVal < bVal) return sorting.direction === "asc" ? -1 : 1;
-        if (aVal > bVal) return sorting.direction === "asc" ? 1 : -1;
+        if (aVal < bVal) return sorting.direction === 'asc' ? -1 : 1;
+        if (aVal > bVal) return sorting.direction === 'asc' ? 1 : -1;
         return 0;
       });
     }
@@ -218,8 +215,8 @@ export const BusManagementPage = () => {
   const columns: ColumnDef<Bus>[] = useMemo(
     () => [
       {
-        key: "plateNumber",
-        header: "Biển số",
+        key: 'plateNumber',
+        header: 'Biển số',
         sortable: true,
         cell: (bus) => (
           <div className="flex items-center gap-2 flex-wrap">
@@ -229,19 +226,19 @@ export const BusManagementPage = () => {
         ),
       },
       {
-        key: "operator",
-        header: "Nhà xe",
-        cell: (bus) => bus.operator?.name ?? "-",
+        key: 'operator',
+        header: 'Nhà xe',
+        cell: (bus) => bus.operator?.name ?? '-',
       },
       {
-        key: "busLayout",
-        header: "Số ghế",
+        key: 'busLayout',
+        header: 'Số ghế',
         sortable: true,
-        cell: (bus) => <span>{bus.busLayout?.totalSeats ?? "-"} ghế</span>,
+        cell: (bus) => <span>{bus.busLayout?.totalSeats ?? '-'} ghế</span>,
       },
       {
-        key: "amenities",
-        header: "Tiện ích",
+        key: 'amenities',
+        header: 'Tiện ích',
         cell: (bus) => (
           <div className="flex flex-wrap gap-1">
             {bus.amenities?.map((amenity, index) => (
@@ -253,18 +250,18 @@ export const BusManagementPage = () => {
         ),
       },
       {
-        key: "isActive",
-        header: "Trạng thái",
+        key: 'isActive',
+        header: 'Trạng thái',
         sortable: true,
         cell: (bus) => (
-          <Badge variant={bus.isActive ? "success" : "default"}>
-            {bus.isActive ? "Hoạt động" : "Bảo trì"}
+          <Badge variant={bus.isActive ? 'success' : 'default'}>
+            {bus.isActive ? 'Hoạt động' : 'Bảo trì'}
           </Badge>
         ),
       },
       {
-        key: "actions",
-        header: "",
+        key: 'actions',
+        header: '',
         cell: (bus) => (
           <div className="flex justify-end">
             <DropdownMenu>
@@ -300,18 +297,21 @@ export const BusManagementPage = () => {
     <div className="flex flex-col gap-8 p-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold tracking-tight">Quản lý Xe</h1>
-        <Sheet open={isOpen} onOpenChange={(open) => {
-          setIsOpen(open);
-          if (!open) {
-            setEditingBus(null);
-            reset({
-              plateNumber: "",
-              operatorId: "",
-              busLayoutId: "",
-              amenities: [],
-            });
-          }
-        }}>
+        <Sheet
+          open={isOpen}
+          onOpenChange={(open) => {
+            setIsOpen(open);
+            if (!open) {
+              setEditingBus(null);
+              reset({
+                plateNumber: '',
+                operatorId: '',
+                busLayoutId: '',
+                amenities: [],
+              });
+            }
+          }}
+        >
           <SheetTrigger asChild>
             <Button>
               <Plus className="mr-2 h-4 w-4" /> Thêm Xe
@@ -319,36 +319,25 @@ export const BusManagementPage = () => {
           </SheetTrigger>
           <SheetContent>
             <SheetHeader>
-              <SheetTitle>{editingBus ? "Cập nhật Xe" : "Thêm Xe mới"}</SheetTitle>
-              <SheetDescription>
-                Nhập thông tin chi tiết về xe mới.
-              </SheetDescription>
+              <SheetTitle>{editingBus ? 'Cập nhật Xe' : 'Thêm Xe mới'}</SheetTitle>
+              <SheetDescription>Nhập thông tin chi tiết về xe mới.</SheetDescription>
             </SheetHeader>
             <div className="py-4">
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                <FormField
-                  label="Biển số xe"
-                  error={errors.plateNumber?.message}
-                >
-                  <Input
-                    placeholder="51B-123.45"
-                    {...register("plateNumber")}
-                  />
+                <FormField label="Biển số xe" error={errors.plateNumber?.message}>
+                  <Input placeholder="51B-123.45" {...register('plateNumber')} />
                 </FormField>
                 <FormField
                   label="Layout ID"
                   hint="Nhập UUID của layout đã tạo"
                   error={errors.busLayoutId?.message}
                 >
-                  <Input
-                    placeholder="Layout UUID"
-                    {...register("busLayoutId")}
-                  />
+                  <Input placeholder="Layout UUID" {...register('busLayoutId')} />
                 </FormField>
                 <FormField label="Nhà xe" error={errors.operatorId?.message}>
                   <select
                     className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                    {...register("operatorId")}
+                    {...register('operatorId')}
                   >
                     <option value="">Chọn nhà xe...</option>
                     {operators?.map((op) => (
@@ -366,7 +355,7 @@ export const BusManagementPage = () => {
                         <Checkbox
                           id={amenity}
                           checked={selectedAmenities.includes(amenity)}
-                          onCheckedChange={(checked: boolean | "indeterminate") =>
+                          onCheckedChange={(checked: boolean | 'indeterminate') =>
                             handleAmenityChange(amenity, checked === true)
                           }
                         />
@@ -380,7 +369,11 @@ export const BusManagementPage = () => {
                   className="w-full"
                   disabled={createBus.isPending || updateBus.isPending}
                 >
-                  {createBus.isPending || updateBus.isPending ? "Đang xử lý..." : (editingBus ? "Cập nhật" : "Tạo Xe")}
+                  {createBus.isPending || updateBus.isPending
+                    ? 'Đang xử lý...'
+                    : editingBus
+                      ? 'Cập nhật'
+                      : 'Tạo Xe'}
                 </Button>
               </form>
             </div>
@@ -411,17 +404,16 @@ export const BusManagementPage = () => {
                 if (prev.key === key) {
                   return {
                     key,
-                    direction: prev.direction === "asc" ? "desc" : "asc",
+                    direction: prev.direction === 'asc' ? 'desc' : 'asc',
                   };
                 }
-                return { key, direction: "asc" };
+                return { key, direction: 'asc' };
               })
             }
             getRowId={(bus) => bus.id}
           />
         </CardContent>
       </Card>
-
 
       <AlertDialog open={!!deletingBus} onOpenChange={(open) => !open && setDeletingBus(null)}>
         <AlertDialogContent>
@@ -437,7 +429,7 @@ export const BusManagementPage = () => {
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={handleDelete}
             >
-              {deleteBus.isPending ? "Đang xóa..." : "Xóa"}
+              {deleteBus.isPending ? 'Đang xóa...' : 'Xóa'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -448,8 +440,8 @@ export const BusManagementPage = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>Cảnh báo: Dữ liệu liên quan</AlertDialogTitle>
             <AlertDialogDescription>
-              Xe này đang được sử dụng trong các chuyến đi.
-              Bạn có muốn xóa BẮT BUỘC không? Hành động này sẽ xóa tất cả các dữ liệu liên quan (chuyến đi, vé).
+              Xe này đang được sử dụng trong các chuyến đi. Bạn có muốn xóa BẮT BUỘC không? Hành
+              động này sẽ xóa tất cả các dữ liệu liên quan (chuyến đi, vé).
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -458,7 +450,7 @@ export const BusManagementPage = () => {
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={handleForceDelete}
             >
-              {deleteBus.isPending ? "Đang xóa..." : "Xóa bắt buộc"}
+              {deleteBus.isPending ? 'Đang xóa...' : 'Xóa bắt buộc'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

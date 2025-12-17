@@ -1,34 +1,43 @@
-import { useState } from "react";
-import { useMutation } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { toast } from "@/hooks/use-toast";
-import { lookupBooking } from "../api";
-import { Search, Ticket } from "lucide-react";
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+
+import { useMutation } from '@tanstack/react-query';
+import { Search, Ticket } from 'lucide-react';
+
+import { Button } from '@/components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { toast } from '@/hooks/use-toast';
+
+import { lookupBooking } from '../api';
 
 export const BookingLookupPage = () => {
   const navigate = useNavigate();
-  const [code, setCode] = useState("");
-  const [email, setEmail] = useState("");
+  const [code, setCode] = useState('');
+  const [email, setEmail] = useState('');
 
   const lookupMutation = useMutation({
-    mutationFn: (data: { code: string; email: string }) => 
-      lookupBooking(data.code, data.email),
+    mutationFn: (data: { code: string; email: string }) => lookupBooking(data.code, data.email),
     onSuccess: (data) => {
       toast({
-        title: "Tra cứu thành công",
+        title: 'Tra cứu thành công',
         description: `Đã tìm thấy vé #${data.code}`,
       });
       navigate(`/booking/confirmation/${data.id}`);
     },
     onError: () => {
       toast({
-        title: "Không tìm thấy vé",
-        description: "Vui lòng kiểm tra lại Mã đặt vé và Email.",
-        variant: "destructive",
+        title: 'Không tìm thấy vé',
+        description: 'Vui lòng kiểm tra lại Mã đặt vé và Email.',
+        variant: 'destructive',
       });
     },
   });
@@ -47,9 +56,7 @@ export const BookingLookupPage = () => {
             <Ticket className="h-6 w-6 text-primary" />
           </div>
           <CardTitle className="text-2xl font-bold">Tra cứu đặt vé</CardTitle>
-          <CardDescription>
-            Nhập mã vé và email để xem thông tin đặt vé của bạn
-          </CardDescription>
+          <CardDescription>Nhập mã vé và email để xem thông tin đặt vé của bạn</CardDescription>
         </CardHeader>
 
         <form onSubmit={handleSubmit}>
@@ -78,14 +85,9 @@ export const BookingLookupPage = () => {
           </CardContent>
 
           <CardFooter>
-            <Button 
-              type="submit" 
-              className="w-full" 
-              size="lg"
-              disabled={lookupMutation.isPending}
-            >
+            <Button type="submit" className="w-full" size="lg" disabled={lookupMutation.isPending}>
               {lookupMutation.isPending ? (
-                "Đang tìm kiếm..."
+                'Đang tìm kiếm...'
               ) : (
                 <>
                   <Search className="mr-2 h-4 w-4" /> Tra cứu ngay

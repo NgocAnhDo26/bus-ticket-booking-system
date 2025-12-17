@@ -1,16 +1,13 @@
-import { create } from "zustand";
-import {
-  type BusLayoutConfig,
-  type SeatCell,
-  type SeatTool,
-} from "../types";
-import { createSeatId } from "../utils";
+import { create } from 'zustand';
+
+import { type BusLayoutConfig, type SeatCell, type SeatTool } from '../types';
+import { createSeatId } from '../utils';
 
 const defaultConfig: BusLayoutConfig = {
-  name: "",
-  busType: "",
+  name: '',
+  busType: '',
   totalFloors: 1,
-  description: "",
+  description: '',
 };
 
 type State = {
@@ -28,14 +25,18 @@ type State = {
 type Actions = {
   setConfig: (data: BusLayoutConfig & { totalRows?: number; totalCols?: number }) => void;
   setGridDimensions: (rows: number, cols: number) => void;
-  addSeat: (seat: Omit<SeatCell, "id"> & { id?: string }) => void;
+  addSeat: (seat: Omit<SeatCell, 'id'> & { id?: string }) => void;
   removeSeat: (row: number, col: number, floor: number) => void;
   updateSeat: (seat: SeatCell) => void;
   setTool: (tool: SeatTool) => void;
   setCurrentFloor: (floor: number) => void;
   setStep: (step: 1 | 2) => void;
   resetStore: () => void;
-  loadLayout: (config: BusLayoutConfig, seats: SeatCell[], gridDims?: { rows: number; cols: number }) => void;
+  loadLayout: (
+    config: BusLayoutConfig,
+    seats: SeatCell[],
+    gridDims?: { rows: number; cols: number },
+  ) => void;
 };
 
 const createInitialState = (): State => ({
@@ -44,7 +45,7 @@ const createInitialState = (): State => ({
   gridDimensions: { rows: 10, cols: 4 },
   seats: [],
   currentFloor: 1,
-  selectedTool: "NORMAL",
+  selectedTool: 'NORMAL',
 });
 
 export const useBusLayoutStore = create<State & Actions>()((set) => ({
@@ -54,15 +55,15 @@ export const useBusLayoutStore = create<State & Actions>()((set) => ({
       const { totalRows, totalCols, ...apiConfig } = data;
       const logicalRows = totalRows ?? state.config.totalRows ?? state.gridDimensions.rows;
       const logicalCols = totalCols ?? state.config.totalCols ?? state.gridDimensions.cols;
-      
+
       const nextGrid = {
         rows: logicalRows,
         cols: logicalCols,
       };
-      
+
       // Include logical totalRows and totalCols in config for API
-      const nextConfig = { 
-        ...state.config, 
+      const nextConfig = {
+        ...state.config,
         ...apiConfig,
         totalRows: logicalRows,
         totalCols: logicalCols,
@@ -71,9 +72,7 @@ export const useBusLayoutStore = create<State & Actions>()((set) => ({
       // Filter seats using logical dimensions
       const filteredSeats = state.seats.filter(
         (seat) =>
-          seat.floor <= nextConfig.totalFloors &&
-          seat.row < logicalRows &&
-          seat.col < logicalCols,
+          seat.floor <= nextConfig.totalFloors && seat.row < logicalRows && seat.col < logicalCols,
       );
 
       return {
@@ -84,9 +83,9 @@ export const useBusLayoutStore = create<State & Actions>()((set) => ({
         step: 2,
       };
     }),
-  setGridDimensions: (rows, cols) => 
+  setGridDimensions: (rows, cols) =>
     set({
-      gridDimensions: { rows, cols }
+      gridDimensions: { rows, cols },
     }),
   addSeat: (seatInput) =>
     set((state) => {
@@ -127,7 +126,7 @@ export const useBusLayoutStore = create<State & Actions>()((set) => ({
     set({
       config,
       seats,
-      gridDimensions: gridDims || { 
+      gridDimensions: gridDims || {
         rows: config.totalRows || 10,
         cols: config.totalCols || 4,
       },

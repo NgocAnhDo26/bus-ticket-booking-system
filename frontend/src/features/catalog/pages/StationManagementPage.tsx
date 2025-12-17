@@ -1,32 +1,13 @@
-import { useMemo, useState, useCallback } from "react";
-import { AxiosError } from "axios";
-import { useQueryClient } from "@tanstack/react-query";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import { Plus, MapPin, Pencil, Trash2, MoreHorizontal } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
-import { FormField } from "@/components/ui/form-field";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { GenericTable, type ColumnDef } from "@/components/common";
-import { useStations, useCreateStation, useUpdateStation, useDeleteStation } from "../hooks";
-import type { Station } from "../types";
+import { useCallback, useMemo, useState } from 'react';
+import { useForm } from 'react-hook-form';
+
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useQueryClient } from '@tanstack/react-query';
+import { AxiosError } from 'axios';
+import { MapPin, MoreHorizontal, Pencil, Plus, Trash2 } from 'lucide-react';
+import * as z from 'zod';
+
+import { type ColumnDef, GenericTable } from '@/components/common';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -36,12 +17,34 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+} from '@/components/ui/alert-dialog';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { FormField } from '@/components/ui/form-field';
+import { Input } from '@/components/ui/input';
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet';
+
+import { useCreateStation, useDeleteStation, useStations, useUpdateStation } from '../hooks';
+import type { Station } from '../types';
 
 const formSchema = z.object({
-  name: z.string().min(1, "Tên bến xe là bắt buộc"),
-  city: z.string().min(1, "Thành phố là bắt buộc"),
-  address: z.string().min(1, "Địa chỉ là bắt buộc"),
+  name: z.string().min(1, 'Tên bến xe là bắt buộc'),
+  city: z.string().min(1, 'Thành phố là bắt buộc'),
+  address: z.string().min(1, 'Địa chỉ là bắt buộc'),
 });
 
 export const StationManagementPage = () => {
@@ -62,9 +65,9 @@ export const StationManagementPage = () => {
   } = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: "",
-      city: "",
-      address: "",
+      name: '',
+      city: '',
+      address: '',
     },
   });
 
@@ -78,7 +81,7 @@ export const StationManagementPage = () => {
             setEditingStation(null);
             reset();
           },
-        }
+        },
       );
     } else {
       createStation.mutate(values, {
@@ -90,15 +93,18 @@ export const StationManagementPage = () => {
     }
   };
 
-  const handleEdit = useCallback((station: Station) => {
-    setEditingStation(station);
-    reset({
-      name: station.name,
-      city: station.city,
-      address: station.address,
-    });
-    setIsOpen(true);
-  }, [reset]);
+  const handleEdit = useCallback(
+    (station: Station) => {
+      setEditingStation(station);
+      reset({
+        name: station.name,
+        city: station.city,
+        address: station.address,
+      });
+      setIsOpen(true);
+    },
+    [reset],
+  );
 
   const [forceDeleteId, setForceDeleteId] = useState<string | null>(null);
 
@@ -117,7 +123,7 @@ export const StationManagementPage = () => {
               setDeletingStation(null);
             }
           },
-        }
+        },
       );
     }
   };
@@ -130,9 +136,9 @@ export const StationManagementPage = () => {
           onSuccess: () => {
             setForceDeleteId(null);
             // Invalidate queries to ensure UI update
-            queryClient.invalidateQueries({ queryKey: ["stations"] });
+            queryClient.invalidateQueries({ queryKey: ['stations'] });
           },
-        }
+        },
       );
     }
   };
@@ -141,8 +147,8 @@ export const StationManagementPage = () => {
   const [pageSize, setPageSize] = useState(10);
   const [sorting, setSorting] = useState<{
     key: string | null;
-    direction: "asc" | "desc";
-  }>({ key: "name", direction: "asc" });
+    direction: 'asc' | 'desc';
+  }>({ key: 'name', direction: 'asc' });
 
   const sortedPaged = useMemo(() => {
     if (!stations) return { data: [], total: 0, totalPages: 1, page: 1 };
@@ -154,8 +160,8 @@ export const StationManagementPage = () => {
         const aVal = a[key] as unknown;
         const bVal = b[key] as unknown;
         if (aVal == null || bVal == null) return 0;
-        if (aVal < bVal) return sorting.direction === "asc" ? -1 : 1;
-        if (aVal > bVal) return sorting.direction === "asc" ? 1 : -1;
+        if (aVal < bVal) return sorting.direction === 'asc' ? -1 : 1;
+        if (aVal > bVal) return sorting.direction === 'asc' ? 1 : -1;
         return 0;
       });
     }
@@ -171,7 +177,7 @@ export const StationManagementPage = () => {
       total,
       totalPages,
       page: safePage,
-      };
+    };
   }, [stations, pageIndex, pageSize, sorting]);
 
   const meta = {
@@ -184,8 +190,8 @@ export const StationManagementPage = () => {
   const columns: ColumnDef<Station>[] = useMemo(
     () => [
       {
-        key: "name",
-        header: "Tên bến xe",
+        key: 'name',
+        header: 'Tên bến xe',
         sortable: true,
         cell: (station) => (
           <div className="flex items-center gap-2 flex-wrap">
@@ -195,19 +201,19 @@ export const StationManagementPage = () => {
         ),
       },
       {
-        key: "city",
-        header: "Thành phố",
+        key: 'city',
+        header: 'Thành phố',
         sortable: true,
         cell: (station) => station.city,
       },
       {
-        key: "address",
-        header: "Địa chỉ",
+        key: 'address',
+        header: 'Địa chỉ',
         cell: (station) => station.address,
       },
       {
-        key: "actions",
-        header: "",
+        key: 'actions',
+        header: '',
         cell: (station) => (
           <div className="flex justify-end">
             <DropdownMenu>
@@ -243,17 +249,20 @@ export const StationManagementPage = () => {
     <div className="flex flex-col gap-8 p-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold tracking-tight">Quản lý Bến xe</h1>
-        <Sheet open={isOpen} onOpenChange={(open) => {
-          setIsOpen(open);
-          if (!open) {
-            setEditingStation(null);
-            reset({
-              name: "",
-              city: "",
-              address: "",
-            });
-          }
-        }}>
+        <Sheet
+          open={isOpen}
+          onOpenChange={(open) => {
+            setIsOpen(open);
+            if (!open) {
+              setEditingStation(null);
+              reset({
+                name: '',
+                city: '',
+                address: '',
+              });
+            }
+          }}
+        >
           <SheetTrigger asChild>
             <Button>
               <Plus className="mr-2 h-4 w-4" /> Thêm Bến xe
@@ -261,34 +270,30 @@ export const StationManagementPage = () => {
           </SheetTrigger>
           <SheetContent>
             <SheetHeader>
-              <SheetTitle>{editingStation ? "Cập nhật Bến xe" : "Thêm Bến xe mới"}</SheetTitle>
-              <SheetDescription>
-                Nhập thông tin chi tiết về bến xe mới.
-              </SheetDescription>
+              <SheetTitle>{editingStation ? 'Cập nhật Bến xe' : 'Thêm Bến xe mới'}</SheetTitle>
+              <SheetDescription>Nhập thông tin chi tiết về bến xe mới.</SheetDescription>
             </SheetHeader>
             <div className="py-4">
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                 <FormField label="Tên bến xe" error={errors.name?.message}>
-                  <Input
-                    placeholder="Bến xe Miền Đông"
-                    {...register("name")}
-                  />
+                  <Input placeholder="Bến xe Miền Đông" {...register('name')} />
                 </FormField>
                 <FormField label="Thành phố" error={errors.city?.message}>
-                  <Input placeholder="Hồ Chí Minh" {...register("city")} />
+                  <Input placeholder="Hồ Chí Minh" {...register('city')} />
                 </FormField>
                 <FormField label="Địa chỉ" error={errors.address?.message}>
-                  <Input
-                    placeholder="292 Đinh Bộ Lĩnh..."
-                    {...register("address")}
-                  />
+                  <Input placeholder="292 Đinh Bộ Lĩnh..." {...register('address')} />
                 </FormField>
                 <Button
                   type="submit"
                   className="w-full"
                   disabled={createStation.isPending || updateStation.isPending}
                 >
-                  {createStation.isPending || updateStation.isPending ? "Đang xử lý..." : (editingStation ? "Cập nhật" : "Tạo Bến xe")}
+                  {createStation.isPending || updateStation.isPending
+                    ? 'Đang xử lý...'
+                    : editingStation
+                      ? 'Cập nhật'
+                      : 'Tạo Bến xe'}
                 </Button>
               </form>
             </div>
@@ -317,8 +322,11 @@ export const StationManagementPage = () => {
             onSort={(key) =>
               setSorting((prev) =>
                 prev.key === key
-                  ? { key, direction: prev.direction === "asc" ? "desc" : "asc" }
-                  : { key, direction: "asc" },
+                  ? {
+                      key,
+                      direction: prev.direction === 'asc' ? 'desc' : 'asc',
+                    }
+                  : { key, direction: 'asc' },
               )
             }
             getRowId={(station) => station.id}
@@ -326,7 +334,10 @@ export const StationManagementPage = () => {
         </CardContent>
       </Card>
 
-      <AlertDialog open={!!deletingStation} onOpenChange={(open) => !open && setDeletingStation(null)}>
+      <AlertDialog
+        open={!!deletingStation}
+        onOpenChange={(open) => !open && setDeletingStation(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Bạn có chắc chắn muốn xóa?</AlertDialogTitle>
@@ -340,7 +351,7 @@ export const StationManagementPage = () => {
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={handleDelete}
             >
-              {deleteStation.isPending ? "Đang xóa..." : "Xóa"}
+              {deleteStation.isPending ? 'Đang xóa...' : 'Xóa'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -351,8 +362,9 @@ export const StationManagementPage = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>Cảnh báo: Dữ liệu liên quan</AlertDialogTitle>
             <AlertDialogDescription>
-              Bến xe này đang được sử dụng trong các tuyến đường hoặc chuyến đi. 
-              Bạn có muốn xóa BẮT BUỘC không? Hành động này sẽ xóa tất cả các dữ liệu liên quan (tuyến đường, chuyến đi, vé).
+              Bến xe này đang được sử dụng trong các tuyến đường hoặc chuyến đi. Bạn có muốn xóa BẮT
+              BUỘC không? Hành động này sẽ xóa tất cả các dữ liệu liên quan (tuyến đường, chuyến đi,
+              vé).
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -361,7 +373,7 @@ export const StationManagementPage = () => {
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={handleForceDelete}
             >
-              {deleteStation.isPending ? "Đang xóa..." : "Xóa bắt buộc"}
+              {deleteStation.isPending ? 'Đang xóa...' : 'Xóa bắt buộc'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
