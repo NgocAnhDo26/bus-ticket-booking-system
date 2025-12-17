@@ -36,7 +36,7 @@ export const getUserBookings = async (
   totalPages: number;
   totalElements: number;
 }> => {
-  const resp = await orvalGetUserBookings({ page, size });
+  const resp = await orvalGetUserBookings({ pageable: { page, size } });
   return {
     content: (resp.content ?? []) as unknown as BookingResponse[],
     totalPages: resp.page?.totalPages ?? 0,
