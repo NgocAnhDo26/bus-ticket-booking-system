@@ -1,17 +1,9 @@
-import { Plus, Pencil, Trash2, MoreHorizontal } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { GenericTable, type ColumnDef } from "@/components/common/GenericTable";
-import { useBusLayouts, useDeleteBusLayout } from "../hooks";
-import { type BusLayout } from "../types";
-import { useNavigate } from "react-router-dom";
-import { useState } from "react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+
+import { MoreHorizontal, Pencil, Plus, Trash2 } from 'lucide-react';
+
+import { type ColumnDef, GenericTable } from '@/components/common/GenericTable';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,19 +13,33 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+} from '@/components/ui/alert-dialog';
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+
+import { useBusLayouts, useDeleteBusLayout } from '../hooks';
+import { type BusLayout } from '../types';
 
 export const BusLayoutManagementPage = () => {
   const navigate = useNavigate();
   const { data: layouts, isLoading } = useBusLayouts();
   const deleteLayout = useDeleteBusLayout();
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  
+
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [sorting, setSorting] = useState<{ key: string | null; direction: "asc" | "desc" }>({
+  const [sorting, setSorting] = useState<{
+    key: string | null;
+    direction: 'asc' | 'desc';
+  }>({
     key: null,
-    direction: "asc",
+    direction: 'asc',
   });
 
   const handleDelete = () => {
@@ -46,31 +52,31 @@ export const BusLayoutManagementPage = () => {
 
   const columns: ColumnDef<BusLayout>[] = [
     {
-      header: "Tên cấu hình",
-      key: "name",
+      header: 'Tên cấu hình',
+      key: 'name',
       sortable: true,
     },
     {
-      header: "Loại xe",
-      key: "busType",
+      header: 'Loại xe',
+      key: 'busType',
       sortable: true,
     },
     {
-      header: "Số tầng",
-      key: "totalFloors",
+      header: 'Số tầng',
+      key: 'totalFloors',
     },
     {
-      header: "Số ghế",
-      key: "totalSeats",
+      header: 'Số ghế',
+      key: 'totalSeats',
       sortable: true,
     },
     {
-      header: "Mô tả",
-      key: "description",
+      header: 'Mô tả',
+      key: 'description',
     },
     {
-      key: "actions",
-      header: "",
+      key: 'actions',
+      header: '',
       cell: (layout) => (
         <div className="flex justify-end">
           <DropdownMenu>
@@ -82,7 +88,9 @@ export const BusLayoutManagementPage = () => {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Thao tác</DropdownMenuLabel>
-              <DropdownMenuItem onClick={() => navigate(`/admin/catalog/layouts/edit/${layout.id}`)}>
+              <DropdownMenuItem
+                onClick={() => navigate(`/admin/catalog/layouts/edit/${layout.id}`)}
+              >
                 <Pencil className="mr-2 h-4 w-4" />
                 Sửa
               </DropdownMenuItem>
@@ -105,24 +113,21 @@ export const BusLayoutManagementPage = () => {
   const filteredData = layouts || [];
   const total = filteredData.length;
   const totalPages = Math.ceil(total / pageSize);
-  
+
   const sortedData = [...filteredData].sort((a, b) => {
     if (!sorting.key) return 0;
     const aValue = a[sorting.key as keyof BusLayout];
     const bValue = b[sorting.key as keyof BusLayout];
-    
+
     if (aValue === bValue) return 0;
     if (aValue === undefined) return 1;
     if (bValue === undefined) return -1;
 
     const comparison = aValue < bValue ? -1 : 1;
-    return sorting.direction === "asc" ? comparison : -comparison;
+    return sorting.direction === 'asc' ? comparison : -comparison;
   });
 
-  const paginatedData = sortedData.slice(
-    (page - 1) * pageSize,
-    page * pageSize
-  );
+  const paginatedData = sortedData.slice((page - 1) * pageSize, page * pageSize);
 
   return (
     <div className="flex flex-col gap-8 p-4">
@@ -133,7 +138,7 @@ export const BusLayoutManagementPage = () => {
             Danh sách các sơ đồ ghế được cấu hình trong hệ thống.
           </p>
         </div>
-        <Button onClick={() => navigate("/admin/catalog/layouts/create")}>
+        <Button onClick={() => navigate('/admin/catalog/layouts/create')}>
           <Plus className="mr-2 h-4 w-4" />
           Tạo mới
         </Button>
@@ -160,8 +165,7 @@ export const BusLayoutManagementPage = () => {
         onSort={(key) => {
           setSorting((prev) => ({
             key,
-            direction:
-              prev.key === key && prev.direction === "asc" ? "desc" : "asc",
+            direction: prev.key === key && prev.direction === 'asc' ? 'desc' : 'asc',
           }));
         }}
         getRowId={(row) => row.id}
@@ -172,8 +176,8 @@ export const BusLayoutManagementPage = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>Bạn có chắc chắn muốn xóa?</AlertDialogTitle>
             <AlertDialogDescription>
-              Hành động này không thể hoàn tác. Sơ đồ này sẽ bị xóa vĩnh viễn.
-              Lưu ý: Không thể xóa sơ đồ đang được sử dụng bởi xe.
+              Hành động này không thể hoàn tác. Sơ đồ này sẽ bị xóa vĩnh viễn. Lưu ý: Không thể xóa
+              sơ đồ đang được sử dụng bởi xe.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -182,7 +186,7 @@ export const BusLayoutManagementPage = () => {
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={handleDelete}
             >
-              {deleteLayout.isPending ? "Đang xóa..." : "Xóa"}
+              {deleteLayout.isPending ? 'Đang xóa...' : 'Xóa'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

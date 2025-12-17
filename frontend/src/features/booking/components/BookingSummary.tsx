@@ -1,8 +1,10 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { Calendar, Clock, Bus, Users } from "lucide-react";
-import type { Trip } from "@/features/catalog/types";
-import type { PassengerInfo } from "../types";
+import { Bus, Calendar, Clock, Users } from 'lucide-react';
+
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import type { Trip } from '@/features/catalog/types';
+
+import type { PassengerInfo } from '../types';
 
 type BookingSummaryProps = {
   trip: Trip;
@@ -11,33 +13,29 @@ type BookingSummaryProps = {
 };
 
 function formatDate(dateString: string) {
-  return new Date(dateString).toLocaleDateString("vi-VN", {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
+  return new Date(dateString).toLocaleDateString('vi-VN', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
   });
 }
 
 function formatTime(dateString: string) {
-  return new Date(dateString).toLocaleTimeString("vi-VN", {
-    hour: "2-digit",
-    minute: "2-digit",
+  return new Date(dateString).toLocaleTimeString('vi-VN', {
+    hour: '2-digit',
+    minute: '2-digit',
   });
 }
 
 function formatCurrency(amount: number) {
-  return new Intl.NumberFormat("vi-VN", {
-    style: "currency",
-    currency: "VND",
+  return new Intl.NumberFormat('vi-VN', {
+    style: 'currency',
+    currency: 'VND',
   }).format(amount);
 }
 
-export function BookingSummary({
-  trip,
-  passengers,
-  totalPrice,
-}: BookingSummaryProps) {
+export function BookingSummary({ trip, passengers, totalPrice }: BookingSummaryProps) {
   return (
     <Card>
       <CardHeader>
@@ -57,17 +55,11 @@ export function BookingSummary({
             </div>
             <div className="flex-1 space-y-2">
               <div>
-                <p className="font-medium">
-                  {trip.route.originStation.name}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  {trip.route.originStation.city}
-                </p>
+                <p className="font-medium">{trip.route.originStation.name}</p>
+                <p className="text-sm text-muted-foreground">{trip.route.originStation.city}</p>
               </div>
               <div>
-                <p className="font-medium">
-                  {trip.route.destinationStation.name}
-                </p>
+                <p className="font-medium">{trip.route.destinationStation.name}</p>
                 <p className="text-sm text-muted-foreground">
                   {trip.route.destinationStation.city}
                 </p>
@@ -117,19 +109,14 @@ export function BookingSummary({
           </div>
           <div className="space-y-2">
             {passengers.map((p, idx) => (
-              <div
-                key={idx}
-                className="flex justify-between items-center p-2 bg-muted rounded-lg"
-              >
+              <div key={idx} className="flex justify-between items-center p-2 bg-muted rounded-lg">
                 <div className="flex items-center gap-2">
                   <span className="bg-primary text-primary-foreground rounded-full w-5 h-5 flex items-center justify-center text-xs">
                     {p.seatCode}
                   </span>
-                  <span className="text-sm">{p.passengerName || "Chưa nhập"}</span>
+                  <span className="text-sm">{p.passengerName || 'Chưa nhập'}</span>
                 </div>
-                <span className="text-sm font-medium">
-                  {formatCurrency(p.price)}
-                </span>
+                <span className="text-sm font-medium">{formatCurrency(p.price)}</span>
               </div>
             ))}
           </div>
@@ -140,9 +127,7 @@ export function BookingSummary({
         {/* Total */}
         <div className="flex justify-between items-center pt-2">
           <span className="text-lg font-semibold">Tổng tiền</span>
-          <span className="text-xl font-bold text-primary">
-            {formatCurrency(totalPrice)}
-          </span>
+          <span className="text-xl font-bold text-primary">{formatCurrency(totalPrice)}</span>
         </div>
       </CardContent>
     </Card>

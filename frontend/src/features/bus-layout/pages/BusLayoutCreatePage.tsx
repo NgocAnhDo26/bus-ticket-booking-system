@@ -1,9 +1,10 @@
-import { useParams } from "react-router-dom";
-import { useEffect } from "react";
-import { BusLayoutWizard } from "../components/BusLayoutWizard";
-import { useBusLayout } from "../hooks";
-import { useBusLayoutStore } from "../store/useBusLayoutStore";
-import { type SeatCell, type SeatType } from "../types";
+import { useEffect } from 'react';
+import { useParams } from 'react-router-dom';
+
+import { BusLayoutWizard } from '../components/BusLayoutWizard';
+import { useBusLayout } from '../hooks';
+import { useBusLayoutStore } from '../store/useBusLayoutStore';
+import { type SeatCell, type SeatType } from '../types';
 
 export const BusLayoutCreatePage = () => {
   const { id } = useParams<{ id: string }>();
@@ -19,8 +20,12 @@ export const BusLayoutCreatePage = () => {
         name: layout.name,
         busType: layout.busType,
         totalFloors: layout.totalFloors,
-        totalRows: layout.totalRows ?? (seatsData.length > 0 ? Math.max(...seatsData.map((s) => s.row)) + 2 : 10),
-        totalCols: layout.totalCols ?? (seatsData.length > 0 ? Math.max(...seatsData.map((s) => s.col)) + 2 : 3),
+        totalRows:
+          layout.totalRows ??
+          (seatsData.length > 0 ? Math.max(...seatsData.map((s) => s.row)) + 2 : 10),
+        totalCols:
+          layout.totalCols ??
+          (seatsData.length > 0 ? Math.max(...seatsData.map((s) => s.col)) + 2 : 3),
         description: layout.description,
       };
 
@@ -48,12 +53,12 @@ export const BusLayoutCreatePage = () => {
     <div className="flex flex-col gap-8 p-4">
       <div className="space-y-1">
         <h1 className="text-2xl font-bold tracking-tight">
-          {id ? "Cập nhật sơ đồ xe" : "Trình tạo sơ đồ xe"}
+          {id ? 'Cập nhật sơ đồ xe' : 'Trình tạo sơ đồ xe'}
         </h1>
         <p className="text-sm text-muted-foreground">
           {id
-            ? "Chỉnh sửa thông tin và sơ đồ ghế."
-            : "Cấu hình thông tin xe và vẽ sơ đồ ghế trực quan trước khi lưu."}
+            ? 'Chỉnh sửa thông tin và sơ đồ ghế.'
+            : 'Cấu hình thông tin xe và vẽ sơ đồ ghế trực quan trước khi lưu.'}
         </p>
       </div>
 

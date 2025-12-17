@@ -1,8 +1,8 @@
-import { type SeatType } from "@/features/catalog/types";
+import { type SeatType } from '@/features/catalog/types';
 
 export type { SeatType };
 
-export type SeatTool = "CURSOR" | "NORMAL" | "VIP" | "ERASER";
+export type SeatTool = 'CURSOR' | 'NORMAL' | 'VIP' | 'ERASER';
 
 export type BusLayoutConfig = {
   name: string;
@@ -38,4 +38,3 @@ export type CreateBusLayoutPayload = {
   config: BusLayoutConfig;
   seats: SeatCell[];
 };
-

@@ -1,23 +1,23 @@
-import * as React from "react";
-import { useSidebar } from "@/components/ui/sidebar";
-import { Tickets } from "lucide-react";
-import { NavMain } from "@/components/nav-main";
-import { NavUser } from "@/components/nav-user";
+import * as React from 'react';
+
+import { Tickets } from 'lucide-react';
+
+import { NavMain } from '@/components/nav-main';
+import { NavUser } from '@/components/nav-user';
+import { useSidebar } from '@/components/ui/sidebar';
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
   SidebarRail,
-} from "@/components/ui/sidebar";
-import { cn } from "@/lib/utils";
-import { useNav } from "@/hooks/useNav";
+} from '@/components/ui/sidebar';
+import { useNav } from '@/hooks/useNav';
+import { cn } from '@/lib/utils';
 
-export function AdminDashboardSidebar({
-  ...props
-}: React.ComponentProps<typeof Sidebar>) {
+export function AdminDashboardSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { state } = useSidebar();
-  const isCollapsed = state === "collapsed";
+  const isCollapsed = state === 'collapsed';
   const { adminNavItems, userData } = useNav();
 
   return (
@@ -25,18 +25,15 @@ export function AdminDashboardSidebar({
       <SidebarHeader>
         <a
           href="#"
-          className={cn(
-            "flex items-center gap-3 font-medium p-2",
-            isCollapsed && "justify-center",
-          )}
+          className={cn('flex items-center gap-3 font-medium p-2', isCollapsed && 'justify-center')}
         >
           <div className="bg-primary text-primary-foreground flex size-8 items-center justify-center rounded-md shrink-0">
             <Tickets className="size-5" />
           </div>
           <p
             className={cn(
-              "text-xl font-semibold overflow-hidden text-ellipsis text-nowrap",
-              isCollapsed && "hidden",
+              'text-xl font-semibold overflow-hidden text-ellipsis text-nowrap',
+              isCollapsed && 'hidden',
             )}
           >
             SwiftRide

@@ -1,5 +1,6 @@
-import { Card } from "@/components/ui/card";
-import { type LucideIcon } from "lucide-react";
+import { type LucideIcon } from 'lucide-react';
+
+import { Card } from '@/components/ui/card';
 
 export interface AdminSummaryCardProps {
   title: string;
@@ -16,9 +17,7 @@ export const AdminSummaryCard = ({
 }: AdminSummaryCardProps) => {
   return (
     <Card className="p-6 flex-1 min-w-64">
-      <div
-        className={`flex items-center justify-center p-2 rounded-xl size-12 ${iconBgColor}`}
-      >
+      <div className={`flex items-center justify-center p-2 rounded-xl size-12 ${iconBgColor}`}>
         <Icon className="text-white size-6" />
       </div>
       <div className="mt-4 space-y-1">

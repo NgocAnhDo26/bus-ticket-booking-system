@@ -1,36 +1,27 @@
-import { useEffect } from "react";
-import { useForm, Controller, type Resolver } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import {
-  Field,
-  FieldGroup,
-  FieldLabel,
-  FieldDescription,
-  FieldError,
-} from "@/components/ui/field";
-import { layoutConfigSchema, type LayoutConfigFormValues } from "../schema";
-import { useBusLayoutStore } from "../store/useBusLayoutStore";
+import { useEffect } from 'react';
+import { Controller, type Resolver, useForm } from 'react-hook-form';
+
+import { zodResolver } from '@hookform/resolvers/zod';
+
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
 import {
   Select,
-  SelectItem,
   SelectContent,
-  SelectValue,
+  SelectItem,
   SelectTrigger,
-} from "@/components/ui/select";
+  SelectValue,
+} from '@/components/ui/select';
+
+import { type LayoutConfigFormValues, layoutConfigSchema } from '../schema';
+import { useBusLayoutStore } from '../store/useBusLayoutStore';
 
 const BUS_TYPES = [
-  { label: "Thường", value: "NORMAL" },
-  { label: "Giường nằm", value: "SLEEPER" },
-  { label: "Limousine", value: "LIMOUSINE" },
+  { label: 'Thường', value: 'NORMAL' },
+  { label: 'Giường nằm', value: 'SLEEPER' },
+  { label: 'Limousine', value: 'LIMOUSINE' },
 ];
 
 type LayoutConfigFormProps = {
@@ -38,10 +29,7 @@ type LayoutConfigFormProps = {
   className?: string;
 };
 
-export const LayoutConfigForm = ({
-  onComplete,
-  className,
-}: LayoutConfigFormProps) => {
+export const LayoutConfigForm = ({ onComplete, className }: LayoutConfigFormProps) => {
   const config = useBusLayoutStore((state) => state.config);
   const gridDimensions = useBusLayoutStore((state) => state.gridDimensions);
   const setConfig = useBusLayoutStore((state) => state.setConfig);
@@ -54,25 +42,23 @@ export const LayoutConfigForm = ({
     reset,
     formState: { errors },
   } = useForm<LayoutConfigFormValues>({
-    resolver: zodResolver(
-      layoutConfigSchema,
-    ) as Resolver<LayoutConfigFormValues>,
+    resolver: zodResolver(layoutConfigSchema) as Resolver<LayoutConfigFormValues>,
     defaultValues: {
-      name: "",
-      busType: "",
+      name: '',
+      busType: '',
       totalFloors: 1,
       totalRows: gridDimensions.rows,
       totalCols: gridDimensions.cols,
     },
-    mode: "onChange",
+    mode: 'onChange',
   });
 
   // Reset form when config changes (e.g., when layout data loads in edit mode)
   // Using config.busType as a stable indicator that real data has loaded
   useEffect(() => {
     const formValues = {
-      name: config.name ?? "",
-      busType: config.busType ?? "",
+      name: config.name ?? '',
+      busType: config.busType ?? '',
       totalFloors: config.totalFloors ?? 1,
       totalRows: config.totalRows ?? gridDimensions.rows,
       totalCols: config.totalCols ?? gridDimensions.cols,
@@ -89,7 +75,16 @@ export const LayoutConfigForm = ({
       keepIsValid: false,
       keepSubmitCount: false,
     });
-  }, [config.name, config.busType, config.totalFloors, config.totalRows, config.totalCols, gridDimensions.rows, gridDimensions.cols, reset]);
+  }, [
+    config.name,
+    config.busType,
+    config.totalFloors,
+    config.totalRows,
+    config.totalCols,
+    gridDimensions.rows,
+    gridDimensions.cols,
+    reset,
+  ]);
 
   const onSubmit = (values: LayoutConfigFormValues) => {
     setConfig(values);
@@ -111,11 +106,7 @@ export const LayoutConfigForm = ({
         <CardContent className="space-y-6">
           <Field data-invalid={!!errors.name}>
             <FieldLabel>Tên sơ đồ</FieldLabel>
-            <Input
-              className="max-w-md"
-              placeholder="Giường nằm 40 chỗ"
-              {...register("name")}
-            />
+            <Input className="max-w-md" placeholder="Giường nằm 40 chỗ" {...register('name')} />
             <FieldError>{errors.name?.message}</FieldError>
           </Field>
           <div className="grid gap-4 md:grid-cols-2">
@@ -127,7 +118,7 @@ export const LayoutConfigForm = ({
                 render={({ field }) => (
                   <Select
                     key={field.value} // Force remount when value changes to ensure UI updates
-                    value={field.value ?? ""}
+                    value={field.value ?? ''}
                     onValueChange={field.onChange}
                   >
                     <SelectTrigger className="max-w-md">
@@ -152,7 +143,7 @@ export const LayoutConfigForm = ({
                 type="number"
                 min={1}
                 max={2}
-                {...register("totalFloors", { valueAsNumber: true })}
+                {...register('totalFloors', { valueAsNumber: true })}
               />
               <FieldError>{errors.totalFloors?.message}</FieldError>
             </Field>
@@ -161,14 +152,12 @@ export const LayoutConfigForm = ({
           <div className="grid gap-4 md:grid-cols-2">
             <Field data-invalid={!!errors.totalCols}>
               <FieldLabel>Số cột</FieldLabel>
-              <FieldDescription>
-                Số dãy ghế theo chiều dọc thân xe
-              </FieldDescription>
+              <FieldDescription>Số dãy ghế theo chiều dọc thân xe</FieldDescription>
               <Input
                 className="max-w-md"
                 type="number"
                 min={1}
-                {...register("totalCols", { valueAsNumber: true })}
+                {...register('totalCols', { valueAsNumber: true })}
               />
               <FieldError>{errors.totalCols?.message}</FieldError>
             </Field>
@@ -179,7 +168,7 @@ export const LayoutConfigForm = ({
                 className="max-w-md"
                 type="number"
                 min={1}
-                {...register("totalRows", { valueAsNumber: true })}
+                {...register('totalRows', { valueAsNumber: true })}
               />
               <FieldError>{errors.totalRows?.message}</FieldError>
             </Field>
@@ -187,11 +176,7 @@ export const LayoutConfigForm = ({
         </CardContent>
       </Card>
       <div className="flex items-center justify-end gap-2 mt-4">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => window.history.back()}
-        >
+        <Button type="button" variant="outline" onClick={() => window.history.back()}>
           Quay lại
         </Button>
         <Button type="submit">Tiếp tục tới vẽ sơ đồ</Button>

@@ -1,23 +1,26 @@
-import { useEffect, useMemo } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-import { useShallow } from "zustand/react/shallow";
-import { Loader2, ArrowLeft, Clock, MapPin } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { useBookingStore } from "../store";
-import { bookingApi, cancelBooking } from "../api";
-import { BookingSeatMap } from "../components/BookingSeatMap";
-import { format } from "date-fns";
+import { useEffect, useMemo } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+
+import { useQuery } from '@tanstack/react-query';
+import { format } from 'date-fns';
+import { ArrowLeft, Clock, Loader2, MapPin } from 'lucide-react';
+import { useShallow } from 'zustand/react/shallow';
+
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
 // import { useAuthStore } from "@/store/auth-store";
-import { getBusLayout } from "@/features/bus-layout/api";
-import { toast } from "@/hooks/use-toast";
+import { getBusLayout } from '@/features/bus-layout/api';
+import { toast } from '@/hooks/use-toast';
+
+import { bookingApi, cancelBooking } from '../api';
+import { BookingSeatMap } from '../components/BookingSeatMap';
+import { useBookingStore } from '../store';
 
 const formatCurrency = (amount: number) => {
-  return new Intl.NumberFormat("vi-VN", {
-    style: "currency",
-    currency: "VND",
+  return new Intl.NumberFormat('vi-VN', {
+    style: 'currency',
+    currency: 'VND',
   }).format(amount);
 };
 
@@ -25,64 +28,65 @@ export const BookingPage = () => {
   const { tripId } = useParams<{ tripId: string }>();
   const navigate = useNavigate();
   // const { user } = useAuthStore(); // Unused
-  
+
   const { initialize, selectedSeats } = useBookingStore(
     useShallow((state) => ({
       initialize: state.initialize,
-      // cleanup: state.cleanup, // cleanup is not used here but in effect return? 
+      // cleanup: state.cleanup, // cleanup is not used here but in effect return?
       // seatStatusMap: state.seatStatusMap, // Unused
       selectedSeats: state.selectedSeats,
-    }))
+    })),
   );
 
   const { data: trip, isLoading } = useQuery({
-    queryKey: ["trip", tripId],
+    queryKey: ['trip', tripId],
     queryFn: () => bookingApi.getTrip(tripId!),
     enabled: !!tripId,
   });
 
   const { data: layout } = useQuery({
-    queryKey: ["bus-layout", trip?.bus?.busLayoutId],
+    queryKey: ['bus-layout', trip?.bus?.busLayoutId],
     queryFn: () => getBusLayout(trip!.bus.busLayoutId!),
     enabled: !!trip?.bus?.busLayoutId,
   });
 
   useEffect(() => {
     const restoreDraft = async () => {
-      const { pendingBookingId, pendingSelectedSeats, setPendingBooking } = useBookingStore.getState();
-      
+      const { pendingBookingId, pendingSelectedSeats, setPendingBooking } =
+        useBookingStore.getState();
+
       if (tripId) {
         // If there is a pending booking (user came back from confirmation), cancel it to free seats
         if (pendingBookingId) {
-           try {
-              await cancelBooking(pendingBookingId);
-              setPendingBooking(null, []); // Clear draft state
-              
-              // Initialize usually fetches fresh status. 
-              // After cancelling, seats should be AVAILABLE. 
-              await initialize(tripId);
+          try {
+            await cancelBooking(pendingBookingId);
+            setPendingBooking(null, []); // Clear draft state
 
-              // Restore selection (optimistically lock them again)
-              // Wait a bit for WS to update or just optimistic check
-              setTimeout(() => {
-                for (const seatCode of pendingSelectedSeats) {
-                    useBookingStore.getState().toggleSeat(seatCode);
-                }
-              }, 500);
-              
-              return;
-           } catch (e) {
-              console.error("Failed to cancel pending booking", e);
-           }
+            // Initialize usually fetches fresh status.
+            // After cancelling, seats should be AVAILABLE.
+            await initialize(tripId);
+
+            // Restore selection (optimistically lock them again)
+            // Wait a bit for WS to update or just optimistic check
+            setTimeout(() => {
+              for (const seatCode of pendingSelectedSeats) {
+                useBookingStore.getState().toggleSeat(seatCode);
+              }
+            }, 500);
+
+            return;
+          } catch (e) {
+            console.error('Failed to cancel pending booking', e);
+          }
         }
         initialize(tripId);
       }
     };
-    
+
     restoreDraft();
-    
+
     // Don't cleanup on unmount to persist state for next step
-    // return () => cleanup(); 
+    // return () => cleanup();
   }, [tripId, initialize]);
 
   // Calculate selected seats and price
@@ -102,7 +106,7 @@ export const BookingPage = () => {
     const seats = layout.seats || [];
     const details = mySelectedSeats.map((seatCode) => {
       const seat = seats.find((s: { seatCode: string; type: string }) => s.seatCode === seatCode);
-      const seatType = seat?.type || "NORMAL";
+      const seatType = seat?.type || 'NORMAL';
       const price = priceMap[seatType] || 0;
       return { seatCode, seatType, price };
     });
@@ -113,14 +117,14 @@ export const BookingPage = () => {
 
   const handleContinue = () => {
     if (!tripId) return;
-    
+
     if (mySelectedSeats.length === 0) {
-        toast({
-            title: "Chưa chọn ghế",
-            description: "Vui lòng chọn ít nhất 1 ghế để tiếp tục.",
-            variant: "destructive",
-        });
-        return;
+      toast({
+        title: 'Chưa chọn ghế',
+        description: 'Vui lòng chọn ít nhất 1 ghế để tiếp tục.',
+        variant: 'destructive',
+      });
+      return;
     }
 
     navigate(`/booking/${tripId}/details`);
@@ -151,9 +155,9 @@ export const BookingPage = () => {
               {trip.bus.busLayoutId ? (
                 <BookingSeatMap busLayoutId={trip.bus.busLayoutId} />
               ) : (
-                 <div className="text-center text-muted-foreground py-8">
-                    Không tìm thấy sơ đồ ghế cho chuyến đi này.
-                 </div>
+                <div className="text-center text-muted-foreground py-8">
+                  Không tìm thấy sơ đồ ghế cho chuyến đi này.
+                </div>
               )}
             </CardContent>
           </Card>
@@ -174,27 +178,27 @@ export const BookingPage = () => {
                   </span>
                 </div>
               </div>
-              
+
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
-                   <div className="text-sm font-medium text-muted-foreground">Khởi hành</div>
-                   <div className="flex items-center gap-2">
-                     <Clock className="h-4 w-4 text-primary" />
-                     <span>{format(new Date(trip.departureTime), "HH:mm")}</span>
-                   </div>
-                   <div className="text-xs text-muted-foreground">
-                      {format(new Date(trip.departureTime), "dd/MM/yyyy")}
-                   </div>
+                  <div className="text-sm font-medium text-muted-foreground">Khởi hành</div>
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-4 w-4 text-primary" />
+                    <span>{format(new Date(trip.departureTime), 'HH:mm')}</span>
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    {format(new Date(trip.departureTime), 'dd/MM/yyyy')}
+                  </div>
                 </div>
-                 <div className="space-y-1">
-                   <div className="text-sm font-medium text-muted-foreground">Dự kiến đến</div>
-                   <div className="flex items-center gap-2">
-                     <Clock className="h-4 w-4 text-primary" />
-                     <span>{format(new Date(trip.arrivalTime), "HH:mm")}</span>
-                   </div>
-                   <div className="text-xs text-muted-foreground">
-                      {format(new Date(trip.arrivalTime), "dd/MM/yyyy")}
-                   </div>
+                <div className="space-y-1">
+                  <div className="text-sm font-medium text-muted-foreground">Dự kiến đến</div>
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-4 w-4 text-primary" />
+                    <span>{format(new Date(trip.arrivalTime), 'HH:mm')}</span>
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    {format(new Date(trip.arrivalTime), 'dd/MM/yyyy')}
+                  </div>
                 </div>
               </div>
 
@@ -209,46 +213,44 @@ export const BookingPage = () => {
           </Card>
 
           <Card className="border-primary/20 shadow-lg">
-             <CardHeader className="bg-primary/5 pb-4">
-               <CardTitle className="text-lg">Ghế đã chọn</CardTitle>
-             </CardHeader>
-             <CardContent className="pt-6">
-                {mySelectedSeats.length > 0 ? (
-                    <div className="space-y-2">
-                      {seatDetails.map((d) => (
-                        <div key={d.seatCode} className="flex justify-between items-center">
-                          <div className="flex items-center gap-2">
-                            <span className="bg-primary text-primary-foreground px-2 py-0.5 rounded text-sm font-medium">
-                              {d.seatCode}
-                            </span>
-                            <span className="text-sm text-muted-foreground">
-                              {d.seatType === "VIP" ? "VIP" : "Thường"}
-                            </span>
-                          </div>
-                          <span className="text-sm font-medium">{formatCurrency(d.price)}</span>
-                        </div>
-                      ))}
+            <CardHeader className="bg-primary/5 pb-4">
+              <CardTitle className="text-lg">Ghế đã chọn</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-6">
+              {mySelectedSeats.length > 0 ? (
+                <div className="space-y-2">
+                  {seatDetails.map((d) => (
+                    <div key={d.seatCode} className="flex justify-between items-center">
+                      <div className="flex items-center gap-2">
+                        <span className="bg-primary text-primary-foreground px-2 py-0.5 rounded text-sm font-medium">
+                          {d.seatCode}
+                        </span>
+                        <span className="text-sm text-muted-foreground">
+                          {d.seatType === 'VIP' ? 'VIP' : 'Thường'}
+                        </span>
+                      </div>
+                      <span className="text-sm font-medium">{formatCurrency(d.price)}</span>
                     </div>
-                ) : (
-                    <p className="text-sm text-muted-foreground">Chưa chọn ghế nào</p>
-                )}
-             </CardContent>
-             <CardFooter className="flex-col gap-4 border-t pt-6">
-                <div className="flex w-full items-center justify-between">
-                    <span className="text-muted-foreground">Tổng cộng</span>
-                    <span className="text-xl font-bold text-primary">
-                        {formatCurrency(totalPrice)}
-                    </span>
+                  ))}
                 </div>
-                <Button 
-                    className="w-full" 
-                    size="lg" 
-                    disabled={mySelectedSeats.length === 0}
-                    onClick={handleContinue}
-                >
-                    Tiếp tục
-                </Button>
-             </CardFooter>
+              ) : (
+                <p className="text-sm text-muted-foreground">Chưa chọn ghế nào</p>
+              )}
+            </CardContent>
+            <CardFooter className="flex-col gap-4 border-t pt-6">
+              <div className="flex w-full items-center justify-between">
+                <span className="text-muted-foreground">Tổng cộng</span>
+                <span className="text-xl font-bold text-primary">{formatCurrency(totalPrice)}</span>
+              </div>
+              <Button
+                className="w-full"
+                size="lg"
+                disabled={mySelectedSeats.length === 0}
+                onClick={handleContinue}
+              >
+                Tiếp tục
+              </Button>
+            </CardFooter>
           </Card>
         </div>
       </div>

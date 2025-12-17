@@ -6,6 +6,8 @@ import com.awad.ticketbooking.modules.dashboard.dto.DashboardResponse.ActivityIt
 import com.awad.ticketbooking.modules.dashboard.dto.DashboardResponse.RoleWidget;
 import com.awad.ticketbooking.modules.dashboard.dto.DashboardResponse.RoleWidget.RoleItem;
 import com.awad.ticketbooking.modules.dashboard.dto.DashboardResponse.SummaryMetric;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import java.util.Map;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -15,9 +17,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/dashboard")
+@Tag(name = "Dashboard", description = "Demo endpoints for dashboard widgets and metrics.")
 public class DashboardController {
 
         @GetMapping("/summary")
+        @Operation(summary = "Get dashboard summary", description = "Returns sample summary metrics and activity items for the main dashboard.")
         public ApiResponse<DashboardResponse> summary() {
                 List<SummaryMetric> summaryMetrics = List.of(
                                 new SummaryMetric("Total Bookings", "1,248", "+12% vs last week", "up"),
@@ -44,6 +48,7 @@ public class DashboardController {
 
         @GetMapping("/admin/stats")
         @PreAuthorize("hasRole('ADMIN')")
+        @Operation(summary = "Get admin dashboard stats", description = "Returns sample statistics and actions for the admin dashboard (ADMIN only).")
         public ApiResponse<Map<String, Object>> adminStats() {
                 return ApiResponse.success(Map.of(
                                 "activeUsers", 1284,

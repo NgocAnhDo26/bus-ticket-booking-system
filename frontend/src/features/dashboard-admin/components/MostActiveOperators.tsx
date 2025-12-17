@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Table,
   TableBody,
@@ -6,23 +6,22 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { type TopOperatorResponse } from "../types";
+} from '@/components/ui/table';
+
+import { type TopOperatorResponse } from '../types';
 
 interface MostActiveOperatorsProps {
   operators: TopOperatorResponse[];
 }
 
 const formatCurrency = (amount: number) => {
-  return new Intl.NumberFormat("vi-VN", {
-    style: "currency",
-    currency: "VND",
+  return new Intl.NumberFormat('vi-VN', {
+    style: 'currency',
+    currency: 'VND',
   }).format(amount);
 };
 
-export const MostActiveOperators = ({
-  operators = [],
-}: MostActiveOperatorsProps) => {
+export const MostActiveOperators = ({ operators = [] }: MostActiveOperatorsProps) => {
   return (
     <Card className="col-span-1">
       <CardHeader>
@@ -41,12 +40,8 @@ export const MostActiveOperators = ({
             {operators.length > 0 ? (
               operators.map((operator) => (
                 <TableRow key={operator.operatorId}>
-                  <TableCell className="font-medium">
-                    {operator.operatorName}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    {operator.ticketsSold}
-                  </TableCell>
+                  <TableCell className="font-medium">{operator.operatorName}</TableCell>
+                  <TableCell className="text-right">{operator.ticketsSold}</TableCell>
                   <TableCell className="text-right">
                     {formatCurrency(operator.totalRevenue)}
                   </TableCell>

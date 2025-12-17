@@ -1,9 +1,11 @@
-import { Outlet } from "react-router-dom";
-import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { UserDashboardSidebar } from "./UserDashboardSidebar";
-import { Separator } from "@/components/ui/separator";
-import { useAuthStore } from "@/store/auth-store";
-import { PublicHeader } from "./PublicHeader";
+import { Outlet } from 'react-router-dom';
+
+import { Separator } from '@/components/ui/separator';
+import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
+import { useAuthStore } from '@/store/auth-store';
+
+import { PublicHeader } from './PublicHeader';
+import { UserDashboardSidebar } from './UserDashboardSidebar';
 
 export const DashboardLayout = () => {
   const { user } = useAuthStore();

@@ -1,7 +1,7 @@
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { FormField } from "@/components/ui/form-field";
-import type { SeatType } from "@/features/catalog/types";
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { FormField } from '@/components/ui/form-field';
+import { Input } from '@/components/ui/input';
+import type { SeatType } from '@/features/catalog/types';
 
 export type PassengerFormValues = {
   passengerName: string;
@@ -38,18 +38,16 @@ export function PassengerForm({
             Ghế {seatCode}
             <span
               className={`text-xs px-2 py-0.5 rounded ${
-                seatType === "VIP"
-                  ? "bg-yellow-100 text-yellow-700"
-                  : "bg-gray-100 text-gray-700"
+                seatType === 'VIP' ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-700'
               }`}
             >
               {seatType}
             </span>
           </span>
           <span className="text-primary font-semibold">
-            {new Intl.NumberFormat("vi-VN", {
-              style: "currency",
-              currency: "VND",
+            {new Intl.NumberFormat('vi-VN', {
+              style: 'currency',
+              currency: 'VND',
             }).format(price)}
           </span>
         </CardTitle>
@@ -60,18 +58,14 @@ export function PassengerForm({
             <Input
               placeholder="Nguyễn Văn A"
               value={values.passengerName}
-              onChange={(e) =>
-                onChange({ ...values, passengerName: e.target.value })
-              }
+              onChange={(e) => onChange({ ...values, passengerName: e.target.value })}
             />
           </FormField>
           <FormField label="Số điện thoại" error={errors?.passengerPhone}>
             <Input
               placeholder="0901234567"
               value={values.passengerPhone}
-              onChange={(e) =>
-                onChange({ ...values, passengerPhone: e.target.value })
-              }
+              onChange={(e) => onChange({ ...values, passengerPhone: e.target.value })}
             />
           </FormField>
         </div>

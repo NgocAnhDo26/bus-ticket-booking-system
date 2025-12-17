@@ -1,10 +1,12 @@
-import { Ticket, Calendar, Clock, MapPin } from "lucide-react";
-import { UserSummaryCard } from "../components/UserSummaryCard";
-import { useUserDashboardSummary, useUserRecentTrips } from "../hooks";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { format } from "date-fns";
-import { vi } from "date-fns/locale";
+import { format } from 'date-fns';
+import { vi } from 'date-fns/locale';
+import { Calendar, Clock, MapPin, Ticket } from 'lucide-react';
+
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
+
+import { UserSummaryCard } from '../components/UserSummaryCard';
+import { useUserDashboardSummary, useUserRecentTrips } from '../hooks';
 
 export const DashboardPage = () => {
   const { data: summary, isLoading: isLoadingSummary } = useUserDashboardSummary();
@@ -26,9 +28,9 @@ export const DashboardPage = () => {
   }
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("vi-VN", {
-      style: "currency",
-      currency: "VND",
+    return new Intl.NumberFormat('vi-VN', {
+      style: 'currency',
+      currency: 'VND',
     }).format(amount);
   };
 
@@ -64,25 +66,27 @@ export const DashboardPage = () => {
             <CardContent>
               <div className="space-y-8">
                 {recentTrips?.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">Chưa có chuyến đi nào.</p>
+                  <p className="text-sm text-muted-foreground">Chưa có chuyến đi nào.</p>
                 ) : (
-                    recentTrips?.map((trip, i) => (
+                  recentTrips?.map((trip, i) => (
                     <div key={i} className="flex items-center">
-                        <div className="space-y-1">
+                      <div className="space-y-1">
                         <p className="text-sm font-medium leading-none">
-                            {trip.origin} - {trip.destination}
+                          {trip.origin} - {trip.destination}
                         </p>
                         <p className="text-sm text-muted-foreground">
-                            {format(new Date(trip.departureTime), "dd/MM/yyyy • HH:mm", { locale: vi })}
+                          {format(new Date(trip.departureTime), 'dd/MM/yyyy • HH:mm', {
+                            locale: vi,
+                          })}
                         </p>
+                      </div>
+                      <div className="ml-auto font-medium">
+                        <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                          <MapPin className="w-3 h-3" /> {trip.distance.toFixed(1)}km
                         </div>
-                        <div className="ml-auto font-medium">
-                            <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                                <MapPin className="w-3 h-3" /> {trip.distance.toFixed(1)}km
-                            </div>
-                        </div>
+                      </div>
                     </div>
-                    ))
+                  ))
                 )}
               </div>
             </CardContent>
@@ -94,14 +98,12 @@ export const DashboardPage = () => {
             <CardContent>
               <div className="space-y-4">
                 <div className="flex items-start gap-4 rounded-md border p-4">
-                    <div className="flex-1 space-y-1">
-                        <p className="text-sm font-medium leading-none">
-                            Khuyến mãi 20%
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                            Nhập mã HELLO2024 để được giảm giá cho chuyến đi đầu tiên.
-                        </p>
-                    </div>
+                  <div className="flex-1 space-y-1">
+                    <p className="text-sm font-medium leading-none">Khuyến mãi 20%</p>
+                    <p className="text-sm text-muted-foreground">
+                      Nhập mã HELLO2024 để được giảm giá cho chuyến đi đầu tiên.
+                    </p>
+                  </div>
                 </div>
               </div>
             </CardContent>

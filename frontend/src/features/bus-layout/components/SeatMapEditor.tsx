@@ -1,43 +1,33 @@
-import { useMemo, useState, type ElementType } from "react";
-import {
-  Crown,
-  Eraser,
-  MousePointerSquareDashed,
-  Square,
-} from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { type ElementType, useMemo, useState } from 'react';
+
+import { Crown, Eraser, MousePointerSquareDashed, Square } from 'lucide-react';
+import { useShallow } from 'zustand/react/shallow';
+
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { cn } from "@/lib/utils";
-import { type SeatType } from "@/features/catalog/types";
-import { useShallow } from "zustand/react/shallow";
-import { useBusLayoutStore } from "../store/useBusLayoutStore";
-import { generateNextSeatCode, seatKey } from "../utils";
-import { type SeatCell, type SeatTool } from "../types";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { SeatGrid } from "../../../components/common/SeatGrid";
+} from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { type SeatType } from '@/features/catalog/types';
+import { cn } from '@/lib/utils';
+
+import { SeatGrid } from '../../../components/common/SeatGrid';
+import { useBusLayoutStore } from '../store/useBusLayoutStore';
+import { type SeatCell, type SeatTool } from '../types';
+import { generateNextSeatCode, seatKey } from '../utils';
 
 const seatTypeStyles: Record<SeatType, string> = {
-  NORMAL: "bg-emerald-500/80 border-emerald-600 text-white",
-  VIP: "bg-amber-500/80 border-amber-600 text-white",
+  NORMAL: 'bg-emerald-500/80 border-emerald-600 text-white',
+  VIP: 'bg-amber-500/80 border-amber-600 text-white',
 };
 
 const tools: Array<{
@@ -47,28 +37,28 @@ const tools: Array<{
   description?: string;
 }> = [
   {
-    key: "CURSOR",
-    label: "Chỉnh sửa",
+    key: 'CURSOR',
+    label: 'Chỉnh sửa',
     icon: MousePointerSquareDashed,
-    description: "Nhấp vào ghế để đổi mã hoặc loại ghế",
+    description: 'Nhấp vào ghế để đổi mã hoặc loại ghế',
   },
   {
-    key: "ERASER",
-    label: "Xóa ghế",
+    key: 'ERASER',
+    label: 'Xóa ghế',
     icon: Eraser,
-    description: "Xóa ghế khỏi vị trí",
+    description: 'Xóa ghế khỏi vị trí',
   },
   {
-    key: "NORMAL",
-    label: "Ghế thường",
+    key: 'NORMAL',
+    label: 'Ghế thường',
     icon: Square,
-    description: "Thêm ghế thường",
+    description: 'Thêm ghế thường',
   },
   {
-    key: "VIP",
-    label: "Ghế VIP",
+    key: 'VIP',
+    label: 'Ghế VIP',
     icon: Crown,
-    description: "Thêm ghế VIP",
+    description: 'Thêm ghế VIP',
   },
 ];
 
@@ -107,7 +97,7 @@ export const SeatMapEditor = ({ className }: SeatMapEditorProps) => {
   const [editingValues, setEditingValues] = useState<{
     seatCode: string;
     type: SeatType;
-  }>({ seatCode: "", type: "NORMAL" });
+  }>({ seatCode: '', type: 'NORMAL' });
 
   const seatMap = useMemo(() => {
     const map = new Map<string, SeatCell>();
@@ -126,13 +116,13 @@ export const SeatMapEditor = ({ className }: SeatMapEditorProps) => {
     const key = seatKey(floor, row, col);
     const seat = seatMap.get(key);
 
-    if (selectedTool === "ERASER") {
+    if (selectedTool === 'ERASER') {
       removeSeat(row, col, floor);
       setEditingKey(null);
       return;
     }
 
-    if (selectedTool === "CURSOR") {
+    if (selectedTool === 'CURSOR') {
       if (seat) {
         setEditingValues({ seatCode: seat.seatCode, type: seat.type });
         setEditingKey(key);
@@ -186,30 +176,21 @@ export const SeatMapEditor = ({ className }: SeatMapEditorProps) => {
         const isEditing = editingKey === key;
 
         return (
-          <Popover
-            key={key}
-            open={isEditing}
-            onOpenChange={(open) => !open && setEditingKey(null)}
-          >
+          <Popover key={key} open={isEditing} onOpenChange={(open) => !open && setEditingKey(null)}>
             <PopoverTrigger asChild>
               <button
                 type="button"
                 onClick={() => handleCellClick(rowIdx, colIdx, floor)}
                 className={cn(
-                  "flex h-14 w-full max-w-14 flex-col items-center justify-center rounded-md border text-xs transition-colors",
-                  "mx-auto",
+                  'flex h-14 w-full max-w-14 flex-col items-center justify-center rounded-md border text-xs transition-colors',
+                  'mx-auto',
                   seat
-                    ? (seatTypeStyles[seat.type] ??
-                        "bg-indigo-500/80 border-indigo-700 text-white")
-                    : "bg-muted/40 hover:bg-muted/60",
-                  selectedTool === "ERASER"
-                    ? "hover:border-destructive"
-                    : "hover:border-primary",
+                    ? (seatTypeStyles[seat.type] ?? 'bg-indigo-500/80 border-indigo-700 text-white')
+                    : 'bg-muted/40 hover:bg-muted/60',
+                  selectedTool === 'ERASER' ? 'hover:border-destructive' : 'hover:border-primary',
                 )}
               >
-                <span className="font-semibold">
-                  {seat ? seat.seatCode : ""}
-                </span>
+                <span className="font-semibold">{seat ? seat.seatCode : ''}</span>
                 <span className="text-[10px] text-muted-foreground">
                   C{colIdx + 1} • H{rowIdx + 1}
                 </span>
@@ -244,7 +225,7 @@ export const SeatMapEditor = ({ className }: SeatMapEditorProps) => {
                       <SelectValue placeholder="Chọn loại ghế" />
                     </SelectTrigger>
                     <SelectContent>
-                      {(["NORMAL", "VIP"] satisfies SeatType[]).map((type) => {
+                      {(['NORMAL', 'VIP'] satisfies SeatType[]).map((type) => {
                         const tool = tools.find((t) => t.key === type);
                         const ToolIcon = tool?.icon ?? Square;
                         const label = tool?.label ?? type;
@@ -261,11 +242,7 @@ export const SeatMapEditor = ({ className }: SeatMapEditorProps) => {
                   </Select>
                 </div>
                 <div className="flex justify-end pt-2 gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setEditingKey(null)}
-                  >
+                  <Button type="button" variant="outline" onClick={() => setEditingKey(null)}>
                     Đóng
                   </Button>
                   <Button type="button" onClick={() => handleUpdateSeat(seat)}>
@@ -292,7 +269,7 @@ export const SeatMapEditor = ({ className }: SeatMapEditorProps) => {
         <Tabs
           value={`floor-${currentFloor}`}
           onValueChange={(value) => {
-            const floor = Number(value.replace("floor-", ""));
+            const floor = Number(value.replace('floor-', ''));
             setCurrentFloor(floor);
           }}
           className="space-y-4"
@@ -300,11 +277,7 @@ export const SeatMapEditor = ({ className }: SeatMapEditorProps) => {
           <div className="flex flex-wrap items-center justify-between gap-2">
             <TabsList>
               {floors.map((floor) => (
-                <TabsTrigger
-                  key={floor}
-                  value={`floor-${floor}`}
-                  className="min-w-20"
-                >
+                <TabsTrigger key={floor} value={`floor-${floor}`} className="min-w-20">
                   Tầng {floor}
                 </TabsTrigger>
               ))}
@@ -325,9 +298,7 @@ export const SeatMapEditor = ({ className }: SeatMapEditorProps) => {
                         <Button
                           key={key}
                           type="button"
-                          variant={
-                            selectedTool === key ? "secondary" : "outline"
-                          }
+                          variant={selectedTool === key ? 'secondary' : 'outline'}
                           className="h-auto justify-start py-3 font-normal"
                           onClick={() => setTool(key)}
                         >
@@ -344,19 +315,14 @@ export const SeatMapEditor = ({ className }: SeatMapEditorProps) => {
               </div>
 
               <div className="rounded-md border border-dashed bg-background p-3 text-sm text-muted-foreground">
-                Mẹo: Dùng <span className="font-semibold">Con trỏ</span> để đổi
-                mã ghế,
+                Mẹo: Dùng <span className="font-semibold">Con trỏ</span> để đổi mã ghế,
                 <span className="font-semibold"> Tẩy</span> để xóa ghế.
               </div>
             </div>
 
             <div className="flex items-center justify-center">
               {floors.map((floor) => (
-                <TabsContent
-                  key={floor}
-                  value={`floor-${floor}`}
-                  className="mt-0"
-                >
+                <TabsContent key={floor} value={`floor-${floor}`} className="mt-0">
                   {renderGrid(floor)}
                 </TabsContent>
               ))}

@@ -1,12 +1,13 @@
 package com.awad.ticketbooking.modules.booking.controller;
 
 import com.awad.ticketbooking.common.config.security.ApplicationUserDetails;
-
-import com.awad.ticketbooking.modules.booking.dto.LockSeatRequest;
-import com.awad.ticketbooking.modules.booking.service.SeatLockService;
-import com.awad.ticketbooking.modules.booking.repository.BookingRepository;
 import com.awad.ticketbooking.common.enums.BookingStatus;
+import com.awad.ticketbooking.modules.booking.dto.LockSeatRequest;
+import com.awad.ticketbooking.modules.booking.repository.BookingRepository;
+import com.awad.ticketbooking.modules.booking.service.SeatLockService;
 import com.awad.ticketbooking.modules.trip.repository.TripRepository;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -21,6 +22,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/bookings/seats")
 @RequiredArgsConstructor
+@Tag(name = "Seat locks", description = "Endpoints for locking and unlocking seats and querying seat status.")
 public class SeatController {
 
     private final SeatLockService seatLockService;
@@ -28,6 +30,7 @@ public class SeatController {
     private final TripRepository tripRepository; // To validate trip exists
 
     @PostMapping("/lock")
+    @Operation(summary = "Lock a seat", description = "Attempts to place a temporary lock on a seat for the current user or guest.")
     public ResponseEntity<?> lockSeat(@Valid @RequestBody LockSeatRequest request,
             @AuthenticationPrincipal ApplicationUserDetails userDetails) {
         UUID userId;
@@ -56,6 +59,7 @@ public class SeatController {
     }
 
     @PostMapping("/unlock")
+    @Operation(summary = "Unlock a seat", description = "Releases a previously locked seat for the current user or guest.")
     public ResponseEntity<?> unlockSeat(@Valid @RequestBody LockSeatRequest request,
             @AuthenticationPrincipal ApplicationUserDetails userDetails) {
         UUID userId;
@@ -72,6 +76,7 @@ public class SeatController {
     }
 
     @GetMapping("/{tripId}")
+    @Operation(summary = "Get seat status for trip", description = "Returns a map of seat codes to status (BOOKED or LOCKED) for a given trip.")
     public ResponseEntity<Map<String, String>> getSeatStatus(@PathVariable UUID tripId) {
         // 1. Get persistent bookings
         Set<String> bookedSeats = bookingRepository.findAllByTripIdAndStatusNot(tripId, BookingStatus.CANCELLED)
