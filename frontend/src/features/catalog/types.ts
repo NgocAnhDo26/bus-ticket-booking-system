@@ -1,5 +1,8 @@
 export type { CreateStationRequest } from '@/model';
-export type { CreateTripRequest as OrvalCreateTripRequest, PricingRequest as OrvalPricingRequest } from '@/model';
+export type {
+  CreateTripRequest as OrvalCreateTripRequest,
+  PricingRequest as OrvalPricingRequest,
+} from '@/model';
 
 export type Station = {
   id: string;

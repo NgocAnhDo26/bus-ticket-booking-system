@@ -5,8 +5,8 @@ import axios, {
 } from 'axios';
 
 import type { ApiResponseAuthResponse, UserResponse } from '@/model';
-import type { UserProfile, UserRole } from '@/types/user';
 import { useAuthStore } from '@/store/auth-store';
+import type { UserProfile, UserRole } from '@/types/user';
 
 // `__API_BASE_URL__` should be the server origin (e.g. `http://localhost:8080`).
 // For backward compatibility, we also accept values that end with `/api` and strip it once.

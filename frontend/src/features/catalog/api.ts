@@ -1,4 +1,58 @@
 import {
+  createBus as orvalCreateBus,
+  deleteBus as orvalDeleteBus,
+  getAllBuses as orvalGetAllBuses,
+  updateBus as orvalUpdateBus,
+} from '@/features/api/bus-controller/bus-controller';
+import {
+  createOperator as orvalCreateOperator,
+  deleteOperator as orvalDeleteOperator,
+  getAllOperators as orvalGetAllOperators,
+  updateOperator as orvalUpdateOperator,
+} from '@/features/api/operator-controller/operator-controller';
+import {
+  createRoute as orvalCreateRoute,
+  deleteRoute as orvalDeleteRoute,
+  getAllRoutes as orvalGetAllRoutes,
+  updateRoute as orvalUpdateRoute,
+} from '@/features/api/route-controller/route-controller';
+import {
+  createStation as orvalCreateStation,
+  deleteStation as orvalDeleteStation,
+  getAllStations as orvalGetAllStations,
+  updateStation as orvalUpdateStation,
+} from '@/features/api/station-controller/station-controller';
+import {
+  createTrip as orvalCreateTrip,
+  deleteTrip as orvalDeleteTrip,
+  getAllTrips as orvalGetAllTrips,
+  getTripById as orvalGetTripById,
+  searchTrips as orvalSearchTrips,
+  updateTrip as orvalUpdateTrip,
+} from '@/features/api/trips/trips';
+import type {
+  Bus as ApiBus,
+  BusLayout as ApiBusLayout,
+  CreateBusRequest as ApiCreateBusRequest,
+  CreateOperatorRequest as ApiCreateOperatorRequest,
+  CreateRouteRequest as ApiCreateRouteRequest,
+  CreateStationRequest as ApiCreateStationRequest,
+  CreateTripRequest as ApiCreateTripRequest,
+  Operator as ApiOperator,
+  Route as ApiRoute,
+  SearchTripRequest as ApiSearchTripRequest,
+  Station as ApiStation,
+  OperatorInfo,
+  RouteResponse,
+  SearchTripsParams,
+  StationInfo,
+  TripPricingInfo,
+  TripPricingInfoSeatType,
+  TripResponse,
+  TripResponseStatus,
+} from '@/model';
+
+import {
   type Bus,
   type CreateBusRequest,
   type CreateOperatorRequest,
@@ -11,61 +65,6 @@ import {
   type Station,
   type Trip,
 } from './types';
-
-import {
-  createStation as orvalCreateStation,
-  deleteStation as orvalDeleteStation,
-  getAllStations as orvalGetAllStations,
-  updateStation as orvalUpdateStation,
-} from '@/features/api/station-controller/station-controller';
-import {
-  createOperator as orvalCreateOperator,
-  deleteOperator as orvalDeleteOperator,
-  getAllOperators as orvalGetAllOperators,
-  updateOperator as orvalUpdateOperator,
-} from '@/features/api/operator-controller/operator-controller';
-import {
-  createBus as orvalCreateBus,
-  deleteBus as orvalDeleteBus,
-  getAllBuses as orvalGetAllBuses,
-  updateBus as orvalUpdateBus,
-} from '@/features/api/bus-controller/bus-controller';
-import {
-  createRoute as orvalCreateRoute,
-  deleteRoute as orvalDeleteRoute,
-  getAllRoutes as orvalGetAllRoutes,
-  updateRoute as orvalUpdateRoute,
-} from '@/features/api/route-controller/route-controller';
-import {
-  createTrip as orvalCreateTrip,
-  deleteTrip as orvalDeleteTrip,
-  getAllTrips as orvalGetAllTrips,
-  getTripById as orvalGetTripById,
-  searchTrips as orvalSearchTrips,
-  updateTrip as orvalUpdateTrip,
-} from '@/features/api/trips/trips';
-
-import type {
-  Bus as ApiBus,
-  BusLayout as ApiBusLayout,
-  CreateBusRequest as ApiCreateBusRequest,
-  CreateOperatorRequest as ApiCreateOperatorRequest,
-  CreateRouteRequest as ApiCreateRouteRequest,
-  CreateStationRequest as ApiCreateStationRequest,
-  CreateTripRequest as ApiCreateTripRequest,
-  Operator as ApiOperator,
-  OperatorInfo,
-  Route as ApiRoute,
-  RouteResponse,
-  SearchTripsParams,
-  SearchTripRequest as ApiSearchTripRequest,
-  Station as ApiStation,
-  StationInfo,
-  TripPricingInfo,
-  TripResponse,
-  TripResponseStatus,
-  TripPricingInfoSeatType,
-} from '@/model';
 
 const DEFAULT_PAGEABLE = { page: 0, size: 1000 };
 
@@ -90,8 +89,13 @@ const toOperator = (o: ApiOperator | OperatorInfo | undefined): Operator => ({
 
 const toRoute = (r: ApiRoute | RouteResponse | undefined): Route => ({
   id: r?.id ?? '',
-  originStation: toStation((r as ApiRoute | undefined)?.originStation ?? (r as RouteResponse | undefined)?.originStation),
-  destinationStation: toStation((r as ApiRoute | undefined)?.destinationStation ?? (r as RouteResponse | undefined)?.destinationStation),
+  originStation: toStation(
+    (r as ApiRoute | undefined)?.originStation ?? (r as RouteResponse | undefined)?.originStation,
+  ),
+  destinationStation: toStation(
+    (r as ApiRoute | undefined)?.destinationStation ??
+      (r as RouteResponse | undefined)?.destinationStation,
+  ),
   durationMinutes: r?.durationMinutes ?? 0,
   distanceKm: 'distanceKm' in (r ?? {}) ? ((r as ApiRoute).distanceKm ?? 0) : 0,
   isActive: 'isActive' in (r ?? {}) ? Boolean((r as ApiRoute | RouteResponse).isActive) : true,

@@ -6,7 +6,12 @@ import {
   updateLayoutMetadata,
   updateLayoutSeats,
 } from '@/features/api/bus-layout-controller/bus-layout-controller';
-import type { BusLayout as ApiBusLayout, BusLayoutRequest, BusLayoutResponse, LayoutSeatDto } from '@/model';
+import type {
+  BusLayout as ApiBusLayout,
+  BusLayoutRequest,
+  BusLayoutResponse,
+  LayoutSeatDto,
+} from '@/model';
 
 import { type BusLayout, type CreateBusLayoutPayload, type SeatCell, type SeatType } from './types';
 

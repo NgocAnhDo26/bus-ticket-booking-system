@@ -1,7 +1,3 @@
-import { type Trip } from '@/features/catalog/types';
-import { apiClient } from '@/lib/api-client';
-
-import type { BookingResponse, CreateBookingRequest, LockSeatRequest } from './types';
 import {
   cancelBooking as orvalCancelBooking,
   confirmBooking as orvalConfirmBooking,
@@ -16,6 +12,10 @@ import {
   lockSeat as orvalLockSeat,
   unlockSeat as orvalUnlockSeat,
 } from '@/features/api/seat-locks/seat-locks';
+import { type Trip } from '@/features/catalog/types';
+import { apiClient } from '@/lib/api-client';
+
+import type { BookingResponse, CreateBookingRequest, LockSeatRequest } from './types';
 
 // Booking CRUD APIs
 export const createBooking = async (request: CreateBookingRequest): Promise<BookingResponse> => {

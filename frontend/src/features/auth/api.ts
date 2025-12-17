@@ -1,5 +1,10 @@
-import { type UserProfile } from '@/types/user';
-
+import {
+  login as orvalLogin,
+  loginWithGoogle as orvalLoginWithGoogle,
+  logout as orvalLogout,
+  register as orvalRegister,
+} from '@/features/api/authentication/authentication';
+import { me as orvalMe } from '@/features/api/users/users';
 import {
   type ApiResponseAuthResponse,
   type ApiResponseUserResponse,
@@ -8,8 +13,7 @@ import {
   type RegisterRequest,
   type UserResponse,
 } from '@/model';
-import { login as orvalLogin, loginWithGoogle as orvalLoginWithGoogle, logout as orvalLogout, register as orvalRegister } from '@/features/api/authentication/authentication';
-import { me as orvalMe } from '@/features/api/users/users';
+import { type UserProfile } from '@/types/user';
 
 type AuthData = {
   accessToken: string;
