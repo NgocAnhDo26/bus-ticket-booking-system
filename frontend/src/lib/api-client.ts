@@ -7,7 +7,8 @@ import axios, {
 import { type AuthResponse } from '@/features/auth/types';
 import { useAuthStore } from '@/store/auth-store';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8080/api';
+const API_BASE_URL =
+  typeof __API_BASE_URL__ !== 'undefined' ? __API_BASE_URL__ : 'http://localhost:8080/api';
 
 type RetryConfig = InternalAxiosRequestConfig & {
   _retry?: boolean;

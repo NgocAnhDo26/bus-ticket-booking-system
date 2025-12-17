@@ -28,7 +28,6 @@ public class OpenApiConfig {
                                 .email("support@example.com"))
                         .license(new License()
                                 .name("MIT License")
-                                .identifier("MIT")
                                 .url("https://opensource.org/licenses/MIT")))
                 .components(new Components()
                         .addSecuritySchemes(bearerSchemeName,
