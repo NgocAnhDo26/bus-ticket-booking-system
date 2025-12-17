@@ -20,8 +20,8 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
           cache: maven
-      - name: Build with Maven
-        run: ./mvnw clean verify -DskipTests # Tạm skip test vì chưa viết test
+      - name: Run tests and build
+        run: ./mvnw clean verify
 
   build-frontend:
     runs-on: ubuntu-latest
@@ -38,6 +38,8 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
       - name: Install dependencies
         run: npm ci
+      - name: Check Formatting
+        run: npm run format:check
       - name: Lint
         run: npm run lint
       - name: Build
