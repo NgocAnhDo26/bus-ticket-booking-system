@@ -1,4 +1,9 @@
 import type { SeatType } from '@/features/catalog/types';
+import type {
+  CreateBookingRequest as ApiCreateBookingRequest,
+  LockSeatRequest as ApiLockSeatRequest,
+  TicketRequest as ApiTicketRequest,
+} from '@/model';
 
 export type BookingStatus = 'PENDING' | 'CONFIRMED' | 'CANCELLED';
 
@@ -52,22 +57,11 @@ export type BookingResponse = {
   tickets: TicketInfo[];
 };
 
-export type TicketRequest = {
-  seatCode: string;
-  passengerName: string;
-  passengerPhone: string;
-  price: number;
-};
+// Prefer OpenAPI/Orval request models as the source of truth.
+export type TicketRequest = ApiTicketRequest;
 
-export type CreateBookingRequest = {
-  tripId: string;
-  userId?: string; // Optional for guests
-  passengerName: string;
-  passengerPhone: string;
-  passengerEmail?: string; // For guests to receive tickets
-  totalPrice: number;
-  tickets: TicketRequest[];
-};
+// Prefer OpenAPI/Orval request models as the source of truth.
+export type CreateBookingRequest = ApiCreateBookingRequest;
 
 export type PassengerInfo = {
   seatCode: string;
@@ -86,8 +80,5 @@ export type SeatStatusMessage = {
   lockedByUserId?: string;
 };
 
-export type LockSeatRequest = {
-  tripId: string;
-  seatCode: string;
-  guestId?: string;
-};
+// Prefer OpenAPI/Orval request models as the source of truth.
+export type LockSeatRequest = ApiLockSeatRequest;

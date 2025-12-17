@@ -1,5 +1,3 @@
-import { apiClient } from '@/lib/api-client';
-
 import {
   type Bus,
   type CreateBusRequest,
@@ -14,162 +12,272 @@ import {
   type Trip,
 } from './types';
 
+import {
+  createStation as orvalCreateStation,
+  deleteStation as orvalDeleteStation,
+  getAllStations as orvalGetAllStations,
+  updateStation as orvalUpdateStation,
+} from '@/features/api/station-controller/station-controller';
+import {
+  createOperator as orvalCreateOperator,
+  deleteOperator as orvalDeleteOperator,
+  getAllOperators as orvalGetAllOperators,
+  updateOperator as orvalUpdateOperator,
+} from '@/features/api/operator-controller/operator-controller';
+import {
+  createBus as orvalCreateBus,
+  deleteBus as orvalDeleteBus,
+  getAllBuses as orvalGetAllBuses,
+  updateBus as orvalUpdateBus,
+} from '@/features/api/bus-controller/bus-controller';
+import {
+  createRoute as orvalCreateRoute,
+  deleteRoute as orvalDeleteRoute,
+  getAllRoutes as orvalGetAllRoutes,
+  updateRoute as orvalUpdateRoute,
+} from '@/features/api/route-controller/route-controller';
+import {
+  createTrip as orvalCreateTrip,
+  deleteTrip as orvalDeleteTrip,
+  getAllTrips as orvalGetAllTrips,
+  getTripById as orvalGetTripById,
+  searchTrips as orvalSearchTrips,
+  updateTrip as orvalUpdateTrip,
+} from '@/features/api/trips/trips';
+
+import type {
+  Bus as ApiBus,
+  BusLayout as ApiBusLayout,
+  CreateBusRequest as ApiCreateBusRequest,
+  CreateOperatorRequest as ApiCreateOperatorRequest,
+  CreateRouteRequest as ApiCreateRouteRequest,
+  CreateStationRequest as ApiCreateStationRequest,
+  CreateTripRequest as ApiCreateTripRequest,
+  Operator as ApiOperator,
+  OperatorInfo,
+  Route as ApiRoute,
+  RouteResponse,
+  SearchTripsParams,
+  SearchTripRequest as ApiSearchTripRequest,
+  Station as ApiStation,
+  StationInfo,
+  TripPricingInfo,
+  TripResponse,
+  TripResponseStatus,
+  TripPricingInfoSeatType,
+} from '@/model';
+
+const DEFAULT_PAGEABLE = { page: 0, size: 1000 };
+
+const toStation = (s: ApiStation | StationInfo | undefined): Station => ({
+  id: s?.id ?? '',
+  name: s?.name ?? '',
+  city: s?.city ?? '',
+  address: 'address' in (s ?? {}) ? ((s as ApiStation).address ?? '') : '',
+  createdAt: 'createdAt' in (s ?? {}) ? ((s as ApiStation).createdAt ?? '') : '',
+});
+
+const toOperator = (o: ApiOperator | OperatorInfo | undefined): Operator => ({
+  id: o?.id ?? '',
+  name: o?.name ?? '',
+  contactInfo:
+    'contactInfo' in (o ?? {})
+      ? (((o as ApiOperator).contactInfo ?? {}) as Record<string, string | undefined>)
+      : {},
+  isActive: 'isActive' in (o ?? {}) ? Boolean((o as ApiOperator).isActive) : true,
+  createdAt: 'createdAt' in (o ?? {}) ? ((o as ApiOperator).createdAt ?? '') : '',
+});
+
+const toRoute = (r: ApiRoute | RouteResponse | undefined): Route => ({
+  id: r?.id ?? '',
+  originStation: toStation((r as ApiRoute | undefined)?.originStation ?? (r as RouteResponse | undefined)?.originStation),
+  destinationStation: toStation((r as ApiRoute | undefined)?.destinationStation ?? (r as RouteResponse | undefined)?.destinationStation),
+  durationMinutes: r?.durationMinutes ?? 0,
+  distanceKm: 'distanceKm' in (r ?? {}) ? ((r as ApiRoute).distanceKm ?? 0) : 0,
+  isActive: 'isActive' in (r ?? {}) ? Boolean((r as ApiRoute | RouteResponse).isActive) : true,
+  createdAt: 'createdAt' in (r ?? {}) ? ((r as ApiRoute).createdAt ?? '') : '',
+});
+
+const toApiBusLayoutSummary = (bl: ApiBusLayout | undefined): Bus['busLayout'] => ({
+  id: bl?.id ?? '',
+  name: bl?.name ?? '',
+  busType: bl?.busType ?? '',
+  totalSeats: bl?.totalSeats ?? 0,
+  totalFloors: bl?.totalFloors ?? 1,
+  description: bl?.description,
+});
+
+const toBus = (b: ApiBus | undefined): Bus => ({
+  id: b?.id ?? '',
+  operator: toOperator(b?.operator),
+  plateNumber: b?.plateNumber ?? '',
+  busLayout: toApiBusLayoutSummary(b?.busLayout),
+  amenities: (b?.amenities ?? []) as string[],
+  isActive: Boolean(b?.isActive ?? true),
+  createdAt: b?.createdAt ?? '',
+});
+
+const toTripPricing = (p: TripPricingInfo | undefined) => ({
+  id: p?.id ?? '',
+  seatType: (p?.seatType as unknown as TripPricingInfoSeatType) ?? 'NORMAL',
+  price: p?.price ?? 0,
+});
+
+const toTrip = (t: TripResponse | undefined): Trip => ({
+  id: t?.id ?? '',
+  route: {
+    id: t?.route?.id ?? '',
+    originStation: toStation(t?.route?.originStation),
+    destinationStation: toStation(t?.route?.destinationStation),
+    durationMinutes: t?.route?.durationMinutes ?? 0,
+    distanceKm: 0,
+    isActive: true,
+    createdAt: '',
+  },
+  bus: {
+    id: t?.bus?.id ?? '',
+    plateNumber: t?.bus?.plateNumber ?? '',
+    operator: toOperator(t?.bus?.operator),
+    totalSeats: t?.bus?.totalSeats ?? 0,
+    busLayoutId: t?.bus?.busLayoutId ?? '',
+    amenities: (t?.bus?.amenities ?? []) as string[],
+  },
+  departureTime: t?.departureTime ?? '',
+  arrivalTime: t?.arrivalTime ?? '',
+  status: (t?.status as unknown as TripResponseStatus) ?? 'ACTIVE',
+  tripPricings: (t?.tripPricings ?? []).map(toTripPricing),
+  createdAt: '',
+});
+
 // Stations
 export const fetchStations = async (): Promise<Station[]> => {
-  const response = await apiClient.get<{ content: Station[] } | Station[]>('/stations');
-
-  // Handle Spring Data Page response
-  if (response.data && 'content' in response.data) {
-    return (response.data as { content: Station[] }).content;
-  }
-
-  // Fallback if it returns a list directly
-  return Array.isArray(response.data) ? response.data : [];
+  const resp = await orvalGetAllStations({ pageable: DEFAULT_PAGEABLE });
+  return (resp.content ?? []).map(toStation);
 };
 
 export const createStation = async (data: CreateStationRequest): Promise<Station> => {
-  const response = await apiClient.post<Station>('/stations', data);
-  return response.data;
+  const resp = await orvalCreateStation(data as unknown as ApiCreateStationRequest);
+  return toStation(resp);
 };
 
 export const updateStation = async (id: string, data: CreateStationRequest): Promise<Station> => {
-  const response = await apiClient.put<Station>(`/stations/${id}`, data);
-  return response.data;
+  const resp = await orvalUpdateStation(id, data as unknown as ApiCreateStationRequest);
+  return toStation(resp);
 };
 
 export const deleteStation = async (id: string, force?: boolean): Promise<void> => {
-  await apiClient.delete(`/stations/${id}`, { params: { force } });
+  await orvalDeleteStation(id, force ? { force } : undefined);
 };
 
 // Operators
 export const fetchOperators = async (): Promise<Operator[]> => {
-  const response = await apiClient.get<{ content: Operator[] } | Operator[]>('/operators');
-  // Handle Spring Data Page response
-  if (response.data && 'content' in response.data) {
-    return (response.data as { content: Operator[] }).content;
-  }
-  // Fallback if it returns a list directly
-  return Array.isArray(response.data) ? response.data : [];
+  const resp = await orvalGetAllOperators({ pageable: DEFAULT_PAGEABLE });
+  return (resp.content ?? []).map(toOperator);
 };
 
 export const createOperator = async (data: CreateOperatorRequest): Promise<Operator> => {
-  const response = await apiClient.post<Operator>('/operators', data);
-  return response.data;
+  const resp = await orvalCreateOperator(data as unknown as ApiCreateOperatorRequest);
+  return toOperator(resp);
 };
 
 export const updateOperator = async (
   id: string,
   data: CreateOperatorRequest,
 ): Promise<Operator> => {
-  const response = await apiClient.put<Operator>(`/operators/${id}`, data);
-  return response.data;
+  const resp = await orvalUpdateOperator(id, data as unknown as ApiCreateOperatorRequest);
+  return toOperator(resp);
 };
 
 export const deleteOperator = async (id: string, force?: boolean): Promise<void> => {
-  await apiClient.delete(`/operators/${id}`, { params: { force } });
+  await orvalDeleteOperator(id, force ? { force } : undefined);
 };
 
 // Buses
 export const fetchBuses = async (): Promise<Bus[]> => {
-  const response = await apiClient.get<{ content: Bus[] } | Bus[]>('/buses');
-  // Handle Spring Data Page response
-  if (response.data && 'content' in response.data) {
-    return (response.data as { content: Bus[] }).content;
-  }
-  // Fallback if it returns a list directly
-  return Array.isArray(response.data) ? response.data : [];
+  const resp = await orvalGetAllBuses({ pageable: DEFAULT_PAGEABLE });
+  return (resp.content ?? []).map(toBus);
 };
 
 export const createBus = async (data: CreateBusRequest): Promise<Bus> => {
-  const response = await apiClient.post<Bus>('/buses', data);
-  return response.data;
+  const resp = await orvalCreateBus(data as unknown as ApiCreateBusRequest);
+  return toBus(resp);
 };
 
 export const updateBus = async (id: string, data: CreateBusRequest): Promise<Bus> => {
-  const response = await apiClient.put<Bus>(`/buses/${id}`, data);
-  return response.data;
+  const resp = await orvalUpdateBus(id, data as unknown as ApiCreateBusRequest);
+  return toBus(resp);
 };
 
 export const deleteBus = async (id: string, force?: boolean): Promise<void> => {
-  await apiClient.delete(`/buses/${id}`, { params: { force } });
+  await orvalDeleteBus(id, force ? { force } : undefined);
 };
 
 // Routes
 export const fetchRoutes = async (): Promise<Route[]> => {
-  const response = await apiClient.get<{ content: Route[] } | Route[]>('/routes');
-  // Handle Spring Data Page response
-  if (response.data && 'content' in response.data) {
-    return (response.data as { content: Route[] }).content;
-  }
-  // Fallback if it returns a list directly
-  return Array.isArray(response.data) ? response.data : [];
+  const resp = await orvalGetAllRoutes({ pageable: DEFAULT_PAGEABLE });
+  return (resp.content ?? []).map(toRoute);
 };
 
 export const createRoute = async (data: CreateRouteRequest): Promise<Route> => {
-  const response = await apiClient.post<Route>('/routes', data);
-  return response.data;
+  const resp = await orvalCreateRoute(data as unknown as ApiCreateRouteRequest);
+  return toRoute(resp);
 };
 
 export const updateRoute = async (id: string, data: CreateRouteRequest): Promise<Route> => {
-  const response = await apiClient.put<Route>(`/routes/${id}`, data);
-  return response.data;
+  const resp = await orvalUpdateRoute(id, data as unknown as ApiCreateRouteRequest);
+  return toRoute(resp);
 };
 
 export const deleteRoute = async (id: string, force?: boolean): Promise<void> => {
-  await apiClient.delete(`/routes/${id}`, { params: { force } });
+  await orvalDeleteRoute(id, force ? { force } : undefined);
 };
 
 // Trips
 export const fetchTrips = async (): Promise<Trip[]> => {
-  const response = await apiClient.get<{ content: Trip[] } | Trip[]>('/trips');
-  // Handle Spring Data Page response
-  if (response.data && 'content' in response.data) {
-    return (response.data as { content: Trip[] }).content;
-  }
-  // Fallback if it returns a list directly
-  return Array.isArray(response.data) ? response.data : [];
+  const resp = await orvalGetAllTrips({ pageable: DEFAULT_PAGEABLE });
+  return (resp.content ?? []).map(toTrip);
 };
 
 export const getTripById = async (id: string): Promise<Trip> => {
-  const response = await apiClient.get<Trip>(`/trips/${id}`);
-  return response.data;
+  const resp = await orvalGetTripById(id);
+  return toTrip(resp);
 };
 
 export const searchTrips = async (params: SearchTripRequest): Promise<Trip[]> => {
-  const searchParams = new URLSearchParams();
-  if (params.origin) searchParams.append('origin', params.origin);
-  if (params.destination) searchParams.append('destination', params.destination);
-  if (params.date) searchParams.append('date', params.date);
-  if (params.minPrice) searchParams.append('minPrice', params.minPrice.toString());
-  if (params.maxPrice) searchParams.append('maxPrice', params.maxPrice.toString());
-  if (params.minTime) searchParams.append('minTime', params.minTime);
-  if (params.maxTime) searchParams.append('maxTime', params.maxTime);
-  if (params.operatorIds) {
-    params.operatorIds.forEach((id) => searchParams.append('operatorIds', id));
-  }
-  if (params.seatType) searchParams.append('seatType', params.seatType);
+  // OpenAPI currently models `/trips/search` params as `{ request: SearchTripRequest }`.
+  // If the backend supports extra fields (e.g. `seatType`) that aren't in the spec yet,
+  // we still pass them through to preserve existing UI behavior.
+  const request: ApiSearchTripRequest & { seatType?: string } = {
+    origin: params.origin,
+    destination: params.destination,
+    date: params.date,
+    minPrice: params.minPrice,
+    maxPrice: params.maxPrice,
+    minTime: params.minTime,
+    maxTime: params.maxTime,
+    amenities: params.amenities,
+    operatorIds: params.operatorIds,
+    sortBy: params.sortBy,
+    page: params.page,
+    size: params.size,
+    seatType: params.seatType,
+  };
 
-  const response = await apiClient.get<{ content: Trip[] } | Trip[]>('/trips/search', {
-    params: searchParams,
-  });
-  // Handle Spring Data Page response
-  if (response.data && 'content' in response.data) {
-    return (response.data as { content: Trip[] }).content;
-  }
-  // Fallback if it returns a list directly
-  return Array.isArray(response.data) ? response.data : [];
+  const orvalParams: SearchTripsParams = { request };
+  const resp = await orvalSearchTrips(orvalParams);
+  return (resp.content ?? []).map(toTrip);
 };
 
 export const createTrip = async (data: CreateTripRequest): Promise<Trip> => {
-  const response = await apiClient.post<Trip>('/trips', data);
-  return response.data;
+  const resp = await orvalCreateTrip(data as unknown as ApiCreateTripRequest);
+  return toTrip(resp);
 };
 
 export const updateTrip = async (id: string, data: CreateTripRequest): Promise<Trip> => {
-  const response = await apiClient.put<Trip>(`/trips/${id}`, data);
-  return response.data;
+  const resp = await orvalUpdateTrip(id, data as unknown as ApiCreateTripRequest);
+  return toTrip(resp);
 };
 
 export const deleteTrip = async (id: string, force?: boolean): Promise<void> => {
-  await apiClient.delete(`/trips/${id}`, { params: { force } });
+  await orvalDeleteTrip(id, force ? { force } : undefined);
 };

@@ -8,7 +8,7 @@ import { bookingApi } from './api';
 import { type LockSeatRequest, type SeatStatusMessage } from './types';
 
 const getBaseUrl = () => {
-  const apiUrl = import.meta.env.VITE_API_URL ?? 'http://localhost:8080/api';
+  const apiUrl = import.meta.env.VITE_API_URL ?? 'http://localhost:8080';
   return apiUrl.replace(/\/api\/?$/, '');
 };
 

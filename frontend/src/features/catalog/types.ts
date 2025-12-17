@@ -1,15 +1,12 @@
+export type { CreateStationRequest } from '@/model';
+export type { CreateTripRequest as OrvalCreateTripRequest, PricingRequest as OrvalPricingRequest } from '@/model';
+
 export type Station = {
   id: string;
   name: string;
   city: string;
   address: string;
   createdAt: string;
-};
-
-export type CreateStationRequest = {
-  name: string;
-  city: string;
-  address: string;
 };
 
 export type Operator = {
@@ -86,6 +83,7 @@ export const SeatType = {
 export type SeatType = (typeof SeatType)[keyof typeof SeatType];
 
 export type PricingRequest = {
+  // Deprecated: kept for source compatibility; prefer the OpenAPI type below.
   seatType: SeatType;
   price: number;
 };
@@ -120,6 +118,7 @@ export type Trip = {
 };
 
 export type CreateTripRequest = {
+  // Deprecated: kept for source compatibility; prefer the OpenAPI type below.
   routeId: string;
   busId: string;
   departureTime: string;
