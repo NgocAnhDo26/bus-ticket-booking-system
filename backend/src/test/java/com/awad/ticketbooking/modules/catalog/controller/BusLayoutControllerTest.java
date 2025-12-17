@@ -58,7 +58,7 @@ public class BusLayoutControllerTest {
 
         when(busLayoutService.createLayout(any())).thenReturn(mockLayout);
 
-        mockMvc.perform(post("/api/v1/bus-layouts")
+        mockMvc.perform(post("/api/bus-layouts")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -79,7 +79,7 @@ public class BusLayoutControllerTest {
         seats.add(s1);
         payload.setSeats(seats);
 
-        mockMvc.perform(put("/api/v1/bus-layouts/" + layoutId + "/seats")
+        mockMvc.perform(put("/api/bus-layouts/" + layoutId + "/seats")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(payload)))
                 .andExpect(status().isOk());
@@ -95,7 +95,7 @@ public class BusLayoutControllerTest {
 
         when(busLayoutService.getLayout(eq(layoutId))).thenReturn(response);
 
-        mockMvc.perform(get("/api/v1/bus-layouts/" + layoutId))
+        mockMvc.perform(get("/api/bus-layouts/" + layoutId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("Test Layout"));
     }

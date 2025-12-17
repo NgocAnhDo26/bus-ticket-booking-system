@@ -1,4 +1,4 @@
-import axios, { type AxiosError, type InternalAxiosRequestConfig } from "axios";
+import axios, { type AxiosRequestConfig, type AxiosError, type InternalAxiosRequestConfig } from "axios";
 import { useAuthStore } from "@/store/auth-store";
 import { type AuthResponse } from "@/features/auth/types";
 
@@ -67,3 +67,23 @@ apiClient.interceptors.response.use(
 );
 
 export { apiClient };
+
+export const customInstance = <T>(
+  config: AxiosRequestConfig,
+  options?: AxiosRequestConfig
+): Promise<T> => {
+  const source = axios.CancelToken.source();
+  
+  const promise = apiClient({
+    ...config,
+    ...options,
+    cancelToken: source.token,
+  }).then(({ data }) => data);
+
+  // @ts-expect-error - Adding cancel method to promise for query cancellation support
+  promise.cancel = () => {
+    source.cancel('Query was cancelled');
+  };
+
+  return promise;
+};

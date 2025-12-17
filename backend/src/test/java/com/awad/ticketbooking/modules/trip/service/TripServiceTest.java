@@ -2,6 +2,7 @@ package com.awad.ticketbooking.modules.trip.service;
 
 import com.awad.ticketbooking.modules.catalog.entity.Bus;
 import com.awad.ticketbooking.modules.catalog.entity.Operator;
+import com.awad.ticketbooking.modules.catalog.entity.BusLayout;
 import com.awad.ticketbooking.modules.catalog.entity.Route;
 import com.awad.ticketbooking.modules.catalog.entity.Station;
 import com.awad.ticketbooking.modules.trip.dto.SearchTripRequest;
@@ -70,6 +71,10 @@ class TripServiceTest {
         operator.setName("Test Operator");
 
         Bus bus = new Bus();
+        BusLayout layout = new BusLayout();
+        layout.setId(UUID.randomUUID());
+        layout.setTotalSeats(40);
+        bus.setBusLayout(layout);
         bus.setOperator(operator);
         bus.setPlateNumber("29A-12345");
         bus.setAmenities(Collections.singletonList("wifi"));
@@ -114,6 +119,10 @@ class TripServiceTest {
         operator.setName("Test Operator");
 
         Bus bus = new Bus();
+        BusLayout layout = new BusLayout();
+        layout.setId(UUID.randomUUID());
+        layout.setTotalSeats(40);
+        bus.setBusLayout(layout);
         bus.setOperator(operator);
         bus.setPlateNumber("29A-12345");
         bus.setAmenities(Collections.singletonList("wifi"));
