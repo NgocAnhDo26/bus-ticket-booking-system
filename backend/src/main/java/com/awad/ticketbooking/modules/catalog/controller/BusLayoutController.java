@@ -24,14 +24,14 @@ public class BusLayoutController {
 
     @PutMapping("/{id}/seats")
     public ResponseEntity<Void> updateLayoutSeats(@PathVariable UUID id,
-            @RequestBody BusLayoutPayload.SeatUpdatePayload payload) {
+                                                  @RequestBody BusLayoutPayload.SeatUpdatePayload payload) {
         busLayoutService.updateLayoutSeats(id, payload);
         return ResponseEntity.ok().build();
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<BusLayout> updateLayoutMetadata(@PathVariable UUID id,
-            @RequestBody BusLayoutPayload.BusLayoutRequest request) {
+                                                          @RequestBody BusLayoutPayload.BusLayoutRequest request) {
         return ResponseEntity.ok(busLayoutService.updateLayoutMetadata(id, request));
     }
 

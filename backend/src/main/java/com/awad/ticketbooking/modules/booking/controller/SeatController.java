@@ -31,7 +31,7 @@ public class SeatController {
     @PostMapping("/lock")
     @Operation(summary = "Lock a seat", description = "Attempts to place a temporary lock on a seat for the current user or guest.")
     public ResponseEntity<?> lockSeat(@Valid @RequestBody LockSeatRequest request,
-            @AuthenticationPrincipal ApplicationUserDetails userDetails) {
+                                      @AuthenticationPrincipal ApplicationUserDetails userDetails) {
         UUID userId;
         if (userDetails != null) {
             userId = userDetails.getUser().getId();
@@ -60,7 +60,7 @@ public class SeatController {
     @PostMapping("/unlock")
     @Operation(summary = "Unlock a seat", description = "Releases a previously locked seat for the current user or guest.")
     public ResponseEntity<?> unlockSeat(@Valid @RequestBody LockSeatRequest request,
-            @AuthenticationPrincipal ApplicationUserDetails userDetails) {
+                                        @AuthenticationPrincipal ApplicationUserDetails userDetails) {
         UUID userId;
         if (userDetails != null) {
             userId = userDetails.getUser().getId();

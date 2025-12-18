@@ -24,7 +24,7 @@ public class BusLayout {
 
     @Column(name = "bus_type", nullable = false)
     private String busType; // Keeping as String to match V1 SQL "web-style" enum, or could use real Enum if
-                            // defined
+    // defined
 
     @Column(name = "total_seats", nullable = false)
     private Integer totalSeats;

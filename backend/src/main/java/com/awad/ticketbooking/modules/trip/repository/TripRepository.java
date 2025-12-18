@@ -11,10 +11,10 @@ import java.util.UUID;
 @Repository
 public interface TripRepository extends JpaRepository<Trip, UUID>, JpaSpecificationExecutor<Trip> {
     boolean existsByBusIdAndDepartureTimeLessThanAndArrivalTimeGreaterThan(UUID busId, Instant arrivalTime,
-            Instant departureTime);
+                                                                           Instant departureTime);
 
     boolean existsByBusIdAndDepartureTimeLessThanAndArrivalTimeGreaterThanAndIdNot(UUID busId, Instant arrivalTime,
-            Instant departureTime, UUID id);
+                                                                                   Instant departureTime, UUID id);
 
     void deleteByRouteId(UUID routeId);
 
