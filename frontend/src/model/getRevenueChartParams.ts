@@ -7,6 +7,12 @@
  */
 
 export type GetRevenueChartParams = {
+/**
+ * Start of the time range (inclusive). ISO-8601 date-time, e.g. 2025-01-01T00:00:00Z.
+ */
 from?: string;
+/**
+ * End of the time range (inclusive). ISO-8601 date-time, e.g. 2025-01-07T23:59:59Z.
+ */
 to?: string;
 };

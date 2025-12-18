@@ -6,11 +6,13 @@
  * OpenAPI spec version: v1.0
  */
 
-export type GetRecentTransactionsParams = {
+export type GetBookingConversionParams = {
 /**
- * Max number of transactions to return.
- * @minimum 1
- * @maximum 200
+ * Start of the time range (inclusive). ISO-8601 date-time.
  */
-limit?: number;
+from?: string;
+/**
+ * End of the time range (inclusive). ISO-8601 date-time.
+ */
+to?: string;
 };
