@@ -187,9 +187,10 @@ export const useBookingStore = create<BookingState>()(
     {
       name: "booking-storage",
       partialize: (state) => ({
+        // Note: seatStatusMap is NOT persisted - always fetch fresh from server
         pendingBookingId: state.pendingBookingId,
         pendingSelectedSeats: state.pendingSelectedSeats,
-        selectedSeats: state.selectedSeats,
+        // selectedSeats is NOT persisted to avoid showing stale selections across sessions
         tripId: state.tripId,
         pickupStationId: state.pickupStationId,
         dropoffStationId: state.dropoffStationId,

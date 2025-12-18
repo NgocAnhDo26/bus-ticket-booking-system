@@ -1,8 +1,11 @@
 import { useParams, useNavigate, Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useBookingById, useConfirmBooking, useCancelBooking } from "../hooks";
+import { useBookingById, useCancelBooking, useCreatePayment } from "../hooks";
+import { verifyPayment } from "../api";
 import { generateETicketPDF } from "../utils/generate-eticket";
 import {
   CheckCircle2,
@@ -10,6 +13,8 @@ import {
   XCircle,
   Download,
   Home,
+  CreditCard,
+  AlertCircle,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
@@ -38,7 +43,7 @@ const formatCurrency = (amount: number) => {
 
 const statusConfig = {
   PENDING: {
-    label: "Chờ xác nhận",
+    label: "Chờ thanh toán",
     icon: Clock,
     className: "bg-yellow-100 text-yellow-700 border-yellow-200",
     iconClassName: "text-yellow-600",
@@ -48,6 +53,18 @@ const statusConfig = {
     icon: CheckCircle2,
     className: "bg-green-100 text-green-700 border-green-200",
     iconClassName: "text-green-600",
+  },
+  PAID: {
+    label: "Đã thanh toán",
+    icon: CreditCard,
+    className: "bg-green-100 text-green-700 border-green-200",
+    iconClassName: "text-green-600",
+  },
+  PAYMENT_FAILED: {
+    label: "Thanh toán thất bại",
+    icon: AlertCircle,
+    className: "bg-red-100 text-red-700 border-red-200",
+    iconClassName: "text-red-600",
   },
   CANCELLED: {
     label: "Đã hủy",
@@ -60,21 +77,93 @@ const statusConfig = {
 export const BookingConfirmationPage = () => {
   const { bookingId } = useParams<{ bookingId: string }>();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { data: booking, isLoading, error } = useBookingById(bookingId);
-  const confirmMutation = useConfirmBooking();
+  const paymentMutation = useCreatePayment();
   const cancelMutation = useCancelBooking();
+  const [isVerifying, setIsVerifying] = useState(false);
 
-  const handleConfirm = async () => {
+  // Auto-verify payment when returning from PayOS (localhost webhook workaround)
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    const status = searchParams.get("status");
+    const code = searchParams.get("code");
+    
+    // If returning from PayOS with PAID status, verify and update
+    if (bookingId && (status === "PAID" || code === "00")) {
+      setIsVerifying(true);
+      verifyPayment(bookingId)
+        .then(() => {
+          // Refetch booking to get updated status
+          queryClient.invalidateQueries({ queryKey: ["booking", bookingId] });
+          toast({
+            title: "Thanh toán thành công!",
+            description: "Đặt vé của bạn đã được xác nhận.",
+          });
+          // Clean URL params
+          window.history.replaceState({}, "", window.location.pathname);
+        })
+        .catch((err: unknown) => {
+          console.error("Verify payment failed:", err);
+          toast({
+            title: "Lỗi xác nhận thanh toán",
+            description: "Không thể xác nhận thanh toán. Vui lòng liên hệ hỗ trợ.",
+            variant: "destructive",
+          });
+        })
+        .finally(() => {
+          setIsVerifying(false);
+        });
+    } else if (status === "CANCELLED" || searchParams.get("cancel") === "true") {
+      toast({
+        title: "Thanh toán bị hủy",
+        description: "Bạn đã hủy thanh toán. Vui lòng thử lại nếu muốn tiếp tục đặt vé.",
+        variant: "destructive",
+      });
+      // Clean URL params
+      window.history.replaceState({}, "", window.location.pathname);
+    } else if (status === "EXPIRED") {
+      toast({
+        title: "Thanh toán hết hạn",
+        description: "Phiên thanh toán đã hết hạn. Vui lòng tạo thanh toán mới.",
+        variant: "destructive",
+      });
+      // Clean URL params
+      window.history.replaceState({}, "", window.location.pathname);
+    } else if (code && code !== "00") {
+      // Other error codes from PayOS
+      const errorMessages: Record<string, string> = {
+        "01": "Số dư tài khoản không đủ",
+        "02": "Giao dịch bị từ chối bởi ngân hàng",
+        "03": "Thẻ đã hết hạn hoặc bị khóa",
+        "04": "Lỗi kết nối ngân hàng",
+      };
+      toast({
+        title: "Thanh toán thất bại",
+        description: errorMessages[code] || `Lỗi thanh toán (mã: ${code}). Vui lòng thử lại.`,
+        variant: "destructive",
+      });
+      // Clean URL params
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+  }, [bookingId, queryClient]);
+
+  const handlePayment = async () => {
     if (!bookingId) return;
     try {
-      await confirmMutation.mutateAsync(bookingId);
-      toast({
-        title: "Xác nhận thành công",
-        description: "Đặt vé của bạn đã được xác nhận.",
+      const payment = await paymentMutation.mutateAsync({
+        bookingId,
+        returnUrl: `${window.location.origin}/booking/confirmation/${bookingId}`,
+        cancelUrl: `${window.location.origin}/booking/confirmation/${bookingId}`,
       });
+      
+      // Redirect to PayOS checkout page
+      if (payment.checkoutUrl) {
+        window.location.href = payment.checkoutUrl;
+      }
     } catch {
       toast({
-        title: "Xác nhận thất bại",
+        title: "Tạo thanh toán thất bại",
         description: "Có lỗi xảy ra, vui lòng thử lại.",
         variant: "destructive",
       });
@@ -98,7 +187,7 @@ export const BookingConfirmationPage = () => {
     }
   };
 
-  if (isLoading) {
+  if (isLoading || isVerifying) {
     return (
       <div className="container mx-auto p-8 max-w-2xl space-y-6">
         <Skeleton className="h-12 w-full" />
@@ -109,6 +198,7 @@ export const BookingConfirmationPage = () => {
   }
 
   if (error || !booking) {
+    console.error("Booking load error:", error);
     return (
       <div className="container mx-auto p-8 max-w-2xl text-center space-y-6">
         <XCircle className="h-16 w-16 text-destructive mx-auto" />
@@ -116,6 +206,11 @@ export const BookingConfirmationPage = () => {
         <p className="text-muted-foreground">
           Đặt vé không tồn tại hoặc đã bị xóa.
         </p>
+        {error && (
+          <p className="text-xs text-red-500">
+            Lỗi: {(error as Error).message}
+          </p>
+        )}
         <Button onClick={() => navigate("/")}>
           <Home className="mr-2 h-4 w-4" />
           Về trang chủ
@@ -124,10 +219,10 @@ export const BookingConfirmationPage = () => {
     );
   }
 
-  const status = statusConfig[booking.status];
+  const status = statusConfig[booking.status as keyof typeof statusConfig] || statusConfig.PENDING;
   const StatusIcon = status.icon;
-  const canConfirm = booking.status === "PENDING";
-  const isConfirmed = booking.status === "CONFIRMED";
+  const canPay = booking.status === "PENDING" || booking.status === "PAYMENT_FAILED";
+  const isPaid = booking.status === "PAID" || booking.status === "CONFIRMED";
   const canCancel =
     booking.status !== "CANCELLED" &&
     new Date(booking.trip.departureTime) > new Date();
@@ -201,23 +296,23 @@ export const BookingConfirmationPage = () => {
 
             {/* Actions */}
             <div className="space-y-3 pt-2">
-                {canConfirm && (
+                {canPay && (
                 <>
                     <Button
                         className="w-full"
                         size="lg"
-                        onClick={handleConfirm}
-                        disabled={confirmMutation.isPending}
+                        onClick={handlePayment}
+                        disabled={paymentMutation.isPending}
                     >
-                        {confirmMutation.isPending ? "Đang xử lý..." : "Thanh toán ngay"}
+                        {paymentMutation.isPending ? "Đang tạo thanh toán..." : "Thanh toán qua PayOS"}
                     </Button>
                     <p className="text-xs text-center text-muted-foreground px-4">
-                        *Đây là giả lập thanh toán. Vé sẽ được gửi qua email sau khi thanh toán thành công.
+                        *Bạn sẽ được chuyển đến cổng thanh toán PayOS để hoàn tất.
                     </p>
                 </>
                 )}
 
-                {isConfirmed && (
+                {isPaid && (
                 <>
                     <Button 
                     className="w-full"
@@ -227,7 +322,7 @@ export const BookingConfirmationPage = () => {
                     Tải vé điện tử
                     </Button>
                     <p className="text-xs text-center text-green-600 font-medium">
-                        Đã gửi vé về email của bạn!
+                        Thanh toán thành công! Đã gửi vé về email của bạn.
                     </p>
                 </>
                 )}

@@ -128,6 +128,11 @@ export const TripManagementPage = () => {
             setEditingTrip(null);
             reset();
           },
+          onError: (error: Error) => {
+            const axiosError = error as AxiosError<string>;
+            const message = axiosError.response?.data || error.message || "Có lỗi xảy ra";
+            alert("Lỗi cập nhật: " + message);
+          },
         }
       );
     } else {
@@ -135,6 +140,11 @@ export const TripManagementPage = () => {
         onSuccess: () => {
           setIsOpen(false);
           reset();
+        },
+        onError: (error: Error) => {
+          const axiosError = error as AxiosError<string>;
+          const message = axiosError.response?.data || error.message || "Có lỗi xảy ra";
+          alert("Lỗi tạo chuyến đi: " + message);
         },
       });
     }

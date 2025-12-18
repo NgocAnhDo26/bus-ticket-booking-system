@@ -140,6 +140,17 @@ export const PassengerInfoPage = () => {
         return;
     }
 
+    // Validate totalPrice is calculated correctly
+    if (finalTotalPrice <= 0) {
+        toast({
+            title: "Lỗi tính giá",
+            description: "Không thể tính được tổng tiền. Vui lòng thử lại hoặc chọn lại ghế.",
+            variant: "destructive",
+        });
+        navigate(`/booking/${tripId}`);
+        return;
+    }
+
     if (!contactName.trim() || !contactPhone.trim()) {
       toast({
         title: "Thiếu thông tin liên hệ",
@@ -193,8 +204,8 @@ export const PassengerInfoPage = () => {
       });
 
       toast({
-        title: "Đặt vé thành công!",
-        description: `Mã đặt vé: #${booking.code}`,
+        title: "Đang giữ vé cho bạn!",
+        description: `Mã đặt vé: #${booking.code}. Vé sẽ được giữ trong 15 phút, vui lòng thanh toán để hoàn tất.`,
       });
 
       // Save draft state in case user navigates back

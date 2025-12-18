@@ -57,6 +57,40 @@ export const lookupBooking = async (code: string, email: string): Promise<Bookin
     return response.data;
 };
 
+// Payment API
+export interface CreatePaymentRequest {
+    bookingId: string;
+    returnUrl: string;
+    cancelUrl: string;
+}
+
+export interface PaymentResponse {
+    id: string;
+    bookingId: string;
+    orderCode: number;
+    amount: number;
+    status: string;
+    checkoutUrl: string;
+    qrCode: string;
+    createdAt: string;
+    updatedAt: string;
+}
+
+export const createPayment = async (request: CreatePaymentRequest): Promise<PaymentResponse> => {
+    const response = await apiClient.post<PaymentResponse>("/payments", request);
+    return response.data;
+};
+
+export const getPaymentByBookingId = async (bookingId: string): Promise<PaymentResponse> => {
+    const response = await apiClient.get<PaymentResponse>(`/payments/booking/${bookingId}`);
+    return response.data;
+};
+
+export const verifyPayment = async (bookingId: string): Promise<PaymentResponse> => {
+    const response = await apiClient.post<PaymentResponse>(`/payments/verify/${bookingId}`);
+    return response.data;
+};
+
 // Seat locking APIs from teammate
 export const bookingApi = {
     lockSeat: async (data: LockSeatRequest) => {

@@ -6,6 +6,8 @@ import {
     getBookedSeatsForTrip,
     confirmBooking,
     cancelBooking,
+    createPayment,
+    type CreatePaymentRequest,
 } from "./api";
 import type { CreateBookingRequest } from "./types";
 
@@ -14,6 +16,7 @@ export const useBookingById = (id: string | undefined) => {
         queryKey: ["booking", id],
         queryFn: () => getBookingById(id!),
         enabled: !!id,
+        retry: false, // Don't retry on error to prevent infinite loading
     });
 };
 
@@ -68,5 +71,11 @@ export const useCancelBooking = () => {
             queryClient.invalidateQueries({ queryKey: ["bookings"] });
             queryClient.invalidateQueries({ queryKey: ["bookedSeats", data.trip.id] });
         },
+    });
+};
+
+export const useCreatePayment = () => {
+    return useMutation({
+        mutationFn: (request: CreatePaymentRequest) => createPayment(request),
     });
 };

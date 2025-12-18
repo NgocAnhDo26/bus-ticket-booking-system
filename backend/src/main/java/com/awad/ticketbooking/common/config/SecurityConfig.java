@@ -65,6 +65,13 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/api/bookings/*/confirm").permitAll() // Confirm booking (pay)
                         .requestMatchers(HttpMethod.PUT, "/api/bookings/*/cancel").permitAll() // Cancel booking
 
+                        // Payments
+                        .requestMatchers(HttpMethod.POST, "/api/payments").permitAll() // Create payment link
+                        .requestMatchers(HttpMethod.GET, "/api/payments/**").permitAll() // Get payment details
+
+                        // Webhooks (no auth - signature verified internally)
+                        .requestMatchers("/api/webhooks/**").permitAll()
+
                         .requestMatchers(HttpMethod.PUT, "/api/routes/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/routes/**").hasRole("ADMIN")
                         .anyRequest().authenticated())
@@ -94,14 +101,24 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource(
             @Value("${app.cors.allowed-origins}") List<String> allowedOrigins) {
-        CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(allowedOrigins);
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of("*"));
-        configuration.setAllowCredentials(true);
+
+        // Webhook endpoints - allow all origins (PayOS server)
+        CorsConfiguration webhookConfig = new CorsConfiguration();
+        webhookConfig.setAllowedOrigins(List.of("*"));
+        webhookConfig.setAllowedMethods(List.of("POST", "OPTIONS"));
+        webhookConfig.setAllowedHeaders(List.of("*"));
+        webhookConfig.setAllowCredentials(false); // Must be false when allowedOrigins is *
+
+        // Regular endpoints - restrict to allowed origins
+        CorsConfiguration defaultConfig = new CorsConfiguration();
+        defaultConfig.setAllowedOrigins(allowedOrigins);
+        defaultConfig.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        defaultConfig.setAllowedHeaders(List.of("*"));
+        defaultConfig.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
+        source.registerCorsConfiguration("/api/webhooks/**", webhookConfig);
+        source.registerCorsConfiguration("/**", defaultConfig);
         return source;
     }
 }

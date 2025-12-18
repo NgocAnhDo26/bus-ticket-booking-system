@@ -1,6 +1,6 @@
 import type { SeatType } from "@/features/catalog/types";
 
-export type BookingStatus = "PENDING" | "CONFIRMED" | "CANCELLED";
+export type BookingStatus = "PENDING" | "CONFIRMED" | "PAID" | "PAYMENT_FAILED" | "CANCELLED" | "REFUNDED";
 
 export type TicketInfo = {
     id: string;

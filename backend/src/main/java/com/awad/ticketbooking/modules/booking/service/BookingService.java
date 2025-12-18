@@ -348,6 +348,10 @@ public class BookingService {
                         }
                 }
 
+                // Delete tickets to release seats
+                ticketRepository.deleteAll(booking.getTickets());
+                booking.getTickets().clear();
+
                 booking.setStatus(BookingStatus.CANCELLED);
                 return toBookingResponse(bookingRepository.save(booking));
         }

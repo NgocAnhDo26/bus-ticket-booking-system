@@ -3,6 +3,8 @@ package com.awad.ticketbooking.common.enums;
 public enum BookingStatus {
     PENDING,
     CONFIRMED,
+    PAID,
+    PAYMENT_FAILED,
     CANCELLED,
     REFUNDED
 }

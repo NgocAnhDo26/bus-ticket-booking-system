@@ -79,48 +79,58 @@ public class TripService {
 
     @Transactional
     public TripResponse updateTrip(java.util.UUID id, CreateTripRequest request) {
-        Trip trip = tripRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Trip not found"));
+        try {
+            Trip trip = tripRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Trip not found with id: " + id));
 
-        // Check if trip has any bookings
-        if (bookingRepository.existsByTripId(id)) {
-            throw new RuntimeException("Cannot update trip that has existing bookings");
+            // Check if trip has any bookings
+            if (bookingRepository.existsByTripId(id)) {
+                throw new RuntimeException("Cannot update trip that has existing bookings. Trip ID: " + id);
+            }
+
+            Bus bus = busRepository.findById(request.getBusId())
+                    .orElseThrow(() -> new RuntimeException("Bus not found with id: " + request.getBusId()));
+
+            Route route = routeRepository.findById(request.getRouteId())
+                    .orElseThrow(() -> new RuntimeException("Route not found with id: " + request.getRouteId()));
+
+            // Check for conflicts (excluding current trip)
+            boolean hasConflict = tripRepository.existsByBusIdAndDepartureTimeLessThanAndArrivalTimeGreaterThanAndIdNot(
+                    bus.getId(), request.getArrivalTime(), request.getDepartureTime(), id);
+
+            if (hasConflict) {
+                throw new RuntimeException(
+                        "Bus " + bus.getPlateNumber() + " is already assigned to another trip during this time");
+            }
+
+            trip.setBus(bus);
+            trip.setRoute(route);
+            trip.setDepartureTime(request.getDepartureTime());
+            trip.setArrivalTime(request.getArrivalTime());
+
+            // Update pricings - explicitly delete old ones first and flush to DB
+            // to avoid unique constraint violation on (trip_id, seat_type)
+            tripPricingRepository.deleteAllByTripId(id);
+            tripPricingRepository.flush();
+            trip.getTripPricings().clear();
+
+            if (request.getPricings() != null) {
+                List<TripPricing> pricings = request.getPricings().stream().map(p -> {
+                    TripPricing pricing = new TripPricing();
+                    pricing.setTrip(trip);
+                    pricing.setSeatType(p.getSeatType());
+                    pricing.setPrice(p.getPrice());
+                    return pricing;
+                }).collect(Collectors.toList());
+                trip.getTripPricings().addAll(pricings);
+            }
+
+            return mapToResponse(tripRepository.save(trip));
+        } catch (RuntimeException e) {
+            throw e; // Re-throw RuntimeException as-is
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to update trip: " + e.getMessage(), e);
         }
-
-        Bus bus = busRepository.findById(request.getBusId())
-                .orElseThrow(() -> new RuntimeException("Bus not found"));
-
-        Route route = routeRepository.findById(request.getRouteId())
-                .orElseThrow(() -> new RuntimeException("Route not found"));
-
-        // Check for conflicts (excluding current trip)
-        boolean hasConflict = tripRepository.existsByBusIdAndDepartureTimeLessThanAndArrivalTimeGreaterThanAndIdNot(
-                bus.getId(), request.getArrivalTime(), request.getDepartureTime(), id);
-
-        if (hasConflict) {
-            throw new RuntimeException("Bus is already assigned to another trip during this time");
-        }
-
-        trip.setBus(bus);
-        trip.setRoute(route);
-        trip.setDepartureTime(request.getDepartureTime());
-        trip.setArrivalTime(request.getArrivalTime());
-
-        // Update pricings
-        trip.getTripPricings().clear();
-
-        if (request.getPricings() != null) {
-            List<TripPricing> pricings = request.getPricings().stream().map(p -> {
-                TripPricing pricing = new TripPricing();
-                pricing.setTrip(trip);
-                pricing.setSeatType(p.getSeatType());
-                pricing.setPrice(p.getPrice());
-                return pricing;
-            }).collect(Collectors.toList());
-            trip.getTripPricings().addAll(pricings);
-        }
-
-        return mapToResponse(tripRepository.save(trip));
     }
 
     @Transactional
