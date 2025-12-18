@@ -50,7 +50,7 @@ public class TripController {
     @PutMapping("/{id}")
     @Operation(summary = "Update trip", description = "Updates an existing trip.")
     public ResponseEntity<TripResponse> updateTrip(@PathVariable UUID id,
-            @RequestBody @Valid CreateTripRequest request) {
+                                                   @RequestBody @Valid CreateTripRequest request) {
         return ResponseEntity.ok(tripService.updateTrip(id, request));
     }
 

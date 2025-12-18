@@ -44,7 +44,7 @@ public class RouteController {
 
     @org.springframework.web.bind.annotation.DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteRoute(@org.springframework.web.bind.annotation.PathVariable UUID id,
-            @org.springframework.web.bind.annotation.RequestParam(defaultValue = "false") boolean force) {
+                                            @org.springframework.web.bind.annotation.RequestParam(defaultValue = "false") boolean force) {
         routeService.deleteRoute(id, force);
         return ResponseEntity.noContent().build();
     }
