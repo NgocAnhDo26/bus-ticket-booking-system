@@ -16,11 +16,35 @@ public class RedissonConfig {
     @Value("${spring.data.redis.port}")
     private int redisPort;
 
+    @Value("${spring.data.redis.username:}")
+    private String redisUsername;
+
+    @Value("${spring.data.redis.password:}")
+    private String redisPassword;
+
+    @Value("${spring.data.redis.ssl.enabled:false}")
+    private boolean redisSslEnabled;
+
     @Bean
     public RedissonClient redissonClient() {
         Config config = new Config();
-        config.useSingleServer()
-                .setAddress("redis://" + redisHost + ":" + redisPort);
+        
+        String protocol = redisSslEnabled ? "rediss://" : "redis://";
+        String address = protocol + redisHost + ":" + redisPort;
+        
+        var singleServerConfig = config.useSingleServer()
+                .setAddress(address);
+        
+        // Set username if provided (Redis 6+ ACL support)
+        if (redisUsername != null && !redisUsername.isEmpty()) {
+            singleServerConfig.setUsername(redisUsername);
+        }
+        
+        // Set password if provided
+        if (redisPassword != null && !redisPassword.isEmpty()) {
+            singleServerConfig.setPassword(redisPassword);
+        }
+        
         return Redisson.create(config);
     }
 }
