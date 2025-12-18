@@ -49,6 +49,9 @@ public class BookingController {
     public ResponseEntity<Page<BookingResponse>> getUserBookings(
             @AuthenticationPrincipal ApplicationUserDetails principal,
             Pageable pageable) {
+        if (principal == null) {
+            return ResponseEntity.status(org.springframework.http.HttpStatus.UNAUTHORIZED).build();
+        }
         return ResponseEntity.ok(bookingService.getUserBookings(principal.getUser().getId(), pageable));
     }
 
