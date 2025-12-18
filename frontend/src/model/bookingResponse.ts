@@ -8,6 +8,7 @@
 import type { BookingResponseStatus } from './bookingResponseStatus';
 import type { TripInfo } from './tripInfo';
 import type { TicketInfo } from './ticketInfo';
+import type { StationInfo } from './stationInfo';
 
 export interface BookingResponse {
   id?: string;
@@ -20,4 +21,6 @@ export interface BookingResponse {
   updatedAt?: string;
   trip?: TripInfo;
   tickets?: TicketInfo[];
+  pickupStation?: StationInfo;
+  dropoffStation?: StationInfo;
 }

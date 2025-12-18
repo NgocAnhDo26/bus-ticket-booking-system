@@ -279,7 +279,12 @@ export const StationManagementPage = () => {
                   <Input placeholder="Bến xe Miền Đông" {...register('name')} />
                 </FormField>
                 <FormField label="Thành phố" error={errors.city?.message}>
-                  <Input placeholder="Hồ Chí Minh" {...register('city')} />
+                  <Input list="cities" placeholder="Hồ Chí Minh" {...register('city')} />
+                  <datalist id="cities">
+                    {Array.from(new Set(stations?.map((s) => s.city))).map((city) => (
+                      <option key={city} value={city} />
+                    ))}
+                  </datalist>
                 </FormField>
                 <FormField label="Địa chỉ" error={errors.address?.message}>
                   <Input placeholder="292 Đinh Bộ Lĩnh..." {...register('address')} />

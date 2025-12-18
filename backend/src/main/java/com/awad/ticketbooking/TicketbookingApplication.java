@@ -14,6 +14,8 @@ import static org.springframework.data.web.config.EnableSpringDataWebSupport.Pag
 @SpringBootApplication
 @EnableCaching
 @EnableAsync
+@org.springframework.scheduling.annotation.EnableScheduling
+
 @EnableSpringDataWebSupport(pageSerializationMode = VIA_DTO)
 @EnableConfigurationProperties({ JwtProperties.class, GoogleProperties.class })
 public class TicketbookingApplication {

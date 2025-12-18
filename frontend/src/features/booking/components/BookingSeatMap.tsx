@@ -14,18 +14,32 @@ import { useBookingStore } from '../store';
 
 type BookingSeatMapProps = {
   busLayoutId: string;
+  alreadyBookedSeats?: string[];
+  selectedSeats?: string[];
+  onSeatClick?: (seatCode: string, status: string) => void;
 };
 
-export const BookingSeatMap = ({ busLayoutId }: BookingSeatMapProps) => {
+export const BookingSeatMap = ({
+  busLayoutId,
+  alreadyBookedSeats = [],
+  selectedSeats: propSelectedSeats,
+  onSeatClick: propOnSeatClick,
+}: BookingSeatMapProps) => {
   // const { user } = useAuthStore(); // Unused variable removed
 
-  const { seatStatusMap, toggleSeat, selectedSeats } = useBookingStore(
+  const {
+    seatStatusMap,
+    toggleSeat,
+    selectedSeats: storeSelectedSeats,
+  } = useBookingStore(
     useShallow((state) => ({
       seatStatusMap: state.seatStatusMap,
       toggleSeat: state.toggleSeat,
       selectedSeats: state.selectedSeats,
     })),
   );
+
+  const selectedSeats = propSelectedSeats ?? storeSelectedSeats;
 
   const [currentFloor, setCurrentFloor] = useState(1);
 
@@ -55,7 +69,9 @@ export const BookingSeatMap = ({ busLayoutId }: BookingSeatMapProps) => {
 
     const statusString = seatStatusMap[seatCode];
     if (!statusString) return 'AVAILABLE';
-    if (statusString === 'BOOKED') return 'BOOKED';
+    // If it's booked but it's one of OUR seats, treat as available so we can select/deselect
+    if (statusString === 'BOOKED' && !alreadyBookedSeats.includes(seatCode)) return 'BOOKED';
+    if (statusString === 'BOOKED' && alreadyBookedSeats.includes(seatCode)) return 'AVAILABLE'; // Or implicitly available
 
     // If it's locked but NOT by me (since I checked selectedSeats above), then it's LOCKED (gray)
     if (statusString.startsWith('LOCKED:')) {
@@ -83,7 +99,12 @@ export const BookingSeatMap = ({ busLayoutId }: BookingSeatMapProps) => {
   };
 
   const handleSeatClick = (seatCode: string, status: string) => {
+    if (propOnSeatClick) {
+      propOnSeatClick(seatCode, status);
+      return;
+    }
     if (status === 'BOOKED' || status === 'LOCKED') return;
+
     toggleSeat(seatCode);
   };
 

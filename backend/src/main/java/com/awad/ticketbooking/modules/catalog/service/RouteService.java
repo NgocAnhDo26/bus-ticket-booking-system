@@ -1,7 +1,10 @@
 package com.awad.ticketbooking.modules.catalog.service;
 
+import com.awad.ticketbooking.modules.catalog.dto.AddRouteStopRequest;
 import com.awad.ticketbooking.modules.catalog.entity.Route;
+import com.awad.ticketbooking.modules.catalog.entity.RouteStop;
 import com.awad.ticketbooking.modules.catalog.repository.RouteRepository;
+import com.awad.ticketbooking.modules.catalog.repository.RouteStopRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
@@ -14,10 +17,12 @@ import java.util.List;
 public class RouteService {
 
         private final RouteRepository routeRepository;
+        private final RouteStopRepository routeStopRepository;
         private final com.awad.ticketbooking.modules.catalog.repository.StationRepository stationRepository;
 
         private final com.awad.ticketbooking.modules.booking.repository.BookingRepository bookingRepository;
         private final com.awad.ticketbooking.modules.trip.repository.TripRepository tripRepository;
+        private final jakarta.persistence.EntityManager entityManager;
 
         @Transactional(readOnly = true)
         @Cacheable(value = "topRoutes")
@@ -60,6 +65,23 @@ public class RouteService {
                                 .durationMinutes(route.getDurationMinutes())
                                 .distanceKm(route.getDistanceKm())
                                 .isActive(route.getIsActive())
+                                .stops(route.getStops() != null ? route.getStops().stream()
+                                                .map(stop -> com.awad.ticketbooking.modules.catalog.dto.RouteResponse.StopInfo
+                                                                .builder()
+                                                                .id(stop.getId())
+                                                                .station(com.awad.ticketbooking.modules.catalog.dto.RouteResponse.StationInfo
+                                                                                .builder()
+                                                                                .id(stop.getStation().getId())
+                                                                                .name(stop.getStation().getName())
+                                                                                .city(stop.getStation().getCity())
+                                                                                .build())
+                                                                .stopOrder(stop.getStopOrder())
+                                                                .durationMinutesFromOrigin(
+                                                                                stop.getDurationMinutesFromOrigin())
+                                                                .stopType(stop.getStopType().name())
+                                                                .build())
+                                                .collect(java.util.stream.Collectors.toList())
+                                                : java.util.Collections.emptyList())
                                 .build();
         }
 
@@ -116,5 +138,45 @@ public class RouteService {
                         tripRepository.deleteByRouteId(id);
                 }
                 routeRepository.deleteById(id);
+        }
+
+        @Transactional
+        public com.awad.ticketbooking.modules.catalog.dto.RouteResponse addRouteStop(java.util.UUID routeId,
+                        AddRouteStopRequest request) {
+                Route route = routeRepository.findById(routeId)
+                                .orElseThrow(() -> new RuntimeException("Route not found"));
+
+                com.awad.ticketbooking.modules.catalog.entity.Station station = stationRepository
+                                .findById(request.getStationId())
+                                .orElseThrow(() -> new RuntimeException("Station not found"));
+
+                RouteStop stop = new RouteStop();
+                stop.setRoute(route);
+                stop.setStation(station);
+                stop.setStopOrder(request.getStopOrder());
+                stop.setDurationMinutesFromOrigin(request.getDurationMinutesFromOrigin());
+                stop.setStopType(request.getStopType());
+
+                routeStopRepository.save(stop);
+
+                // Refresh route to get new stops
+                entityManager.refresh(route); // Need EntityManager or just return updated DTO.
+                // Since List is cached in object, save might not update it immediately without
+                // refresh if logical mapping.
+                // Re-fetching is safer.
+                Route updatedRoute = routeRepository.findById(routeId).orElseThrow();
+                return mapToRouteResponse(updatedRoute);
+        }
+
+        @Transactional
+        public void deleteRouteStop(java.util.UUID routeId, java.util.UUID stopId) {
+                RouteStop stop = routeStopRepository.findById(stopId)
+                                .orElseThrow(() -> new RuntimeException("Stop not found"));
+
+                if (!stop.getRoute().getId().equals(routeId)) {
+                        throw new RuntimeException("Stop does not belong to this route");
+                }
+
+                routeStopRepository.delete(stop);
         }
 }

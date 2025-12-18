@@ -21,7 +21,7 @@ public class BookingExpirationScheduler {
     private final BookingRepository bookingRepository;
     private final BookingService bookingService;
 
-    @Scheduled(fixedRate = 60000) // Run every 1 minute
+    @Scheduled(fixedRate = 30000) // Run every 1 minute
     @Transactional
     public void expirePendingBookings() {
         log.info("Running booking expiration scheduler...");

@@ -6,6 +6,7 @@
  * OpenAPI spec version: v1.0
  */
 import type { Station } from './station';
+import type { RouteStop } from './routeStop';
 
 export interface Route {
   id?: string;
@@ -15,4 +16,5 @@ export interface Route {
   distanceKm?: number;
   isActive?: boolean;
   createdAt?: string;
+  stops?: RouteStop[];
 }

@@ -30,6 +30,7 @@ import {
   searchTrips as orvalSearchTrips,
   updateTrip as orvalUpdateTrip,
 } from '@/features/api/trips/trips';
+import { apiClient } from '@/lib/api-client';
 import type {
   Bus as ApiBus,
   BusLayout as ApiBusLayout,
@@ -53,6 +54,7 @@ import type {
 } from '@/model';
 
 import {
+  type AddRouteStopRequest,
   type Bus,
   type CreateBusRequest,
   type CreateOperatorRequest,
@@ -100,6 +102,7 @@ const toRoute = (r: ApiRoute | RouteResponse | undefined): Route => ({
   distanceKm: 'distanceKm' in (r ?? {}) ? ((r as ApiRoute).distanceKm ?? 0) : 0,
   isActive: 'isActive' in (r ?? {}) ? Boolean((r as ApiRoute | RouteResponse).isActive) : true,
   createdAt: 'createdAt' in (r ?? {}) ? ((r as ApiRoute).createdAt ?? '') : '',
+  stops: [],
 });
 
 const toApiBusLayoutSummary = (bl: ApiBusLayout | undefined): Bus['busLayout'] => ({
@@ -137,6 +140,7 @@ const toTrip = (t: TripResponse | undefined): Trip => ({
     distanceKm: 0,
     isActive: true,
     createdAt: '',
+    stops: [],
   },
   bus: {
     id: t?.bus?.id ?? '',
@@ -234,6 +238,15 @@ export const updateRoute = async (id: string, data: CreateRouteRequest): Promise
 
 export const deleteRoute = async (id: string, force?: boolean): Promise<void> => {
   await orvalDeleteRoute(id, force ? { force } : undefined);
+};
+
+export const addRouteStop = async (routeId: string, data: AddRouteStopRequest): Promise<Route> => {
+  const response = await apiClient.post<Route>(`/api/routes/${routeId}/stops`, data);
+  return response.data;
+};
+
+export const deleteRouteStop = async (routeId: string, stopId: string): Promise<void> => {
+  await apiClient.delete(`/api/routes/${routeId}/stops/${stopId}`);
 };
 
 // Trips

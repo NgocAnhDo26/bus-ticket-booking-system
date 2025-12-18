@@ -42,6 +42,10 @@ public class Route implements Serializable {
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
+    @OneToMany(mappedBy = "route", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("stopOrder ASC")
+    private java.util.List<RouteStop> stops = new java.util.ArrayList<>();
+
     @PrePersist
     public void onCreate() {
         this.createdAt = Instant.now();

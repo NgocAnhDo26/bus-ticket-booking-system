@@ -15,6 +15,8 @@ export interface CreateBookingRequest {
   /** @minLength 1 */
   passengerPhone: string;
   passengerEmail?: string;
+  pickupStationId?: string;
+  dropoffStationId?: string;
   totalPrice: number;
   /** @minItems 1 */
   tickets: TicketRequest[];
