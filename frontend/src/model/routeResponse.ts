@@ -6,6 +6,7 @@
  * OpenAPI spec version: v1.0
  */
 import type { StationInfo } from './stationInfo';
+import type { StopInfo } from './stopInfo';
 
 export interface RouteResponse {
   id?: string;
@@ -14,4 +15,5 @@ export interface RouteResponse {
   durationMinutes?: number;
   distanceKm?: number;
   isActive?: boolean;
+  stops?: StopInfo[];
 }

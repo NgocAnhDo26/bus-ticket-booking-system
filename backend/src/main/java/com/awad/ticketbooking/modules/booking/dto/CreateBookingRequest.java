@@ -4,6 +4,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Email;
 import lombok.Data;
 
@@ -29,8 +30,11 @@ public class CreateBookingRequest {
     @Email(message = "Invalid email format")
     private String passengerEmail;
 
+    private UUID pickupStationId;
+    private UUID dropoffStationId;
+
     @NotNull(message = "Total price is required")
-    @Positive(message = "Total price must be positive")
+    @PositiveOrZero(message = "Total price must be zero or positive")
     private BigDecimal totalPrice;
 
     @NotEmpty(message = "At least one ticket is required")

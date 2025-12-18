@@ -6,10 +6,12 @@
  * OpenAPI spec version: v1.0
  */
 import type { StationInfo } from './stationInfo';
+import type { RouteStopInfo } from './routeStopInfo';
 
 export interface RouteInfo {
   id?: string;
   originStation?: StationInfo;
   destinationStation?: StationInfo;
   durationMinutes?: number;
+  stops?: RouteStopInfo[];
 }

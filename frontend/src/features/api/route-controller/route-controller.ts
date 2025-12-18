@@ -25,6 +25,7 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  AddRouteStopRequest,
   CreateRouteRequest,
   DeleteRouteParams,
   GetAllRoutesParams,
@@ -300,6 +301,65 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
       return useMutation(mutationOptions, queryClient);
     }
+    export const addRouteStop = (
+    id: string,
+    addRouteStopRequest: AddRouteStopRequest,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<RouteResponse>(
+      {url: `/api/routes/${id}/stops`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: addRouteStopRequest, signal
+    },
+      options);
+    }
+  
+
+
+export const getAddRouteStopMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addRouteStop>>, TError,{id: string;data: AddRouteStopRequest}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof addRouteStop>>, TError,{id: string;data: AddRouteStopRequest}, TContext> => {
+
+const mutationKey = ['addRouteStop'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof addRouteStop>>, {id: string;data: AddRouteStopRequest}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  addRouteStop(id,data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AddRouteStopMutationResult = NonNullable<Awaited<ReturnType<typeof addRouteStop>>>
+    export type AddRouteStopMutationBody = AddRouteStopRequest
+    export type AddRouteStopMutationError = unknown
+
+    export const useAddRouteStop = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addRouteStop>>, TError,{id: string;data: AddRouteStopRequest}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof addRouteStop>>,
+        TError,
+        {id: string;data: AddRouteStopRequest},
+        TContext
+      > => {
+
+      const mutationOptions = getAddRouteStopMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
     export const getTopRoutes = (
     
  options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
@@ -386,3 +446,60 @@ export function useGetTopRoutes<TData = Awaited<ReturnType<typeof getTopRoutes>>
 
 
 
+export const deleteRouteStop = (
+    id: string,
+    stopId: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+      
+      
+      return customInstance<void>(
+      {url: `/api/routes/${id}/stops/${stopId}`, method: 'DELETE'
+    },
+      options);
+    }
+  
+
+
+export const getDeleteRouteStopMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteRouteStop>>, TError,{id: string;stopId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteRouteStop>>, TError,{id: string;stopId: string}, TContext> => {
+
+const mutationKey = ['deleteRouteStop'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteRouteStop>>, {id: string;stopId: string}> = (props) => {
+          const {id,stopId} = props ?? {};
+
+          return  deleteRouteStop(id,stopId,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteRouteStopMutationResult = NonNullable<Awaited<ReturnType<typeof deleteRouteStop>>>
+    
+    export type DeleteRouteStopMutationError = unknown
+
+    export const useDeleteRouteStop = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteRouteStop>>, TError,{id: string;stopId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteRouteStop>>,
+        TError,
+        {id: string;stopId: string},
+        TContext
+      > => {
+
+      const mutationOptions = getDeleteRouteStopMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    

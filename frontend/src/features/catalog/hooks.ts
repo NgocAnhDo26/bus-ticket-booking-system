@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import {
+  addRouteStop,
   createBus,
   createOperator,
   createRoute,
@@ -9,6 +10,7 @@ import {
   deleteBus,
   deleteOperator,
   deleteRoute,
+  deleteRouteStop,
   deleteStation,
   deleteTrip,
   fetchBuses,
@@ -25,6 +27,7 @@ import {
   updateTrip,
 } from './api';
 import type {
+  AddRouteStopRequest,
   CreateBusRequest,
   CreateOperatorRequest,
   CreateRouteRequest,
@@ -181,6 +184,28 @@ export const useDeleteRoute = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ id, force }: { id: string; force?: boolean }) => deleteRoute(id, force),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['routes'] });
+    },
+  });
+};
+
+export const useAddRouteStop = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ routeId, data }: { routeId: string; data: AddRouteStopRequest }) =>
+      addRouteStop(routeId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['routes'] });
+    },
+  });
+};
+
+export const useDeleteRouteStop = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ routeId, stopId }: { routeId: string; stopId: string }) =>
+      deleteRouteStop(routeId, stopId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['routes'] });
     },

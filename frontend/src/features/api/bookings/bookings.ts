@@ -29,7 +29,8 @@ import type {
   BookingResponse,
   CreateBookingRequest,
   GetUserBookingsParams,
-  PagedModelBookingResponse
+  PagedModelBookingResponse,
+  UpdateBookingRequest
 } from '../../../model';
 
 import { customInstance } from '../../../lib/api-client';
@@ -40,6 +41,157 @@ type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
 /**
+ * Returns detailed information for a single booking.
+ * @summary Get booking by ID
+ */
+export const getBookingById = (
+    id: string,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<BookingResponse>(
+      {url: `/api/bookings/${id}`, method: 'GET', signal
+    },
+      options);
+    }
+  
+
+
+
+export const getGetBookingByIdQueryKey = (id?: string,) => {
+    return [
+    `/api/bookings/${id}`
+    ] as const;
+    }
+
+    
+export const getGetBookingByIdQueryOptions = <TData = Awaited<ReturnType<typeof getBookingById>>, TError = unknown>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBookingById>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetBookingByIdQueryKey(id);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getBookingById>>> = ({ signal }) => getBookingById(id, requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getBookingById>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetBookingByIdQueryResult = NonNullable<Awaited<ReturnType<typeof getBookingById>>>
+export type GetBookingByIdQueryError = unknown
+
+
+export function useGetBookingById<TData = Awaited<ReturnType<typeof getBookingById>>, TError = unknown>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBookingById>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getBookingById>>,
+          TError,
+          Awaited<ReturnType<typeof getBookingById>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetBookingById<TData = Awaited<ReturnType<typeof getBookingById>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBookingById>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getBookingById>>,
+          TError,
+          Awaited<ReturnType<typeof getBookingById>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetBookingById<TData = Awaited<ReturnType<typeof getBookingById>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBookingById>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get booking by ID
+ */
+
+export function useGetBookingById<TData = Awaited<ReturnType<typeof getBookingById>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBookingById>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetBookingByIdQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+export const updateBooking = (
+    id: string,
+    updateBookingRequest: UpdateBookingRequest,
+ options?: SecondParameter<typeof customInstance>,) => {
+      
+      
+      return customInstance<BookingResponse>(
+      {url: `/api/bookings/${id}`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: updateBookingRequest
+    },
+      options);
+    }
+  
+
+
+export const getUpdateBookingMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBooking>>, TError,{id: string;data: UpdateBookingRequest}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateBooking>>, TError,{id: string;data: UpdateBookingRequest}, TContext> => {
+
+const mutationKey = ['updateBooking'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateBooking>>, {id: string;data: UpdateBookingRequest}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateBooking(id,data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateBookingMutationResult = NonNullable<Awaited<ReturnType<typeof updateBooking>>>
+    export type UpdateBookingMutationBody = UpdateBookingRequest
+    export type UpdateBookingMutationError = unknown
+
+    export const useUpdateBooking = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBooking>>, TError,{id: string;data: UpdateBookingRequest}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateBooking>>,
+        TError,
+        {id: string;data: UpdateBookingRequest},
+        TContext
+      > => {
+
+      const mutationOptions = getUpdateBookingMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
  * Marks a booking as confirmed after successful payment.
  * @summary Confirm booking
  */
@@ -294,99 +446,6 @@ export const useLookupBooking = <TError = unknown,
       return useMutation(mutationOptions, queryClient);
     }
     /**
- * Returns detailed information for a single booking.
- * @summary Get booking by ID
- */
-export const getBookingById = (
-    id: string,
- options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
-) => {
-      
-      
-      return customInstance<BookingResponse>(
-      {url: `/api/bookings/${id}`, method: 'GET', signal
-    },
-      options);
-    }
-  
-
-
-
-export const getGetBookingByIdQueryKey = (id?: string,) => {
-    return [
-    `/api/bookings/${id}`
-    ] as const;
-    }
-
-    
-export const getGetBookingByIdQueryOptions = <TData = Awaited<ReturnType<typeof getBookingById>>, TError = unknown>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBookingById>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getGetBookingByIdQueryKey(id);
-
-  
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getBookingById>>> = ({ signal }) => getBookingById(id, requestOptions, signal);
-
-      
-
-      
-
-   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getBookingById>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type GetBookingByIdQueryResult = NonNullable<Awaited<ReturnType<typeof getBookingById>>>
-export type GetBookingByIdQueryError = unknown
-
-
-export function useGetBookingById<TData = Awaited<ReturnType<typeof getBookingById>>, TError = unknown>(
- id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBookingById>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getBookingById>>,
-          TError,
-          Awaited<ReturnType<typeof getBookingById>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customInstance>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetBookingById<TData = Awaited<ReturnType<typeof getBookingById>>, TError = unknown>(
- id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBookingById>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getBookingById>>,
-          TError,
-          Awaited<ReturnType<typeof getBookingById>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customInstance>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetBookingById<TData = Awaited<ReturnType<typeof getBookingById>>, TError = unknown>(
- id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBookingById>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get booking by ID
- */
-
-export function useGetBookingById<TData = Awaited<ReturnType<typeof getBookingById>>, TError = unknown>(
- id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBookingById>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
- , queryClient?: QueryClient 
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getGetBookingByIdQueryOptions(id,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
-}
-
-
-
-
-/**
  * Returns a paginated list of bookings for the authenticated user.
  * @summary Get current user bookings
  */

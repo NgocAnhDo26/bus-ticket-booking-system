@@ -27,7 +27,6 @@ public class SeatController {
 
     private final SeatLockService seatLockService;
     private final BookingRepository bookingRepository;
-    private final TripRepository tripRepository; // To validate trip exists
 
     @PostMapping("/lock")
     @Operation(summary = "Lock a seat", description = "Attempts to place a temporary lock on a seat for the current user or guest.")

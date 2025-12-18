@@ -1,9 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import {
+  type CreatePaymentRequest,
   cancelBooking,
   confirmBooking,
   createBooking,
+  createPayment,
   getBookedSeatsForTrip,
   getBookingById,
   getUserBookings,
@@ -15,6 +17,7 @@ export const useBookingById = (id: string | undefined) => {
     queryKey: ['booking', id],
     queryFn: () => getBookingById(id!),
     enabled: !!id,
+    retry: false, // Don't retry on error to prevent infinite loading
   });
 };
 
@@ -69,9 +72,13 @@ export const useCancelBooking = () => {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['booking', data.id] });
       queryClient.invalidateQueries({ queryKey: ['bookings'] });
-      queryClient.invalidateQueries({
-        queryKey: ['bookedSeats', data.trip.id],
-      });
+      queryClient.invalidateQueries({ queryKey: ['bookedSeats', data.trip.id] });
     },
+  });
+};
+
+export const useCreatePayment = () => {
+  return useMutation({
+    mutationFn: (request: CreatePaymentRequest) => createPayment(request),
   });
 };

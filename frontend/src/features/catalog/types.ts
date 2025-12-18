@@ -69,6 +69,20 @@ export type Route = {
   distanceKm: number;
   isActive: boolean;
   createdAt: string;
+  stops: {
+    id: string;
+    station: Station;
+    stopOrder: number;
+    durationMinutesFromOrigin: number;
+    stopType: 'PICKUP' | 'DROPOFF' | 'BOTH';
+  }[];
+};
+
+export type AddRouteStopRequest = {
+  stationId: string;
+  stopOrder: number;
+  durationMinutesFromOrigin: number;
+  stopType: 'PICKUP' | 'DROPOFF' | 'BOTH';
 };
 
 export type CreateRouteRequest = {

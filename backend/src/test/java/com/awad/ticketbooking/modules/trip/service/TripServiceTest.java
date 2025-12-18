@@ -27,6 +27,7 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
+import org.mockito.ArgumentMatchers;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -81,7 +82,7 @@ class TripServiceTest {
         trip.setBus(bus);
 
         Page<Trip> page = new PageImpl<>(Collections.singletonList(trip));
-        when(tripRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(page);
+        when(tripRepository.findAll(ArgumentMatchers.<Specification<Trip>>any(), any(Pageable.class))).thenReturn(page);
 
         // Act
         Page<TripResponse> result = tripService.searchTrips(request);
@@ -91,7 +92,7 @@ class TripServiceTest {
         assertEquals(1, result.getTotalElements());
         assertEquals("Hanoi", result.getContent().get(0).getRoute().getOriginStation().getCity());
 
-        verify(tripRepository).findAll(any(Specification.class), any(Pageable.class));
+        verify(tripRepository).findAll(ArgumentMatchers.<Specification<Trip>>any(), any(Pageable.class));
     }
 
     @Test

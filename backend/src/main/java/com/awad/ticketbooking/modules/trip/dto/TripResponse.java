@@ -27,7 +27,19 @@ public class TripResponse {
         private UUID id;
         private StationInfo originStation;
         private StationInfo destinationStation;
+
         private int durationMinutes;
+        private List<RouteStopInfo> stops;
+    }
+
+    @Data
+    @Builder
+    public static class RouteStopInfo {
+        private UUID id;
+        private StationInfo station;
+        private int stopOrder;
+        private int durationMinutesFromOrigin;
+        private String stopType;
     }
 
     @Data

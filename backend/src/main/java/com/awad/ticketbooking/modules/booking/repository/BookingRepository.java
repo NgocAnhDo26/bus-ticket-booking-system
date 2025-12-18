@@ -78,4 +78,17 @@ public interface BookingRepository extends JpaRepository<Booking, java.util.UUID
                         "LEFT JOIN FETCH b.tickets " +
                         "WHERE b.id = :bookingId")
         Optional<Booking> findByIdWithFullDetails(@Param("bookingId") java.util.UUID bookingId);
+
+        @Query("SELECT b FROM Booking b " +
+                        "JOIN FETCH b.trip t " +
+                        "JOIN FETCH t.route r " +
+                        "JOIN FETCH r.originStation " +
+                        "JOIN FETCH r.destinationStation " +
+                        "JOIN FETCH t.bus bus " +
+                        "JOIN FETCH bus.operator " +
+                        "WHERE b.status = :status AND b.reminderSent = false AND t.departureTime BETWEEN :start AND :end")
+        List<Booking> findByStatusAndReminderSentFalseAndTripDepartureTimeBetween(
+                        @Param("status") BookingStatus status,
+                        @Param("start") Instant start,
+                        @Param("end") Instant end);
 }
