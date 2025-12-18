@@ -7,5 +7,18 @@
  */
 
 export type GetTopRoutes1Params = {
+/**
+ * Start of the time range (inclusive). When omitted, returns all-time top routes.
+ */
+from?: string;
+/**
+ * End of the time range (inclusive). When omitted, returns all-time top routes.
+ */
+to?: string;
+/**
+ * Max number of routes to return.
+ * @minimum 1
+ * @maximum 100
+ */
 limit?: number;
 };

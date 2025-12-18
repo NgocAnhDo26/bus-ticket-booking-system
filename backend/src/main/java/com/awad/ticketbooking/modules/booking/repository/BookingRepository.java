@@ -25,6 +25,8 @@ public interface BookingRepository extends JpaRepository<Booking, java.util.UUID
         BigDecimal sumTotalPriceByCreatedAtBetweenAndStatus(@Param("start") Instant start, @Param("end") Instant end,
                         @Param("status") BookingStatus status);
 
+        long countByCreatedAtBetween(Instant start, Instant end);
+
         long countByCreatedAtBetweenAndStatus(Instant start, Instant end, BookingStatus status);
 
         @Query("SELECT COUNT(DISTINCT b.trip.bus.operator) FROM Booking b WHERE b.createdAt BETWEEN :start AND :end AND b.status = :status")
@@ -34,6 +36,13 @@ public interface BookingRepository extends JpaRepository<Booking, java.util.UUID
         @Query("SELECT b.trip.route, COUNT(b) as ticketCount FROM Booking b WHERE b.status = 'CONFIRMED' GROUP BY b.trip.route ORDER BY ticketCount DESC")
         List<Object[]> findTopRoutes(Pageable pageable);
 
+        @Query("SELECT b.trip.route, COUNT(b) as ticketCount " +
+                        "FROM Booking b " +
+                        "WHERE b.status = 'CONFIRMED' AND b.createdAt BETWEEN :start AND :end " +
+                        "GROUP BY b.trip.route " +
+                        "ORDER BY ticketCount DESC")
+        List<Object[]> findTopRoutesInRange(@Param("start") Instant start, @Param("end") Instant end, Pageable pageable);
+
         @Query("SELECT b FROM Booking b ORDER BY b.createdAt DESC")
         List<Booking> findRecentBookings(Pageable pageable);
 
@@ -42,6 +51,41 @@ public interface BookingRepository extends JpaRepository<Booking, java.util.UUID
 
         @Query("SELECT b.trip.bus.operator, COUNT(b) as ticketCount, SUM(b.totalPrice) as totalRevenue FROM Booking b WHERE b.status = 'CONFIRMED' GROUP BY b.trip.bus.operator ORDER BY ticketCount DESC")
         List<Object[]> findTopOperators(Pageable pageable);
+
+        @Query("SELECT b.trip.bus.operator, COUNT(b) as ticketCount, SUM(b.totalPrice) as totalRevenue " +
+                        "FROM Booking b " +
+                        "WHERE b.status = 'CONFIRMED' AND b.createdAt BETWEEN :start AND :end " +
+                        "GROUP BY b.trip.bus.operator " +
+                        "ORDER BY ticketCount DESC")
+        List<Object[]> findTopOperatorsInRange(@Param("start") Instant start, @Param("end") Instant end, Pageable pageable);
+
+        @Query("SELECT function('date_trunc', 'day', b.createdAt) as bucket, COUNT(b) as bookingCount " +
+                        "FROM Booking b " +
+                        "WHERE b.createdAt BETWEEN :start AND :end " +
+                        "GROUP BY function('date_trunc', 'day', b.createdAt) " +
+                        "ORDER BY bucket")
+        List<Object[]> getBookingTrendsDaily(@Param("start") Instant start, @Param("end") Instant end);
+
+        @Query("SELECT function('date_trunc', 'day', b.createdAt) as bucket, COUNT(b) as bookingCount " +
+                        "FROM Booking b " +
+                        "WHERE b.createdAt BETWEEN :start AND :end AND b.status = 'CONFIRMED' " +
+                        "GROUP BY function('date_trunc', 'day', b.createdAt) " +
+                        "ORDER BY bucket")
+        List<Object[]> getConfirmedBookingTrendsDaily(@Param("start") Instant start, @Param("end") Instant end);
+
+        @Query("SELECT function('date_trunc', 'week', b.createdAt) as bucket, COUNT(b) as bookingCount " +
+                        "FROM Booking b " +
+                        "WHERE b.createdAt BETWEEN :start AND :end " +
+                        "GROUP BY function('date_trunc', 'week', b.createdAt) " +
+                        "ORDER BY bucket")
+        List<Object[]> getBookingTrendsWeekly(@Param("start") Instant start, @Param("end") Instant end);
+
+        @Query("SELECT function('date_trunc', 'week', b.createdAt) as bucket, COUNT(b) as bookingCount " +
+                        "FROM Booking b " +
+                        "WHERE b.createdAt BETWEEN :start AND :end AND b.status = 'CONFIRMED' " +
+                        "GROUP BY function('date_trunc', 'week', b.createdAt) " +
+                        "ORDER BY bucket")
+        List<Object[]> getConfirmedBookingTrendsWeekly(@Param("start") Instant start, @Param("end") Instant end);
 
         // User Dashboard Methods
         long countByUserEmail(String email);

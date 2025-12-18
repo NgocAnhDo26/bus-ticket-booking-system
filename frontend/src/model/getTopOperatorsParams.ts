@@ -7,5 +7,18 @@
  */
 
 export type GetTopOperatorsParams = {
+/**
+ * Start of the time range (inclusive). When omitted, returns all-time top operators.
+ */
+from?: string;
+/**
+ * End of the time range (inclusive). When omitted, returns all-time top operators.
+ */
+to?: string;
+/**
+ * Max number of operators to return.
+ * @minimum 1
+ * @maximum 100
+ */
 limit?: number;
 };

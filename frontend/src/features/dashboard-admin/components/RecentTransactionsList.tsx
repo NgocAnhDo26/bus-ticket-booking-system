@@ -23,8 +23,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-
-import type { TransactionResponse } from '../types';
+import type { TransactionResponse } from '@/model';
 
 interface RecentTransactionsListProps {
   transactions: TransactionResponse[];
@@ -75,7 +74,7 @@ const getStateLabel = (status: TransactionResponse['status']): string => {
     case 'REFUNDED':
       return 'Đã hoàn tiền';
     default:
-      return status;
+      return status ?? '—';
   }
 };
 
@@ -97,8 +96,11 @@ const columns: ColumnDef<TransactionResponse>[] = [
       );
     },
     cell: ({ row }) => (
-      <div className="text-center font-medium truncate max-w-[100px]" title={row.getValue('id')}>
-        {row.getValue('id')}
+      <div
+        className="text-center font-medium truncate max-w-[100px]"
+        title={String(row.getValue('id') ?? '')}
+      >
+        {String(row.getValue('id') ?? '—')}
       </div>
     ),
   },
@@ -151,7 +153,7 @@ const columns: ColumnDef<TransactionResponse>[] = [
       );
     },
     cell: ({ row }) => {
-      const amount = parseFloat(row.getValue('totalPrice'));
+      const amount = Number(row.getValue('totalPrice') ?? 0);
       return <div className="text-right font-medium">{formatCurrency(amount)}</div>;
     },
   },
@@ -184,8 +186,12 @@ const columns: ColumnDef<TransactionResponse>[] = [
       );
     },
     cell: ({ row }) => {
-      const dateStr = row.getValue('bookingTime') as string;
-      return <div className="text-center text-muted-foreground">{formatDateTime(dateStr)}</div>;
+      const dateStr = row.getValue('bookingTime') as string | undefined;
+      return (
+        <div className="text-center text-muted-foreground">
+          {dateStr ? formatDateTime(dateStr) : '—'}
+        </div>
+      );
     },
   },
 ];

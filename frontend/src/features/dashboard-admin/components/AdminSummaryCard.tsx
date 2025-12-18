@@ -1,10 +1,12 @@
+import type { ReactNode } from 'react';
+
 import { type LucideIcon } from 'lucide-react';
 
 import { Card } from '@/components/ui/card';
 
 export interface AdminSummaryCardProps {
   title: string;
-  data: string;
+  data: ReactNode;
   icon: LucideIcon;
   iconBgColor?: string;
 }
@@ -22,7 +24,7 @@ export const AdminSummaryCard = ({
       </div>
       <div className="mt-4 space-y-1">
         <p>{title}</p>
-        <p className="font-semibold text-xl">{data}</p>
+        <div className="font-semibold text-xl">{data}</div>
       </div>
     </Card>
   );

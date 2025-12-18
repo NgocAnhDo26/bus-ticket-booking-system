@@ -15,10 +15,11 @@ import com.awad.ticketbooking.modules.booking.repository.TicketRepository;
 import java.util.Set;
 import java.util.Map;
 import com.awad.ticketbooking.modules.catalog.entity.Station;
-import com.awad.ticketbooking.modules.catalog.repository.StationRepository;
 import com.awad.ticketbooking.modules.trip.entity.Trip;
 import com.awad.ticketbooking.modules.trip.repository.TripRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -37,11 +38,19 @@ public class BookingService {
         private final TripRepository tripRepository;
         private final UserRepository userRepository;
         private final TicketRepository ticketRepository;
-        private final StationRepository stationRepository;
         private final EmailService emailService;
         private final SeatLockService seatLockService;
 
         @Transactional
+        @Caching(evict = {
+                        @CacheEvict(value = com.awad.ticketbooking.common.config.RedisConfig.CACHE_ADMIN_METRICS, allEntries = true),
+                        @CacheEvict(value = com.awad.ticketbooking.common.config.RedisConfig.CACHE_ADMIN_REVENUE, allEntries = true),
+                        @CacheEvict(value = com.awad.ticketbooking.common.config.RedisConfig.CACHE_ADMIN_BOOKING_TRENDS, allEntries = true),
+                        @CacheEvict(value = com.awad.ticketbooking.common.config.RedisConfig.CACHE_ADMIN_BOOKING_CONVERSION, allEntries = true),
+                        @CacheEvict(value = com.awad.ticketbooking.common.config.RedisConfig.CACHE_ADMIN_TOP_ROUTES, allEntries = true),
+                        @CacheEvict(value = com.awad.ticketbooking.common.config.RedisConfig.CACHE_ADMIN_TOP_OPERATORS, allEntries = true),
+                        @CacheEvict(value = com.awad.ticketbooking.common.config.RedisConfig.CACHE_ADMIN_RECENT_TRANSACTIONS, allEntries = true)
+        })
         public BookingResponse createBooking(CreateBookingRequest request) {
                 Trip trip = tripRepository.findById(request.getTripId())
                                 .orElseThrow(() -> new RuntimeException("Trip not found"));
@@ -53,7 +62,8 @@ public class BookingService {
                 }
 
                 // Validate seats are not already booked
-                List<String> bookedSeats = ticketRepository.findBookedSeatCodesByTripId(request.getTripId());
+                // Fetch booked seats to warm up/validate seat availability via the repository (conflicts handled below).
+                ticketRepository.findBookedSeatCodesByTripId(request.getTripId());
                 List<String> requestedSeats = request.getTickets().stream()
                                 .map(TicketRequest::getSeatCode)
                                 .collect(Collectors.toList());
@@ -306,6 +316,16 @@ public class BookingService {
                 return ticketRepository.findBookedSeatCodesByTripId(tripId);
         }
 
+        @Transactional
+        @Caching(evict = {
+                        @CacheEvict(value = com.awad.ticketbooking.common.config.RedisConfig.CACHE_ADMIN_METRICS, allEntries = true),
+                        @CacheEvict(value = com.awad.ticketbooking.common.config.RedisConfig.CACHE_ADMIN_REVENUE, allEntries = true),
+                        @CacheEvict(value = com.awad.ticketbooking.common.config.RedisConfig.CACHE_ADMIN_BOOKING_TRENDS, allEntries = true),
+                        @CacheEvict(value = com.awad.ticketbooking.common.config.RedisConfig.CACHE_ADMIN_BOOKING_CONVERSION, allEntries = true),
+                        @CacheEvict(value = com.awad.ticketbooking.common.config.RedisConfig.CACHE_ADMIN_TOP_ROUTES, allEntries = true),
+                        @CacheEvict(value = com.awad.ticketbooking.common.config.RedisConfig.CACHE_ADMIN_TOP_OPERATORS, allEntries = true),
+                        @CacheEvict(value = com.awad.ticketbooking.common.config.RedisConfig.CACHE_ADMIN_RECENT_TRANSACTIONS, allEntries = true)
+        })
         public BookingResponse confirmBooking(UUID bookingId) {
                 Booking booking = bookingRepository.findById(bookingId)
                                 .orElseThrow(() -> new RuntimeException("Booking not found"));
@@ -334,6 +354,15 @@ public class BookingService {
         }
 
         @Transactional
+        @Caching(evict = {
+                        @CacheEvict(value = com.awad.ticketbooking.common.config.RedisConfig.CACHE_ADMIN_METRICS, allEntries = true),
+                        @CacheEvict(value = com.awad.ticketbooking.common.config.RedisConfig.CACHE_ADMIN_REVENUE, allEntries = true),
+                        @CacheEvict(value = com.awad.ticketbooking.common.config.RedisConfig.CACHE_ADMIN_BOOKING_TRENDS, allEntries = true),
+                        @CacheEvict(value = com.awad.ticketbooking.common.config.RedisConfig.CACHE_ADMIN_BOOKING_CONVERSION, allEntries = true),
+                        @CacheEvict(value = com.awad.ticketbooking.common.config.RedisConfig.CACHE_ADMIN_TOP_ROUTES, allEntries = true),
+                        @CacheEvict(value = com.awad.ticketbooking.common.config.RedisConfig.CACHE_ADMIN_TOP_OPERATORS, allEntries = true),
+                        @CacheEvict(value = com.awad.ticketbooking.common.config.RedisConfig.CACHE_ADMIN_RECENT_TRANSACTIONS, allEntries = true)
+        })
         public BookingResponse cancelBooking(UUID bookingId) {
                 Booking booking = bookingRepository.findById(bookingId)
                                 .orElseThrow(() -> new RuntimeException("Booking not found"));
@@ -375,6 +404,15 @@ public class BookingService {
         }
 
         @Transactional
+        @Caching(evict = {
+                        @CacheEvict(value = com.awad.ticketbooking.common.config.RedisConfig.CACHE_ADMIN_METRICS, allEntries = true),
+                        @CacheEvict(value = com.awad.ticketbooking.common.config.RedisConfig.CACHE_ADMIN_REVENUE, allEntries = true),
+                        @CacheEvict(value = com.awad.ticketbooking.common.config.RedisConfig.CACHE_ADMIN_BOOKING_TRENDS, allEntries = true),
+                        @CacheEvict(value = com.awad.ticketbooking.common.config.RedisConfig.CACHE_ADMIN_BOOKING_CONVERSION, allEntries = true),
+                        @CacheEvict(value = com.awad.ticketbooking.common.config.RedisConfig.CACHE_ADMIN_TOP_ROUTES, allEntries = true),
+                        @CacheEvict(value = com.awad.ticketbooking.common.config.RedisConfig.CACHE_ADMIN_TOP_OPERATORS, allEntries = true),
+                        @CacheEvict(value = com.awad.ticketbooking.common.config.RedisConfig.CACHE_ADMIN_RECENT_TRANSACTIONS, allEntries = true)
+        })
         public BookingResponse updateBooking(UUID bookingId, UpdateBookingRequest request) {
                 Booking booking = bookingRepository.findById(bookingId)
                                 .orElseThrow(() -> new RuntimeException("Booking not found"));
