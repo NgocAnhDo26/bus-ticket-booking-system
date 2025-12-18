@@ -9,39 +9,39 @@ import { Toaster } from '@/components/ui/toaster';
 import { useHydrateAuth } from '@/features/auth/hooks';
 
 type Props = {
-    children: ReactNode;
+  children: ReactNode;
 };
 
 const AuthHydrator = ({ children }: Props) => {
-    useHydrateAuth();
-    return <>{children}</>;
+  useHydrateAuth();
+  return <>{children}</>;
 };
 
 export const AppProviders = ({ children }: Props) => {
-    const queryClient = useMemo(
-        () =>
-            new QueryClient({
-                defaultOptions: {
-                    queries: {
-                        refetchOnWindowFocus: false,
-                        staleTime: 1000 * 30,
-                    },
-                },
-            }),
-        [],
-    );
+  const queryClient = useMemo(
+    () =>
+      new QueryClient({
+        defaultOptions: {
+          queries: {
+            refetchOnWindowFocus: false,
+            staleTime: 1000 * 30,
+          },
+        },
+      }),
+    [],
+  );
 
-    const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID ?? '';
+  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID ?? '';
 
-    return (
-        <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
-            <GoogleOAuthProvider clientId={googleClientId}>
-                <QueryClientProvider client={queryClient}>
-                    <AuthHydrator>{children}</AuthHydrator>
-                    <SonnerToaster position="top-center" richColors />
-                    <Toaster />
-                </QueryClientProvider>
-            </GoogleOAuthProvider>
-        </ThemeProvider>
-    );
+  return (
+    <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
+      <GoogleOAuthProvider clientId={googleClientId}>
+        <QueryClientProvider client={queryClient}>
+          <AuthHydrator>{children}</AuthHydrator>
+          <SonnerToaster position="top-center" richColors />
+          <Toaster />
+        </QueryClientProvider>
+      </GoogleOAuthProvider>
+    </ThemeProvider>
+  );
 };
