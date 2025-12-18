@@ -53,25 +53,52 @@ public class SeatLockService {
         RLock lock = redissonClient.getLock(lockKey);
 
         if (lock.isLocked()) {
-             // In a real scenario we should check if it's locked by the same user or if it's force unlock
-             // but RLock handles hold count. For simplicity, we assume the controller validates user ownership 
-             // or we check the map.
-            
+            // In a real scenario we should check if it's locked by the same user or if it's
+            // force unlock
+            // but RLock handles hold count. For simplicity, we assume the controller
+            // validates user ownership
+            // or we check the map.
+
             RMap<String, UUID> locksMap = redissonClient.getMap(String.format(LOCK_INFO_MAP_PREFIX, tripId));
             UUID lockerId = locksMap.get(seatCode);
-            
+
             if (lockerId != null && lockerId.equals(userId)) {
                 if (lock.isHeldByCurrentThread() || lock.isLocked()) {
-                     // Force unlock if needed or just unlock. 
-                     // Since we are in a different thread than the one that locked it (likely),
-                     // standard lock.unlock() might throw IllegalMonitorStateException if not handled correctly by Redisson across threads/transactions.
-                     // However, Redisson RLock is reentrant. But here we are processing a new request.
-                     // A safer way with Redisson for distributed locks not tied to thread is forceUnlock if we verify ownership via the Map.
-                     lock.forceUnlock();
+                    // Force unlock if needed or just unlock.
+                    // Since we are in a different thread than the one that locked it (likely),
+                    // standard lock.unlock() might throw IllegalMonitorStateException if not
+                    // handled correctly by Redisson across threads/transactions.
+                    // However, Redisson RLock is reentrant. But here we are processing a new
+                    // request.
+                    // A safer way with Redisson for distributed locks not tied to thread is
+                    // forceUnlock if we verify ownership via the Map.
+                    lock.forceUnlock();
                 }
                 locksMap.remove(seatCode);
                 broadcastSeatStatus(tripId, seatCode, "AVAILABLE", null);
             }
+        }
+    }
+
+    public void unlockSeatsForBooking(UUID tripId, java.util.List<String> seatCodes) {
+        RMap<String, UUID> locksMap = redissonClient.getMap(String.format(LOCK_INFO_MAP_PREFIX, tripId));
+
+        for (String seatCode : seatCodes) {
+            String lockKey = String.format(LOCK_KEY_PREFIX, tripId, seatCode);
+            RLock lock = redissonClient.getLock(lockKey);
+
+            // Force unlock if locked, regardless of map status
+            // This ensures no zombie locks remain if map entry is lost
+            if (lock.isLocked()) {
+                lock.forceUnlock();
+            }
+
+            // Also clean up map
+            if (locksMap.containsKey(seatCode)) {
+                locksMap.remove(seatCode);
+            }
+            // Always broadcast available status to ensure frontend updates
+            broadcastSeatStatus(tripId, seatCode, "AVAILABLE", null);
         }
     }
 
@@ -85,4 +112,3 @@ public class SeatLockService {
         messagingTemplate.convertAndSend("/topic/trip/" + tripId + "/seats", message);
     }
 }
-

@@ -1,8 +1,8 @@
-import * as React from "react"
-import { Check, ChevronsUpDown } from "lucide-react"
+import * as React from 'react';
 
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
+import { Check, ChevronsUpDown } from 'lucide-react';
+
+import { Button } from '@/components/ui/button';
 import {
   Command,
   CommandEmpty,
@@ -10,31 +10,28 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from "@/components/ui/command"
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover"
+} from '@/components/ui/command';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { cn } from '@/lib/utils';
 
 interface ComboboxProps {
-  options: { value: string; label: string }[]
-  value?: string
-  onSelect: (value: string) => void
-  placeholder?: string
-  emptyText?: string
-  className?: string
+  options: { value: string; label: string }[];
+  value?: string;
+  onSelect: (value: string) => void;
+  placeholder?: string;
+  emptyText?: string;
+  className?: string;
 }
 
 export function Combobox({
   options,
   value,
   onSelect,
-  placeholder = "Select option...",
-  emptyText = "No option found.",
+  placeholder = 'Select option...',
+  emptyText = 'No option found.',
   className,
 }: ComboboxProps) {
-  const [open, setOpen] = React.useState(false)
+  const [open, setOpen] = React.useState(false);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -43,11 +40,9 @@ export function Combobox({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className={cn("w-full justify-between", !value && "text-muted-foreground", className)}
+          className={cn('w-full justify-between', !value && 'text-muted-foreground', className)}
         >
-          {value
-            ? options.find((option) => option.value === value)?.label
-            : placeholder}
+          {value ? options.find((option) => option.value === value)?.label : placeholder}
           <ChevronsUpDown className="opacity-50" />
         </Button>
       </PopoverTrigger>
@@ -64,19 +59,16 @@ export function Combobox({
                   onSelect={(currentValue) => {
                     // cmdk returns lowercased value
                     const selectedOption = options.find(
-                      (option) => option.label.toLowerCase() === currentValue.toLowerCase()
+                      (option) => option.label.toLowerCase() === currentValue.toLowerCase(),
                     );
                     const newValue = selectedOption ? selectedOption.value : currentValue;
-                    onSelect(newValue === value ? "" : newValue)
-                    setOpen(false)
+                    onSelect(newValue === value ? '' : newValue);
+                    setOpen(false);
                   }}
                 >
                   {option.label}
                   <Check
-                    className={cn(
-                      "ml-auto",
-                      value === option.value ? "opacity-100" : "opacity-0"
-                    )}
+                    className={cn('ml-auto', value === option.value ? 'opacity-100' : 'opacity-0')}
                   />
                 </CommandItem>
               ))}
@@ -85,5 +77,5 @@ export function Combobox({
         </Command>
       </PopoverContent>
     </Popover>
-  )
+  );
 }

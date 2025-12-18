@@ -1,14 +1,12 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { type ActivityItem } from "../types";
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
-const badgeVariantMap: Record<
-  ActivityItem["status"],
-  "success" | "warning" | "default"
-> = {
-  success: "success",
-  warning: "warning",
-  info: "default",
+import { type ActivityItem } from '../types';
+
+const badgeVariantMap: Record<ActivityItem['status'], 'success' | 'warning' | 'default'> = {
+  success: 'success',
+  warning: 'warning',
+  info: 'default',
 };
 
 type ActivityListProps = {

@@ -1,12 +1,10 @@
-"use client";
+'use client';
 
-import { ChevronRight, type LucideIcon } from "lucide-react";
+import { Link } from 'react-router-dom';
 
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
+import { ChevronRight, type LucideIcon } from 'lucide-react';
+
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
   SidebarGroup,
   SidebarMenu,
@@ -15,8 +13,7 @@ import {
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
-} from "@/components/ui/sidebar";
-import { Link } from "react-router-dom";
+} from '@/components/ui/sidebar';
 
 type NavItem = {
   title: string;
@@ -34,7 +31,7 @@ type NavMainProps = {
   items: NavItem[];
 };
 
-function SubMenuItems({ items }: { items: NavItem["items"] }) {
+function SubMenuItems({ items }: { items: NavItem['items'] }) {
   if (!items) return null;
 
   return (
@@ -54,12 +51,7 @@ function SubMenuItems({ items }: { items: NavItem["items"] }) {
 
 function CollapsibleNavItem({ item }: { item: NavItem }) {
   return (
-    <Collapsible
-      key={item.title}
-      asChild
-      defaultOpen={item.isActive}
-      className="group/collapsible"
-    >
+    <Collapsible key={item.title} asChild defaultOpen={item.isActive} className="group/collapsible">
       <SidebarMenuItem>
         <CollapsibleTrigger asChild>
           <SidebarMenuButton tooltip={item.title}>

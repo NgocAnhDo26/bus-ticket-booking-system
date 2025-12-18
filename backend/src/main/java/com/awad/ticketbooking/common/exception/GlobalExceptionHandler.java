@@ -1,49 +1,26 @@
 package com.awad.ticketbooking.common.exception;
 
-import jakarta.servlet.http.HttpServletRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-@RestControllerAdvice
+@ControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ApiError> handleValidation(MethodArgumentNotValidException ex, HttpServletRequest request) {
-        String message = ex.getBindingResult().getFieldErrors().stream()
-                .findFirst()
-                .map(fieldError -> fieldError.getField() + " " + fieldError.getDefaultMessage())
-                .orElse("Validation failed");
-        return buildResponse(HttpStatus.BAD_REQUEST, message, request);
-    }
+    private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
-    @ExceptionHandler(BadCredentialsException.class)
-    public ResponseEntity<ApiError> handleBadCredentials(BadCredentialsException ex, HttpServletRequest request) {
-        return buildResponse(HttpStatus.UNAUTHORIZED, "Invalid credentials", request);
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<String> handleException(Exception e) {
+        logger.error("Unhandled exception caught: ", e);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<ApiError> handleIllegalArgument(IllegalArgumentException ex, HttpServletRequest request) {
-        return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), request);
-    }
-
-    @ExceptionHandler(org.springframework.dao.DataIntegrityViolationException.class)
-    public ResponseEntity<ApiError> handleDataIntegrityViolation(
-            org.springframework.dao.DataIntegrityViolationException ex, HttpServletRequest request) {
-        return buildResponse(HttpStatus.CONFLICT, "Cannot perform operation because data is in use by other records.",
-                request);
-    }
-
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ApiError> handleGeneric(Exception ex, HttpServletRequest request) {
-        return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error: " + ex.getMessage(), request);
-    }
-
-    private ResponseEntity<ApiError> buildResponse(HttpStatus status, String message, HttpServletRequest request) {
-        ApiError apiError = ApiError.of(status.value(), message, request.getRequestURI());
-        return ResponseEntity.status(status).body(apiError);
+    public ResponseEntity<String> handleIllegalArgument(IllegalArgumentException e) {
+        logger.warn("Bad request: {}", e.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
     }
 }

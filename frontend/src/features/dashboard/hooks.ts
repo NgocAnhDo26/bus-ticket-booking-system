@@ -1,23 +1,24 @@
-import { useQuery } from "@tanstack/react-query";
-import { fetchDashboard, fetchUserDashboardSummary, fetchUserRecentTrips } from "./api";
+import { useQuery } from '@tanstack/react-query';
+
+import { fetchDashboard, fetchUserDashboardSummary, fetchUserRecentTrips } from './api';
 
 export const useDashboard = () => {
   return useQuery({
-    queryKey: ["dashboard"],
+    queryKey: ['dashboard'],
     queryFn: fetchDashboard,
   });
 };
 
 export const useUserDashboardSummary = () => {
   return useQuery({
-    queryKey: ["userDashboardSummary"],
+    queryKey: ['userDashboardSummary'],
     queryFn: fetchUserDashboardSummary,
   });
 };
 
 export const useUserRecentTrips = () => {
   return useQuery({
-    queryKey: ["userRecentTrips"],
+    queryKey: ['userRecentTrips'],
     queryFn: fetchUserRecentTrips,
   });
 };

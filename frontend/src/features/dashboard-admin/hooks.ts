@@ -1,43 +1,34 @@
-import { useQuery } from "@tanstack/react-query";
 import {
-  fetchMetrics,
-  fetchRecentTransactions,
-  fetchRevenueChart,
-  fetchTopOperators,
-  fetchTopRoutes,
-} from "./api";
+  useGetBookingConversion,
+  useGetBookingTrends,
+  useGetMetrics,
+  useGetRecentTransactions,
+  useGetRevenueChart,
+  useGetTopOperators,
+  useGetTopRoutes1,
+} from '@/features/api/admin-dashboard/admin-dashboard';
+import type {
+  GetBookingConversionParams,
+  GetBookingTrendsParams,
+  GetRecentTransactionsParams,
+  GetRevenueChartParams,
+  GetTopOperatorsParams,
+  GetTopRoutes1Params,
+} from '@/model';
 
-export const useAdminMetrics = () => {
-  return useQuery({
-    queryKey: ["admin-metrics"],
-    queryFn: fetchMetrics,
-  });
-};
+export const useAdminMetrics = () => useGetMetrics();
 
-export const useAdminRevenue = () => {
-  return useQuery({
-    queryKey: ["admin-revenue"],
-    queryFn: fetchRevenueChart,
-  });
-};
+export const useAdminRevenue = (params?: GetRevenueChartParams) => useGetRevenueChart(params);
 
-export const useAdminTopRoutes = () => {
-  return useQuery({
-    queryKey: ["admin-top-routes"],
-    queryFn: fetchTopRoutes,
-  });
-};
+export const useAdminTopRoutes = (params?: GetTopRoutes1Params) => useGetTopRoutes1(params);
 
-export const useAdminRecentTransactions = () => {
-  return useQuery({
-    queryKey: ["admin-recent-transactions"],
-    queryFn: fetchRecentTransactions,
-  });
-};
+export const useAdminRecentTransactions = (params?: GetRecentTransactionsParams) =>
+  useGetRecentTransactions(params);
 
-export const useAdminTopOperators = () => {
-  return useQuery({
-    queryKey: ["admin-top-operators"],
-    queryFn: fetchTopOperators,
-  });
-};
+export const useAdminTopOperators = (params?: GetTopOperatorsParams) => useGetTopOperators(params);
+
+export const useAdminBookingTrends = (params?: GetBookingTrendsParams) =>
+  useGetBookingTrends(params);
+
+export const useAdminBookingConversion = (params?: GetBookingConversionParams) =>
+  useGetBookingConversion(params);

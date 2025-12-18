@@ -22,6 +22,8 @@ public class BookingResponse {
     private Instant updatedAt;
     private TripInfo trip;
     private List<TicketInfo> tickets;
+    private StationInfo pickupStation;
+    private StationInfo dropoffStation;
 
     @Data
     @Builder
@@ -57,6 +59,7 @@ public class BookingResponse {
         private UUID id;
         private String plateNumber;
         private String operatorName;
+        private UUID busLayoutId;
         private List<String> amenities;
     }
 

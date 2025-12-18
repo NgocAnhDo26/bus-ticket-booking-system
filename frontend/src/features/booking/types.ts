@@ -1,93 +1,102 @@
-import type { SeatType } from "@/features/catalog/types";
+import type { SeatType } from '@/features/catalog/types';
+import type {
+  LockSeatRequest as ApiLockSeatRequest,
+  TicketRequest as ApiTicketRequest,
+} from '@/model';
 
-export type BookingStatus = "PENDING" | "CONFIRMED" | "CANCELLED";
+export type BookingStatus = 'PENDING' | 'CONFIRMED' | 'CANCELLED' | 'REFUNDED';
 
 export type TicketInfo = {
-    id: string;
-    seatCode: string;
-    passengerName: string;
-    passengerPhone: string;
-    price: number;
+  id: string;
+  seatCode: string;
+  passengerName: string;
+  passengerPhone: string;
+  price: number;
 };
 
 export type StationInfo = {
-    id: string;
-    name: string;
-    city: string;
-    address: string;
+  id: string;
+  name: string;
+  city: string;
+  address: string;
 };
 
 export type RouteInfo = {
-    id: string;
-    originStation: StationInfo;
-    destinationStation: StationInfo;
-    durationMinutes: number;
+  id: string;
+  originStation: StationInfo;
+  destinationStation: StationInfo;
+  durationMinutes: number;
 };
 
 export type BusInfo = {
-    id: string;
-    plateNumber: string;
-    operatorName: string;
-    amenities: string[];
+  id: string;
+  plateNumber: string;
+  operatorName: string;
+  busLayoutId: string;
+  amenities: string[];
 };
 
 export type TripInfo = {
-    id: string;
-    departureTime: string;
-    arrivalTime: string;
-    route: RouteInfo;
-    bus: BusInfo;
+  id: string;
+  departureTime: string;
+  arrivalTime: string;
+  route: RouteInfo;
+  bus: BusInfo;
 };
 
 export type BookingResponse = {
-    id: string;
-    code: string;
-    status: BookingStatus;
-    totalPrice: number;
-    passengerName: string;
-    passengerPhone: string;
-    createdAt: string;
-    updatedAt: string;
-    trip: TripInfo;
-    tickets: TicketInfo[];
+  id: string;
+  code: string;
+  status: BookingStatus;
+  totalPrice: number;
+  passengerName: string;
+  passengerPhone: string;
+  createdAt: string;
+  updatedAt: string;
+  trip: TripInfo;
+  tickets: TicketInfo[];
+  pickupStation?: StationInfo;
+  dropoffStation?: StationInfo;
 };
 
-export type TicketRequest = {
-    seatCode: string;
-    passengerName: string;
-    passengerPhone: string;
-    price: number;
-};
+// Prefer OpenAPI/Orval request models as the source of truth.
+export type TicketRequest = ApiTicketRequest;
 
 export type CreateBookingRequest = {
-    tripId: string;
-    userId?: string; // Optional for guests
-    passengerName: string;
-    passengerPhone: string;
-    passengerEmail?: string; // For guests to receive tickets
-    totalPrice: number;
-    tickets: TicketRequest[];
+  tripId: string;
+  userId?: string; // Optional for guests
+  passengerName: string;
+  passengerPhone: string;
+  passengerEmail?: string; // For guests to receive tickets
+  pickupStationId?: string;
+  dropoffStationId?: string;
+  totalPrice: number;
+  tickets: TicketRequest[];
+};
+
+export type UpdateBookingRequest = {
+  passengerName: string;
+  passengerPhone: string;
+  passengerEmail?: string;
+  tickets?: TicketRequest[];
 };
 
 export type PassengerInfo = {
-    seatCode: string;
-    seatType: SeatType;
-    passengerName: string;
-    passengerPhone: string;
-    price: number;
+  seatCode: string;
+  seatType: SeatType;
+  passengerName: string;
+  passengerPhone: string;
+  price: number;
 };
 
 // Teammate's seat locking types
-export type SeatStatus = "LOCKED" | "AVAILABLE" | "BOOKED";
+export type SeatStatus = 'LOCKED' | 'AVAILABLE' | 'BOOKED';
 
 export type SeatStatusMessage = {
-    seatCode: string;
-    status: SeatStatus;
-    lockedByUserId?: string;
+  seatCode: string;
+  status: SeatStatus;
+  lockedByUserId?: string;
 };
 
-export type LockSeatRequest = {
-    tripId: string;
-    seatCode: string;
-    guestId?: string;
-};
+// Prefer OpenAPI/Orval request models as the source of truth.
+export type LockSeatRequest = ApiLockSeatRequest;

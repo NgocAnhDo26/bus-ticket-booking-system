@@ -1,18 +1,16 @@
-import { Navigate, Outlet } from "react-router-dom";
-import { useAuthStore } from "@/store/auth-store";
-import { useHydrateAuth } from "@/features/auth/hooks";
-import { getDashboardPath } from "@/lib/navigation";
-import { type UserRole } from "@/types/user";
+import { Navigate, Outlet } from 'react-router-dom';
+
+import { useHydrateAuth } from '@/features/auth/hooks';
+import { getDashboardPath } from '@/lib/navigation';
+import { useAuthStore } from '@/store/auth-store';
+import { type UserRole } from '@/types/user';
 
 type ProtectedRouteProps = {
   allowGuests?: boolean;
   allowedRoles?: UserRole[];
 };
 
-export const ProtectedRoute = ({
-  allowGuests = false,
-  allowedRoles,
-}: ProtectedRouteProps) => {
+export const ProtectedRoute = ({ allowGuests = false, allowedRoles }: ProtectedRouteProps) => {
   const user = useAuthStore((state) => state.user);
   const token = useAuthStore((state) => state.accessToken);
 

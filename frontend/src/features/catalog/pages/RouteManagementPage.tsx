@@ -1,34 +1,13 @@
-import { useMemo, useState, useCallback } from "react";
-import { AxiosError } from "axios";
-import { useQueryClient } from "@tanstack/react-query";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import { Plus, ArrowRight, Pencil, Trash2, MoreHorizontal } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
-import { FormField } from "@/components/ui/form-field";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { GenericTable, type ColumnDef } from "@/components/common";
-import { useRoutes, useCreateRoute, useUpdateRoute, useDeleteRoute, useStations } from "../hooks";
-import type { Route } from "../types";
+import { useCallback, useMemo, useState } from 'react';
+import { useForm } from 'react-hook-form';
 
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useQueryClient } from '@tanstack/react-query';
+import { AxiosError } from 'axios';
+import { ArrowRight, MoreHorizontal, Pencil, Plus, Trash2 } from 'lucide-react';
+import * as z from 'zod';
+
+import { type ColumnDef, GenericTable } from '@/components/common';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -38,13 +17,37 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+} from '@/components/ui/alert-dialog';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { FormField } from '@/components/ui/form-field';
+import { Input } from '@/components/ui/input';
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet';
+
+import { RouteStopsManager } from '../components/RouteStopsManager';
+import { useCreateRoute, useDeleteRoute, useRoutes, useStations, useUpdateRoute } from '../hooks';
+import type { Route } from '../types';
 
 const formSchema = z.object({
-  originStationId: z.string().min(1, "Vui lòng chọn điểm đi"),
-  destinationStationId: z.string().min(1, "Vui lòng chọn điểm đến"),
-  durationMinutes: z.number().min(1, "Thời gian di chuyển phải lớn hơn 0"),
-  distanceKm: z.number().min(1, "Khoảng cách phải lớn hơn 0"),
+  originStationId: z.string().min(1, 'Vui lòng chọn điểm đi'),
+  destinationStationId: z.string().min(1, 'Vui lòng chọn điểm đến'),
+  durationMinutes: z.number().min(1, 'Thời gian di chuyển phải lớn hơn 0'),
+  distanceKm: z.number().min(1, 'Khoảng cách phải lớn hơn 0'),
 });
 
 export const RouteManagementPage = () => {
@@ -58,6 +61,8 @@ export const RouteManagementPage = () => {
   const [editingRoute, setEditingRoute] = useState<Route | null>(null);
   const [deletingRoute, setDeletingRoute] = useState<Route | null>(null);
 
+  const [managingStopsRoute, setManagingStopsRoute] = useState<Route | null>(null);
+
   const {
     register,
     handleSubmit,
@@ -66,8 +71,8 @@ export const RouteManagementPage = () => {
   } = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      originStationId: "",
-      destinationStationId: "",
+      originStationId: '',
+      destinationStationId: '',
       durationMinutes: 0,
       distanceKm: 0,
     },
@@ -83,7 +88,7 @@ export const RouteManagementPage = () => {
             setEditingRoute(null);
             reset();
           },
-        }
+        },
       );
     } else {
       createRoute.mutate(values, {
@@ -95,16 +100,19 @@ export const RouteManagementPage = () => {
     }
   };
 
-  const handleEdit = useCallback((route: Route) => {
-    setEditingRoute(route);
-    reset({
-      originStationId: route.originStation.id,
-      destinationStationId: route.destinationStation.id,
-      durationMinutes: route.durationMinutes,
-      distanceKm: route.distanceKm,
-    });
-    setIsOpen(true);
-  }, [reset]);
+  const handleEdit = useCallback(
+    (route: Route) => {
+      setEditingRoute(route);
+      reset({
+        originStationId: route.originStation.id,
+        destinationStationId: route.destinationStation.id,
+        durationMinutes: route.durationMinutes,
+        distanceKm: route.distanceKm,
+      });
+      setIsOpen(true);
+    },
+    [reset],
+  );
 
   const [forceDeleteId, setForceDeleteId] = useState<string | null>(null);
 
@@ -123,7 +131,7 @@ export const RouteManagementPage = () => {
               setDeletingRoute(null);
             }
           },
-        }
+        },
       );
     }
   };
@@ -135,9 +143,9 @@ export const RouteManagementPage = () => {
         {
           onSuccess: () => {
             setForceDeleteId(null);
-            queryClient.invalidateQueries({ queryKey: ["routes"] });
+            queryClient.invalidateQueries({ queryKey: ['routes'] });
           },
-        }
+        },
       );
     }
   };
@@ -146,8 +154,8 @@ export const RouteManagementPage = () => {
   const [pageSize, setPageSize] = useState(10);
   const [sorting, setSorting] = useState<{
     key: string | null;
-    direction: "asc" | "desc";
-  }>({ key: null, direction: "asc" });
+    direction: 'asc' | 'desc';
+  }>({ key: null, direction: 'asc' });
 
   const sortedPaged = useMemo(() => {
     if (!routes) return { data: [], total: 0, totalPages: 1, page: 1 };
@@ -159,8 +167,8 @@ export const RouteManagementPage = () => {
         const aVal = a[key] as unknown;
         const bVal = b[key] as unknown;
         if (aVal == null || bVal == null) return 0;
-        if (aVal < bVal) return sorting.direction === "asc" ? -1 : 1;
-        if (aVal > bVal) return sorting.direction === "asc" ? 1 : -1;
+        if (aVal < bVal) return sorting.direction === 'asc' ? -1 : 1;
+        if (aVal > bVal) return sorting.direction === 'asc' ? 1 : -1;
         return 0;
       });
     }
@@ -189,8 +197,8 @@ export const RouteManagementPage = () => {
   const columns: ColumnDef<Route>[] = useMemo(
     () => [
       {
-        key: "originStation",
-        header: "Tuyến đường",
+        key: 'originStation',
+        header: 'Tuyến đường',
         cell: (route) => (
           <div className="flex flex-col gap-1">
             <div className="flex items-center gap-2 flex-wrap">
@@ -205,30 +213,30 @@ export const RouteManagementPage = () => {
         ),
       },
       {
-        key: "durationMinutes",
-        header: "Thời gian",
+        key: 'durationMinutes',
+        header: 'Thời gian',
         sortable: true,
         cell: (route) => <span>{route.durationMinutes} phút</span>,
       },
       {
-        key: "distanceKm",
-        header: "Khoảng cách",
+        key: 'distanceKm',
+        header: 'Khoảng cách',
         sortable: true,
         cell: (route) => <span>{route.distanceKm} km</span>,
       },
       {
-        key: "isActive",
-        header: "Trạng thái",
+        key: 'isActive',
+        header: 'Trạng thái',
         sortable: true,
         cell: (route) => (
-          <Badge variant={route.isActive ? "success" : "default"}>
-            {route.isActive ? "Hoạt động" : "Ngừng hoạt động"}
+          <Badge variant={route.isActive ? 'success' : 'default'}>
+            {route.isActive ? 'Hoạt động' : 'Ngừng hoạt động'}
           </Badge>
         ),
       },
       {
-        key: "actions",
-        header: "",
+        key: 'actions',
+        header: '',
         cell: (route) => (
           <div className="flex justify-end">
             <DropdownMenu>
@@ -264,18 +272,21 @@ export const RouteManagementPage = () => {
     <div className="flex flex-col gap-8 p-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold tracking-tight">Quản lý Tuyến đường</h1>
-        <Sheet open={isOpen} onOpenChange={(open) => {
-          setIsOpen(open);
-          if (!open) {
-            setEditingRoute(null);
-            reset({
-              originStationId: "",
-              destinationStationId: "",
-              durationMinutes: 0,
-              distanceKm: 0,
-            });
-          }
-        }}>
+        <Sheet
+          open={isOpen}
+          onOpenChange={(open) => {
+            setIsOpen(open);
+            if (!open) {
+              setEditingRoute(null);
+              reset({
+                originStationId: '',
+                destinationStationId: '',
+                durationMinutes: 0,
+                distanceKm: 0,
+              });
+            }
+          }}
+        >
           <SheetTrigger asChild>
             <Button>
               <Plus className="mr-2 h-4 w-4" /> Thêm Tuyến đường
@@ -283,20 +294,17 @@ export const RouteManagementPage = () => {
           </SheetTrigger>
           <SheetContent>
             <SheetHeader>
-              <SheetTitle>{editingRoute ? "Cập nhật Tuyến đường" : "Thêm Tuyến đường mới"}</SheetTitle>
-              <SheetDescription>
-                Nhập thông tin chi tiết về tuyến đường mới.
-              </SheetDescription>
+              <SheetTitle>
+                {editingRoute ? 'Cập nhật Tuyến đường' : 'Thêm Tuyến đường mới'}
+              </SheetTitle>
+              <SheetDescription>Nhập thông tin chi tiết về tuyến đường mới.</SheetDescription>
             </SheetHeader>
             <div className="py-4">
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                <FormField
-                  label="Điểm đi"
-                  error={errors.originStationId?.message}
-                >
+                <FormField label="Điểm đi" error={errors.originStationId?.message}>
                   <select
                     className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                    {...register("originStationId")}
+                    {...register('originStationId')}
                   >
                     <option value="">Chọn điểm đi...</option>
                     {stations?.map((station) => (
@@ -306,13 +314,10 @@ export const RouteManagementPage = () => {
                     ))}
                   </select>
                 </FormField>
-                <FormField
-                  label="Điểm đến"
-                  error={errors.destinationStationId?.message}
-                >
+                <FormField label="Điểm đến" error={errors.destinationStationId?.message}>
                   <select
                     className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                    {...register("destinationStationId")}
+                    {...register('destinationStationId')}
                   >
                     <option value="">Chọn điểm đến...</option>
                     {stations?.map((station) => (
@@ -326,19 +331,13 @@ export const RouteManagementPage = () => {
                   label="Thời gian di chuyển (phút)"
                   error={errors.durationMinutes?.message}
                 >
-                  <Input
-                    type="number"
-                    {...register("durationMinutes", { valueAsNumber: true })}
-                  />
+                  <Input type="number" {...register('durationMinutes', { valueAsNumber: true })} />
                 </FormField>
-                <FormField
-                  label="Khoảng cách (km)"
-                  error={errors.distanceKm?.message}
-                >
+                <FormField label="Khoảng cách (km)" error={errors.distanceKm?.message}>
                   <Input
                     type="number"
                     step="0.1"
-                    {...register("distanceKm", { valueAsNumber: true })}
+                    {...register('distanceKm', { valueAsNumber: true })}
                   />
                 </FormField>
                 <Button
@@ -346,7 +345,11 @@ export const RouteManagementPage = () => {
                   className="w-full"
                   disabled={createRoute.isPending || updateRoute.isPending}
                 >
-                  {createRoute.isPending || updateRoute.isPending ? "Đang xử lý..." : (editingRoute ? "Cập nhật" : "Tạo Tuyến đường")}
+                  {createRoute.isPending || updateRoute.isPending
+                    ? 'Đang xử lý...'
+                    : editingRoute
+                      ? 'Cập nhật'
+                      : 'Tạo Tuyến đường'}
                 </Button>
               </form>
             </div>
@@ -375,15 +378,17 @@ export const RouteManagementPage = () => {
             onSort={(key) =>
               setSorting((prev) =>
                 prev.key === key
-                  ? { key, direction: prev.direction === "asc" ? "desc" : "asc" }
-                  : { key, direction: "asc" },
+                  ? {
+                      key,
+                      direction: prev.direction === 'asc' ? 'desc' : 'asc',
+                    }
+                  : { key, direction: 'asc' },
               )
             }
             getRowId={(route) => route.id}
           />
         </CardContent>
       </Card>
-
 
       <AlertDialog open={!!deletingRoute} onOpenChange={(open) => !open && setDeletingRoute(null)}>
         <AlertDialogContent>
@@ -399,7 +404,7 @@ export const RouteManagementPage = () => {
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={handleDelete}
             >
-              {deleteRoute.isPending ? "Đang xóa..." : "Xóa"}
+              {deleteRoute.isPending ? 'Đang xóa...' : 'Xóa'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -410,8 +415,8 @@ export const RouteManagementPage = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>Cảnh báo: Dữ liệu liên quan</AlertDialogTitle>
             <AlertDialogDescription>
-              Tuyến đường này đang được sử dụng trong các chuyến đi.
-              Bạn có muốn xóa BẮT BUỘC không? Hành động này sẽ xóa tất cả các dữ liệu liên quan (chuyến đi, vé).
+              Tuyến đường này đang được sử dụng trong các chuyến đi. Bạn có muốn xóa BẮT BUỘC không?
+              Hành động này sẽ xóa tất cả các dữ liệu liên quan (chuyến đi, vé).
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -420,11 +425,30 @@ export const RouteManagementPage = () => {
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={handleForceDelete}
             >
-              {deleteRoute.isPending ? "Đang xóa..." : "Xóa bắt buộc"}
+              {deleteRoute.isPending ? 'Đang xóa...' : 'Xóa bắt buộc'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Route Stops Management Sheet */}
+      <Sheet
+        open={!!managingStopsRoute}
+        onOpenChange={(open) => !open && setManagingStopsRoute(null)}
+      >
+        <SheetContent className="overflow-y-auto sm:max-w-xl w-full">
+          <SheetHeader>
+            <SheetTitle>Quản lý trạm dừng</SheetTitle>
+            <SheetDescription>
+              Tuyến: {managingStopsRoute?.originStation.name} -{' '}
+              {managingStopsRoute?.destinationStation.name}
+            </SheetDescription>
+          </SheetHeader>
+          <div className="py-4">
+            {managingStopsRoute && <RouteStopsManager route={managingStopsRoute} />}
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 };

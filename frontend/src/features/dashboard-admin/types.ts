@@ -22,7 +22,7 @@ export type TransactionResponse = {
   passengerName: string;
   route: string;
   totalPrice: number;
-  status: "PENDING" | "CONFIRMED" | "CANCELLED" | "REFUNDED";
+  status: 'PENDING' | 'CONFIRMED' | 'CANCELLED' | 'REFUNDED';
   bookingTime: string;
 };
 

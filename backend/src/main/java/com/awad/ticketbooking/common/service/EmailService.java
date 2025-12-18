@@ -149,4 +149,64 @@ public class EmailService {
                         seats,
                         CURRENCY_FORMATTER.format(booking.getTotalPrice()));
     }
+
+    // @Async - Removed to ensure transactional consistency in scheduler
+    public void sendTripReminderEmail(Booking booking, String recipientEmail) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setFrom(fromEmail, fromName);
+            helper.setTo(recipientEmail);
+            helper.setSubject(
+                    "Nhắc nhở khởi hành - Chuyến đi " + booking.getTrip().getRoute().getOriginStation().getCity()
+                            + " - " + booking.getTrip().getRoute().getDestinationStation().getCity());
+
+            String content = """
+                    <!DOCTYPE html>
+                    <html>
+                    <body style="font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px;">
+                        <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
+                            <h2 style="color: #333333; text-align: center;">Nhắc nhở chuyến đi sắp tới</h2>
+                            <p>Xin chào <strong>%s</strong>,</p>
+                            <p>Đây là email nhắc nhở về chuyến đi của bạn vào ngày mai.</p>
+
+                            <div style="background-color: #e9ecef; padding: 15px; border-radius: 5px; margin: 20px 0;">
+                                <p style="margin: 5px 0;"><strong>Mã vé:</strong> %s</p>
+                                <p style="margin: 5px 0;"><strong>Tuyến đường:</strong> %s - %s</p>
+                                <p style="margin: 5px 0;"><strong>Thời gian:</strong> %s %s</p>
+                                <p style="margin: 5px 0;"><strong>Điểm đón:</strong> %s</p>
+                                <p style="margin: 5px 0;"><strong>Nhà xe:</strong> %s (%s)</p>
+                            </div>
+
+                            <p>Vui lòng có mặt tại điểm đón trước <strong>15-30 phút</strong>.</p>
+                            <p>Chúc bạn có một chuyến đi an toàn và vui vẻ!</p>
+
+                            <hr style="border: 0; border-top: 1px solid #eeeeee; margin: 20px 0;">
+                            <p style="font-size: 12px; color: #999999; text-align: center;">Đây là email tự động, vui lòng không trả lời.</p>
+                        </div>
+                    </body>
+                    </html>
+                    """
+                    .formatted(
+                            booking.getPassengerName(),
+                            booking.getCode(),
+                            booking.getTrip().getRoute().getOriginStation().getCity(),
+                            booking.getTrip().getRoute().getDestinationStation().getCity(),
+                            TIME_FORMATTER
+                                    .format(booking.getTrip().getDepartureTime().atZone(ZoneId.of("Asia/Ho_Chi_Minh"))),
+                            DATE_FORMATTER
+                                    .format(booking.getTrip().getDepartureTime().atZone(ZoneId.of("Asia/Ho_Chi_Minh"))),
+                            booking.getPickupStation().getName(),
+                            booking.getTrip().getBus().getOperator().getName(),
+                            booking.getTrip().getBus().getPlateNumber());
+
+            helper.setText(content, true);
+
+            mailSender.send(message);
+            log.info("Reminder email sent to: {}", recipientEmail);
+        } catch (MessagingException | java.io.UnsupportedEncodingException e) {
+            log.error("Failed to send reminder email to {}: {}", recipientEmail, e.getMessage());
+        }
+    }
 }

@@ -2,7 +2,7 @@ export type SummaryMetric = {
   label: string;
   value: string;
   trend: string;
-  trendDirection: "up" | "down";
+  trendDirection: 'up' | 'down';
 };
 
 export type ActivityItem = {
@@ -10,7 +10,7 @@ export type ActivityItem = {
   title: string;
   timestamp: string;
   description: string;
-  status: "success" | "warning" | "info";
+  status: 'success' | 'warning' | 'info';
 };
 
 export type DashboardResponse = {

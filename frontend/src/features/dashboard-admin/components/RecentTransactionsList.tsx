@@ -1,19 +1,20 @@
-"use client";
+'use client';
 
-import * as React from "react";
+import * as React from 'react';
+
 import {
   type ColumnDef,
+  type SortingState,
   flexRender,
   getCoreRowModel,
   getSortedRowModel,
-  type SortingState,
   useReactTable,
-} from "@tanstack/react-table";
-import { ArrowUpDown } from "lucide-react";
+} from '@tanstack/react-table';
+import { ArrowUpDown } from 'lucide-react';
 
-import { Card, CardContent, CardTitle, CardHeader } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Table,
   TableBody,
@@ -21,71 +22,71 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import type { TransactionResponse } from "../types";
+} from '@/components/ui/table';
+import type { TransactionResponse } from '@/model';
 
 interface RecentTransactionsListProps {
   transactions: TransactionResponse[];
 }
 
 const formatCurrency = (amount: number): string => {
-  return new Intl.NumberFormat("vi-VN", {
-    style: "currency",
-    currency: "VND",
+  return new Intl.NumberFormat('vi-VN', {
+    style: 'currency',
+    currency: 'VND',
   }).format(amount);
 };
 
 const formatDateTime = (dateStr: string): string => {
   const date = new Date(dateStr);
-  return new Intl.DateTimeFormat("vi-VN", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
+  return new Intl.DateTimeFormat('vi-VN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
   }).format(date);
 };
 
 const getStateBadgeVariant = (
-  status: TransactionResponse["status"],
-): "default" | "success" | "warning" => {
+  status: TransactionResponse['status'],
+): 'default' | 'success' | 'warning' => {
   switch (status) {
-    case "CONFIRMED":
-      return "success";
-    case "PENDING":
-      return "warning";
-    case "CANCELLED":
-    case "REFUNDED":
-      return "default";
+    case 'CONFIRMED':
+      return 'success';
+    case 'PENDING':
+      return 'warning';
+    case 'CANCELLED':
+    case 'REFUNDED':
+      return 'default';
     default:
-      return "default";
+      return 'default';
   }
 };
 
-const getStateLabel = (status: TransactionResponse["status"]): string => {
+const getStateLabel = (status: TransactionResponse['status']): string => {
   switch (status) {
-    case "CONFIRMED":
-      return "Đã xác nhận";
-    case "PENDING":
-      return "Đang chờ";
-    case "CANCELLED":
-      return "Đã hủy";
-    case "REFUNDED":
-      return "Đã hoàn tiền";
+    case 'CONFIRMED':
+      return 'Đã xác nhận';
+    case 'PENDING':
+      return 'Đang chờ';
+    case 'CANCELLED':
+      return 'Đã hủy';
+    case 'REFUNDED':
+      return 'Đã hoàn tiền';
     default:
-      return status;
+      return status ?? '—';
   }
 };
 
 const columns: ColumnDef<TransactionResponse>[] = [
   {
-    accessorKey: "id",
+    accessorKey: 'id',
     header: ({ column }) => {
       return (
         <div className="text-center">
           <Button
             variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
             className="h-8 px-2 lg:px-3"
           >
             Mã giao dịch
@@ -95,18 +96,21 @@ const columns: ColumnDef<TransactionResponse>[] = [
       );
     },
     cell: ({ row }) => (
-      <div className="text-center font-medium truncate max-w-[100px]" title={row.getValue("id")}>
-        {row.getValue("id")}
+      <div
+        className="text-center font-medium truncate max-w-[100px]"
+        title={String(row.getValue('id') ?? '')}
+      >
+        {String(row.getValue('id') ?? '—')}
       </div>
     ),
   },
   {
-    accessorKey: "passengerName",
+    accessorKey: 'passengerName',
     header: ({ column }) => {
       return (
         <Button
           variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
           className="h-8 px-2 lg:px-3"
         >
           Tên khách hàng
@@ -114,15 +118,15 @@ const columns: ColumnDef<TransactionResponse>[] = [
         </Button>
       );
     },
-    cell: ({ row }) => <div>{row.getValue("passengerName")}</div>,
+    cell: ({ row }) => <div>{row.getValue('passengerName')}</div>,
   },
   {
-    accessorKey: "route",
+    accessorKey: 'route',
     header: ({ column }) => {
       return (
         <Button
           variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
           className="h-8 px-2 lg:px-3"
         >
           Tuyến đường
@@ -130,16 +134,16 @@ const columns: ColumnDef<TransactionResponse>[] = [
         </Button>
       );
     },
-    cell: ({ row }) => <div>{row.getValue("route")}</div>,
+    cell: ({ row }) => <div>{row.getValue('route')}</div>,
   },
   {
-    accessorKey: "totalPrice",
+    accessorKey: 'totalPrice',
     header: ({ column }) => {
       return (
         <div className="text-right">
           <Button
             variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
             className="h-8 px-2 lg:px-3"
           >
             Tổng tiền
@@ -149,34 +153,30 @@ const columns: ColumnDef<TransactionResponse>[] = [
       );
     },
     cell: ({ row }) => {
-      const amount = parseFloat(row.getValue("totalPrice"));
-      return (
-        <div className="text-right font-medium">{formatCurrency(amount)}</div>
-      );
+      const amount = Number(row.getValue('totalPrice') ?? 0);
+      return <div className="text-right font-medium">{formatCurrency(amount)}</div>;
     },
   },
   {
-    accessorKey: "status",
+    accessorKey: 'status',
     header: () => <div className="text-center">Trạng thái</div>,
     cell: ({ row }) => {
-      const status = row.getValue("status") as TransactionResponse["status"];
+      const status = row.getValue('status') as TransactionResponse['status'];
       return (
         <div className="text-center">
-          <Badge variant={getStateBadgeVariant(status)}>
-            {getStateLabel(status)}
-          </Badge>
+          <Badge variant={getStateBadgeVariant(status)}>{getStateLabel(status)}</Badge>
         </div>
       );
     },
   },
   {
-    accessorKey: "bookingTime",
+    accessorKey: 'bookingTime',
     header: ({ column }) => {
       return (
         <div className="text-center">
           <Button
             variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
             className="h-8 px-2 lg:px-3"
           >
             Thời gian đặt
@@ -186,19 +186,17 @@ const columns: ColumnDef<TransactionResponse>[] = [
       );
     },
     cell: ({ row }) => {
-      const dateStr = row.getValue("bookingTime") as string;
+      const dateStr = row.getValue('bookingTime') as string | undefined;
       return (
         <div className="text-center text-muted-foreground">
-          {formatDateTime(dateStr)}
+          {dateStr ? formatDateTime(dateStr) : '—'}
         </div>
       );
     },
   },
 ];
 
-export const RecentTransactionsList = ({
-  transactions = [],
-}: RecentTransactionsListProps) => {
+export const RecentTransactionsList = ({ transactions = [] }: RecentTransactionsListProps) => {
   const [sorting, setSorting] = React.useState<SortingState>([]);
 
   const data = React.useMemo(() => transactions, [transactions]);
@@ -231,10 +229,7 @@ export const RecentTransactionsList = ({
                       <TableHead key={header.id}>
                         {header.isPlaceholder
                           ? null
-                          : flexRender(
-                              header.column.columnDef.header,
-                              header.getContext(),
-                            )}
+                          : flexRender(header.column.columnDef.header, header.getContext())}
                       </TableHead>
                     );
                   })}
@@ -244,26 +239,17 @@ export const RecentTransactionsList = ({
             <TableBody>
               {table.getRowModel().rows?.length ? (
                 table.getRowModel().rows.map((row) => (
-                  <TableRow
-                    key={row.id}
-                    data-state={row.getIsSelected() && "selected"}
-                  >
+                  <TableRow key={row.id} data-state={row.getIsSelected() && 'selected'}>
                     {row.getVisibleCells().map((cell) => (
                       <TableCell key={cell.id}>
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext(),
-                        )}
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
                       </TableCell>
                     ))}
                   </TableRow>
                 ))
               ) : (
                 <TableRow>
-                  <TableCell
-                    colSpan={columns.length}
-                    className="h-24 text-center"
-                  >
+                  <TableCell colSpan={columns.length} className="h-24 text-center">
                     Không có dữ liệu
                   </TableCell>
                 </TableRow>

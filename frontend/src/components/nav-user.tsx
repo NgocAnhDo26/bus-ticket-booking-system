@@ -1,16 +1,10 @@
-"use client";
+'use client';
 
-import {
-  BadgeCheck,
-  Bell,
-  ChevronsUpDown,
-  CreditCard,
-  LogOut,
-  Moon,
-  Sun,
-} from "lucide-react";
+import { useNavigate } from 'react-router-dom';
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { BadgeCheck, Bell, ChevronsUpDown, CreditCard, LogOut, Moon, Sun } from 'lucide-react';
+
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,17 +13,17 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from '@/components/ui/dropdown-menu';
 import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
-} from "@/components/ui/sidebar";
-import { useTheme } from "./theme-provider";
-import { useAuthStore } from "@/store/auth-store";
-import { useNavigate } from "react-router-dom";
-import { logout } from "@/features/auth/api";
+} from '@/components/ui/sidebar';
+import { logout } from '@/features/auth/api';
+import { useAuthStore } from '@/store/auth-store';
+
+import { useTheme } from './theme-provider';
 
 export function NavUser({
   user,
@@ -49,10 +43,10 @@ export function NavUser({
     try {
       await logout();
     } catch (error) {
-      console.error("Logout failed:", error);
+      console.error('Logout failed:', error);
     } finally {
       clearAuth();
-      navigate("/login");
+      navigate('/login');
     }
   };
 
@@ -78,7 +72,7 @@ export function NavUser({
           </DropdownMenuTrigger>
           <DropdownMenuContent
             className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
-            side={isMobile ? "bottom" : "right"}
+            side={isMobile ? 'bottom' : 'right'}
             align="end"
             sideOffset={4}
           >
@@ -97,16 +91,10 @@ export function NavUser({
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               <DropdownMenuItem
-                onClick={() =>
-                  theme.setTheme(theme.theme === "light" ? "dark" : "light")
-                }
+                onClick={() => theme.setTheme(theme.theme === 'light' ? 'dark' : 'light')}
               >
-                {theme.theme === "light" ? (
-                  <Moon className="size-4" />
-                ) : (
-                  <Sun className="size-4" />
-                )}
-                Chuyển sang chế độ {theme.theme === "light" ? "Tối" : "Sáng"}
+                {theme.theme === 'light' ? <Moon className="size-4" /> : <Sun className="size-4" />}
+                Chuyển sang chế độ {theme.theme === 'light' ? 'Tối' : 'Sáng'}
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />

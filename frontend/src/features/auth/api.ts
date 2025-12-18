@@ -1,37 +1,68 @@
-import { apiClient } from "@/lib/api-client";
-import { type UserProfile } from "@/types/user";
 import {
-  type AuthResponse,
+  login as orvalLogin,
+  loginWithGoogle as orvalLoginWithGoogle,
+  logout as orvalLogout,
+  register as orvalRegister,
+} from '@/features/api/authentication/authentication';
+import { me as orvalMe } from '@/features/api/users/users';
+import {
+  type ApiResponseAuthResponse,
+  type ApiResponseUserResponse,
   type GoogleLoginRequest,
   type LoginRequest,
   type RegisterRequest,
-} from "./types";
+  type UserResponse,
+} from '@/model';
+import { type UserProfile } from '@/types/user';
+
+type AuthData = {
+  accessToken: string;
+  user: UserProfile;
+};
+
+const toUserProfile = (user: UserResponse | undefined): UserProfile | null => {
+  if (!user?.id || !user.email || !user.fullName || !user.role) return null;
+  // Backend enum currently exposes PASSENGER/ADMIN; app also allows STAFF.
+  return {
+    id: user.id,
+    email: user.email,
+    fullName: user.fullName,
+    role: user.role as UserProfile['role'],
+    avatarUrl: user.avatarUrl ?? undefined,
+  };
+};
+
+const unwrapAuth = (resp: ApiResponseAuthResponse): AuthData => {
+  const accessToken = resp.data?.accessToken;
+  const user = toUserProfile(resp.data?.user);
+  if (!accessToken || !user) {
+    throw new Error(resp.message ?? 'Invalid auth response');
+  }
+  return { accessToken, user };
+};
 
 export const register = async (payload: RegisterRequest) => {
-  const response = await apiClient.post<AuthResponse>(
-    "/auth/register",
-    payload,
-  );
-  return response.data.data;
+  const resp = await orvalRegister(payload);
+  return unwrapAuth(resp);
 };
 
 export const login = async (payload: LoginRequest) => {
-  const response = await apiClient.post<AuthResponse>("/auth/login", payload);
-  return response.data.data;
+  const resp = await orvalLogin(payload);
+  return unwrapAuth(resp);
 };
 
 export const loginWithGoogle = async ({ credential }: GoogleLoginRequest) => {
-  const response = await apiClient.post<AuthResponse>("/auth/google", {
-    credential,
-  });
-  return response.data.data;
+  const resp = await orvalLoginWithGoogle({ credential });
+  return unwrapAuth(resp);
 };
 
 export const fetchCurrentUser = async () => {
-  const { data } = await apiClient.get<UserProfile>("/users/me");
-  return data;
+  const resp: ApiResponseUserResponse = await orvalMe();
+  const user = toUserProfile(resp.data);
+  if (!user) throw new Error(resp.message ?? 'Invalid user response');
+  return user;
 };
 
 export const logout = async () => {
-  await apiClient.post("/auth/logout");
+  await orvalLogout();
 };

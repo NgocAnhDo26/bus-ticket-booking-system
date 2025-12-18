@@ -1,5 +1,6 @@
-import { type ReactNode } from "react";
-import { Tickets } from "lucide-react";
+import { type ReactNode } from 'react';
+
+import { Tickets } from 'lucide-react';
 
 type AuthLayoutProps = {
   children: ReactNode;

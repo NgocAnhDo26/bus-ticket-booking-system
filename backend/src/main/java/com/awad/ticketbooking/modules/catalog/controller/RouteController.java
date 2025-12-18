@@ -44,8 +44,24 @@ public class RouteController {
 
     @org.springframework.web.bind.annotation.DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteRoute(@org.springframework.web.bind.annotation.PathVariable UUID id,
-            @org.springframework.web.bind.annotation.RequestParam(defaultValue = "false") boolean force) {
+                                            @org.springframework.web.bind.annotation.RequestParam(defaultValue = "false") boolean force) {
         routeService.deleteRoute(id, force);
         return ResponseEntity.noContent().build();
     }
+
+    @org.springframework.web.bind.annotation.PostMapping("/{id}/stops")
+    public ResponseEntity<com.awad.ticketbooking.modules.catalog.dto.RouteResponse> addRouteStop(
+            @org.springframework.web.bind.annotation.PathVariable UUID id,
+            @jakarta.validation.Valid @org.springframework.web.bind.annotation.RequestBody com.awad.ticketbooking.modules.catalog.dto.AddRouteStopRequest request) {
+        return ResponseEntity.ok(routeService.addRouteStop(id, request));
+    }
+
+    @org.springframework.web.bind.annotation.DeleteMapping("/{id}/stops/{stopId}")
+    public ResponseEntity<Void> deleteRouteStop(
+            @org.springframework.web.bind.annotation.PathVariable UUID id,
+            @org.springframework.web.bind.annotation.PathVariable UUID stopId) {
+        routeService.deleteRouteStop(id, stopId);
+        return ResponseEntity.noContent().build();
+    }
+
 }

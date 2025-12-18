@@ -30,13 +30,13 @@ public class OperatorController {
 
     @PutMapping("/{id}")
     public ResponseEntity<Operator> updateOperator(@PathVariable java.util.UUID id,
-            @Valid @RequestBody CreateOperatorRequest request) {
+                                                   @Valid @RequestBody CreateOperatorRequest request) {
         return ResponseEntity.ok(operatorService.updateOperator(id, request));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteOperator(@PathVariable java.util.UUID id,
-            @RequestParam(defaultValue = "false") boolean force) {
+                                               @RequestParam(defaultValue = "false") boolean force) {
         operatorService.deleteOperator(id, force);
         return ResponseEntity.noContent().build();
     }

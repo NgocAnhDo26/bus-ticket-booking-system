@@ -12,10 +12,19 @@ import org.springframework.data.redis.serializer.JacksonJsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 import java.time.Duration;
+import java.util.Map;
 
 @Configuration
 @EnableCaching
 public class RedisConfig {
+
+    public static final String CACHE_ADMIN_METRICS = "adminDashboard:metrics";
+    public static final String CACHE_ADMIN_REVENUE = "adminDashboard:revenue";
+    public static final String CACHE_ADMIN_BOOKING_TRENDS = "adminDashboard:bookingTrends";
+    public static final String CACHE_ADMIN_BOOKING_CONVERSION = "adminDashboard:bookingConversion";
+    public static final String CACHE_ADMIN_TOP_ROUTES = "adminDashboard:topRoutes";
+    public static final String CACHE_ADMIN_TOP_OPERATORS = "adminDashboard:topOperators";
+    public static final String CACHE_ADMIN_RECENT_TRANSACTIONS = "adminDashboard:recentTransactions";
 
     @Bean
     public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory connectionFactory) {
@@ -39,6 +48,15 @@ public class RedisConfig {
 
         return RedisCacheManager.builder(redisConnectionFactory)
                 .cacheDefaults(cacheConfiguration)
+                .withInitialCacheConfigurations(Map.of(
+                        CACHE_ADMIN_METRICS, cacheConfiguration.entryTtl(Duration.ofSeconds(30)),
+                        CACHE_ADMIN_RECENT_TRANSACTIONS, cacheConfiguration.entryTtl(Duration.ofSeconds(30)),
+                        CACHE_ADMIN_REVENUE, cacheConfiguration.entryTtl(Duration.ofMinutes(5)),
+                        CACHE_ADMIN_BOOKING_TRENDS, cacheConfiguration.entryTtl(Duration.ofMinutes(5)),
+                        CACHE_ADMIN_BOOKING_CONVERSION, cacheConfiguration.entryTtl(Duration.ofMinutes(5)),
+                        CACHE_ADMIN_TOP_ROUTES, cacheConfiguration.entryTtl(Duration.ofMinutes(10)),
+                        CACHE_ADMIN_TOP_OPERATORS, cacheConfiguration.entryTtl(Duration.ofMinutes(10))
+                ))
                 .build();
     }
 }

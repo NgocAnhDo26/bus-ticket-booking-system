@@ -1,12 +1,15 @@
-import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import { useShallow } from "zustand/react/shallow";
-import { useNavigate } from "react-router-dom";
-import { useEffect } from "react";
-import { useBusLayoutStore } from "../store/useBusLayoutStore";
-import { useCreateBusLayout, useUpdateBusLayout } from "../hooks";
-import { LayoutConfigForm } from "./LayoutConfigForm";
-import { SeatMapEditor } from "./SeatMapEditor";
+import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+
+import { toast } from 'sonner';
+import { useShallow } from 'zustand/react/shallow';
+
+import { Button } from '@/components/ui/button';
+
+import { useCreateBusLayout, useUpdateBusLayout } from '../hooks';
+import { useBusLayoutStore } from '../store/useBusLayoutStore';
+import { LayoutConfigForm } from './LayoutConfigForm';
+import { SeatMapEditor } from './SeatMapEditor';
 
 interface BusLayoutWizardProps {
   layoutId?: string;
@@ -14,20 +17,14 @@ interface BusLayoutWizardProps {
 
 export const BusLayoutWizard = ({ layoutId }: BusLayoutWizardProps) => {
   const navigate = useNavigate();
-  const {
-    step,
-    setStep,
-    resetStore,
-    config,
-    seats,
-  } = useBusLayoutStore(
+  const { step, setStep, resetStore, config, seats } = useBusLayoutStore(
     useShallow((state) => ({
       step: state.step,
       setStep: state.setStep,
       resetStore: state.resetStore,
       config: state.config,
       seats: state.seats,
-    }))
+    })),
   );
 
   const createLayout = useCreateBusLayout();
@@ -47,7 +44,7 @@ export const BusLayoutWizard = ({ layoutId }: BusLayoutWizardProps) => {
           onSuccess: () => {
             resetStore();
             setStep(1);
-            navigate("/admin/catalog/layouts");
+            navigate('/admin/catalog/layouts');
           },
         },
       );
@@ -61,7 +58,7 @@ export const BusLayoutWizard = ({ layoutId }: BusLayoutWizardProps) => {
           onSuccess: () => {
             resetStore();
             setStep(1);
-            navigate("/admin/catalog/layouts");
+            navigate('/admin/catalog/layouts');
           },
         },
       );
@@ -74,9 +71,7 @@ export const BusLayoutWizard = ({ layoutId }: BusLayoutWizardProps) => {
   useEffect(() => {
     if (error) {
       toast.error(
-        error instanceof Error
-          ? error.message
-          : "Không thể lưu layout, vui lòng thử lại.",
+        error instanceof Error ? error.message : 'Không thể lưu layout, vui lòng thử lại.',
       );
     }
   }, [error]);
@@ -93,15 +88,14 @@ export const BusLayoutWizard = ({ layoutId }: BusLayoutWizardProps) => {
               <Button variant="outline" onClick={() => setStep(1)}>
                 Quay lại cấu hình
               </Button>
-              {!layoutId && <Button variant="ghost" onClick={resetStore}>
-                Làm lại từ đầu
-              </Button>}
+              {!layoutId && (
+                <Button variant="ghost" onClick={resetStore}>
+                  Làm lại từ đầu
+                </Button>
+              )}
             </div>
-            <Button
-              onClick={handleSave}
-              disabled={isPending || seats.length === 0}
-            >
-              {isPending ? "Đang lưu..." : (layoutId ? "Cập nhật layout" : "Lưu layout")}
+            <Button onClick={handleSave} disabled={isPending || seats.length === 0}>
+              {isPending ? 'Đang lưu...' : layoutId ? 'Cập nhật layout' : 'Lưu layout'}
             </Button>
           </div>
         </div>

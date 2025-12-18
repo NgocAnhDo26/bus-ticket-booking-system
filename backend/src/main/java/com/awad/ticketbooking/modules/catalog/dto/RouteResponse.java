@@ -15,6 +15,7 @@ public class RouteResponse {
     private int durationMinutes;
     private BigDecimal distanceKm;
     private Boolean isActive;
+    private java.util.List<StopInfo> stops;
 
     @Data
     @Builder
@@ -23,5 +24,15 @@ public class RouteResponse {
         private String name;
         private String city;
         private String address;
+    }
+
+    @Data
+    @Builder
+    public static class StopInfo {
+        private UUID id;
+        private StationInfo station;
+        private int stopOrder;
+        private int durationMinutesFromOrigin;
+        private String stopType;
     }
 }

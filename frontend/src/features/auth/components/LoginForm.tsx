@@ -1,12 +1,14 @@
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { cn } from "@/lib/utils";
-import { type LoginFormValues } from "@/features/auth/schema";
-import { GoogleLogin } from "@react-oauth/google";
-import { type UseFormReturn } from "react-hook-form";
-import { Link } from "react-router-dom";
-import { Alert, AlertTitle } from "@/components/ui/alert";
+import { type UseFormReturn } from 'react-hook-form';
+import { Link } from 'react-router-dom';
+
+import { GoogleLogin } from '@react-oauth/google';
+
+import { Alert, AlertTitle } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { type LoginFormValues } from '@/features/auth/schema';
+import { cn } from '@/lib/utils';
 
 type Props = {
   form: UseFormReturn<LoginFormValues>;
@@ -27,7 +29,7 @@ export function LoginForm({
   onGoogleError,
   className,
   ...props
-}: Props & Omit<React.ComponentPropsWithoutRef<"form">, keyof Props>) {
+}: Props & Omit<React.ComponentPropsWithoutRef<'form'>, keyof Props>) {
   const {
     register,
     handleSubmit,
@@ -36,7 +38,7 @@ export function LoginForm({
 
   return (
     <form
-      className={cn("flex flex-col gap-6", className)}
+      className={cn('flex flex-col gap-6', className)}
       onSubmit={handleSubmit(onSubmit)}
       {...props}
     >
@@ -61,19 +63,14 @@ export function LoginForm({
             type="email"
             placeholder="m@example.com"
             autoComplete="email"
-            {...register("email")}
+            {...register('email')}
           />
-          {errors.email && (
-            <p className="text-sm text-destructive">{errors.email.message}</p>
-          )}
+          {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
         </div>
         <div className="grid gap-2">
           <div className="flex items-center">
             <Label htmlFor="password">Password</Label>
-            <a
-              href="#"
-              className="ml-auto text-sm underline-offset-4 hover:underline"
-            >
+            <a href="#" className="ml-auto text-sm underline-offset-4 hover:underline">
               Forgot your password?
             </a>
           </div>
@@ -81,16 +78,12 @@ export function LoginForm({
             id="password"
             type="password"
             autoComplete="current-password"
-            {...register("password")}
+            {...register('password')}
           />
-          {errors.password && (
-            <p className="text-sm text-destructive">
-              {errors.password.message}
-            </p>
-          )}
+          {errors.password && <p className="text-sm text-destructive">{errors.password.message}</p>}
         </div>
         <Button type="submit" className="w-full" disabled={isSubmitting}>
-          {isSubmitting ? "Signing in…" : "Sign in"}
+          {isSubmitting ? 'Signing in…' : 'Sign in'}
         </Button>
         <div className="relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t after:border-border">
           <span className="relative z-10 bg-background px-2 text-muted-foreground">
@@ -110,7 +103,7 @@ export function LoginForm({
         </div>
       </div>
       <div className="text-center text-sm">
-        Don&apos;t have an account?{" "}
+        Don&apos;t have an account?{' '}
         <Link to="/register" className="underline underline-offset-4">
           Sign up
         </Link>

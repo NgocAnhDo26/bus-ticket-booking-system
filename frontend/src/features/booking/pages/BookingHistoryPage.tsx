@@ -1,17 +1,20 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { useUserBookings, useCancelBooking } from "../hooks";
-import { BookingCard } from "../components/BookingCard";
-import { toast } from "@/hooks/use-toast";
-import { Ticket, ChevronLeft, ChevronRight } from "lucide-react";
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
+
+import { ChevronLeft, ChevronRight, Ticket } from 'lucide-react';
+
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
+import { toast } from '@/hooks/use-toast';
+
+import { BookingCard } from '../components/BookingCard';
+import { useCancelBooking, useUserBookings } from '../hooks';
 
 export const BookingHistoryPage = () => {
   const [page, setPage] = useState(0);
   const pageSize = 5;
-  
+
   const { data, isLoading, error } = useUserBookings(page, pageSize);
   const cancelMutation = useCancelBooking();
 
@@ -19,14 +22,14 @@ export const BookingHistoryPage = () => {
     try {
       await cancelMutation.mutateAsync(id);
       toast({
-        title: "Hủy vé thành công",
-        description: "Đặt vé của bạn đã được hủy.",
+        title: 'Hủy vé thành công',
+        description: 'Đặt vé của bạn đã được hủy.',
       });
     } catch {
       toast({
-        title: "Hủy vé thất bại",
-        description: "Có lỗi xảy ra, vui lòng thử lại.",
-        variant: "destructive",
+        title: 'Hủy vé thất bại',
+        description: 'Có lỗi xảy ra, vui lòng thử lại.',
+        variant: 'destructive',
       });
     }
   };
@@ -57,7 +60,9 @@ export const BookingHistoryPage = () => {
   }
 
   // Include PENDING so users can see them. Logic in BookingCard handles actions.
-  const bookings = (data?.content ?? []).filter((b) => ["CONFIRMED", "CANCELLED", "PENDING"].includes(b.status));
+  const bookings = (data?.content ?? []).filter((b) =>
+    ['CONFIRMED', 'CANCELLED', 'PENDING'].includes(b.status),
+  );
   const totalPages = data?.totalPages ?? 0;
   const totalElements = data?.totalElements ?? 0;
 
@@ -67,9 +72,7 @@ export const BookingHistoryPage = () => {
         <Ticket className="h-8 w-8 text-primary" />
         <div>
           <h1 className="text-2xl font-bold">Lịch sử đặt vé</h1>
-          <p className="text-muted-foreground">
-            Bạn có {totalElements} đặt vé
-          </p>
+          <p className="text-muted-foreground">Bạn có {totalElements} đặt vé</p>
         </div>
       </div>
 
@@ -78,9 +81,7 @@ export const BookingHistoryPage = () => {
           <CardContent className="pt-6 text-center py-12">
             <Ticket className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-medium mb-2">Chưa có đặt vé nào</h3>
-            <p className="text-muted-foreground mb-4">
-              Đặt vé ngay để bắt đầu hành trình của bạn.
-            </p>
+            <p className="text-muted-foreground mb-4">Đặt vé ngay để bắt đầu hành trình của bạn.</p>
             <Button asChild>
               <Link to="/">Tìm chuyến xe</Link>
             </Button>
