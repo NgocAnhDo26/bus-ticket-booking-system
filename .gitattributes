@@ -1,0 +1,13 @@
+# Tự động phát hiện các file text và chuẩn hóa về LF khi commit
+* text=auto
+
+# Ép các file code luôn sử dụng LF khi commit và checkout
+*.cs text eol=lf
+*.java text eol=lf
+*.js text eol=lf
+*.ts text eol=lf
+*.json text eol=lf
+
+# Giữ nguyên định dạng cho các file binary (ảnh, pdf...)
+*.png binary
+*.jpg binary
