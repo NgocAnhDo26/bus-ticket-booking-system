@@ -46,7 +46,13 @@ public interface BookingRepository extends JpaRepository<Booking, java.util.UUID
     @Query("SELECT b FROM Booking b ORDER BY b.createdAt DESC")
     List<Booking> findRecentBookings(Pageable pageable);
 
-    @Query("SELECT new map(function('date_trunc', 'day', b.createdAt) as date, SUM(b.totalPrice) as revenue) FROM Booking b WHERE b.createdAt BETWEEN :start AND :end AND b.status = 'CONFIRMED' GROUP BY function('date_trunc', 'day', b.createdAt) ORDER BY date")
+    @Query(
+            "SELECT function('date_trunc', 'day', b.createdAt) as date, SUM(b.totalPrice) as revenue " +
+            "FROM Booking b " +
+            "WHERE b.createdAt BETWEEN :start AND :end AND b.status = 'CONFIRMED' " +
+            "GROUP BY function('date_trunc', 'day', b.createdAt) " +
+            "ORDER BY date"
+    )
     List<Object[]> getRevenueChartData(@Param("start") Instant start, @Param("end") Instant end);
 
     @Query("SELECT b.trip.bus.operator, COUNT(b) as ticketCount, SUM(b.totalPrice) as totalRevenue FROM Booking b WHERE b.status = 'CONFIRMED' GROUP BY b.trip.bus.operator ORDER BY ticketCount DESC")

@@ -43,7 +43,6 @@ const allAdminNavItems: AdminNavItem[] = [
     title: 'Tổng quan',
     url: '/admin/dashboard',
     icon: LayoutDashboard,
-    isActive: true,
     isCollapsible: false,
     // Both ADMIN and STAFF can see dashboard
   },

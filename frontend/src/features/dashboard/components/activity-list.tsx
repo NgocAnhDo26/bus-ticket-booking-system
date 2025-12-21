@@ -3,10 +3,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 import { type ActivityItem } from '../types';
 
-const badgeVariantMap: Record<ActivityItem['status'], 'success' | 'warning' | 'default'> = {
-  success: 'success',
-  warning: 'warning',
-  info: 'default',
+const badgeVariantMap: Record<
+  ActivityItem['status'],
+  'default' | 'secondary' | 'destructive' | 'outline' | 'ghost' | 'link' | null | undefined
+> = {
+  success: 'default',
+  warning: 'secondary',
+  info: 'outline',
 };
 
 type ActivityListProps = {

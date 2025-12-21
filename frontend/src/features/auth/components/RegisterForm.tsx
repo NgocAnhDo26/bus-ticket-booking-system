@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 
 import { Alert, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { FormField } from '@/components/ui/form-field';
+import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { type RegisterFormValues } from '@/features/auth/schema';
 import { cn } from '@/lib/utils';
@@ -45,33 +45,41 @@ export function RegisterForm({
         </Alert>
       )}
 
-      <FormField label="Full name" error={errors.fullName?.message}>
+      <Field data-invalid={!!errors.fullName}>
+        <FieldLabel>Full name</FieldLabel>
         <Input placeholder="Jane Doe" {...register('fullName')} />
-      </FormField>
-      <FormField label="Email address" error={errors.email?.message}>
+        <FieldError>{errors.fullName?.message}</FieldError>
+      </Field>
+      <Field data-invalid={!!errors.email}>
+        <FieldLabel>Email address</FieldLabel>
         <Input
           type="email"
           placeholder="you@example.com"
           autoComplete="email"
           {...register('email')}
         />
-      </FormField>
-      <FormField label="Password" error={errors.password?.message}>
+        <FieldError>{errors.email?.message}</FieldError>
+      </Field>
+      <Field data-invalid={!!errors.password}>
+        <FieldLabel>Password</FieldLabel>
         <Input
           type="password"
           placeholder="••••••••"
           autoComplete="new-password"
           {...register('password')}
         />
-      </FormField>
-      <FormField label="Confirm password" error={errors.confirmPassword?.message}>
+        <FieldError>{errors.password?.message}</FieldError>
+      </Field>
+      <Field data-invalid={!!errors.confirmPassword}>
+        <FieldLabel>Confirm password</FieldLabel>
         <Input
           type="password"
           placeholder="••••••••"
           autoComplete="new-password"
           {...register('confirmPassword')}
         />
-      </FormField>
+        <FieldError>{errors.confirmPassword?.message}</FieldError>
+      </Field>
       <Button type="submit" className="w-full" disabled={isSubmitting}>
         {isSubmitting ? 'Creating account…' : 'Sign up'}
       </Button>

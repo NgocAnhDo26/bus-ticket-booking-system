@@ -37,12 +37,12 @@ export const TopRoutesTable = ({ routes, isLoading }: TopRoutesTableProps) => {
         <CardTitle>Tuyến phổ biến</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="rounded-md border">
+        <div className="rounded-md border bg-card overflow-x-auto">
           <Table>
-            <TableHeader>
+            <TableHeader className="bg-muted/50">
               <TableRow>
-                <TableHead>Tuyến</TableHead>
-                <TableHead className="text-right">Vé đã bán</TableHead>
+                <TableHead className="text-muted-foreground">Tuyến</TableHead>
+                <TableHead className="text-right text-muted-foreground">Vé đã bán</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -57,7 +57,7 @@ export const TopRoutesTable = ({ routes, isLoading }: TopRoutesTableProps) => {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={2} className="h-24 text-center">
+                  <TableCell colSpan={2} className="h-24 text-center text-muted-foreground">
                     Không có dữ liệu
                   </TableCell>
                 </TableRow>

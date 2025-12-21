@@ -21,7 +21,6 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,7 +28,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { FormField } from '@/components/ui/form-field';
+import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import {
   Sheet,
@@ -315,12 +314,12 @@ export const TripManagementPage = () => {
         cell: (trip) => {
           const statusMap: Record<
             string,
-            { label: string; variant: 'default' | 'success' | 'warning' }
+            { label: string; variant: 'default' | 'secondary' | 'destructive' }
           > = {
             SCHEDULED: { label: 'Sắp diễn ra', variant: 'default' },
-            COMPLETED: { label: 'Hoàn thành', variant: 'success' },
-            CANCELLED: { label: 'Đã hủy', variant: 'warning' },
-            DELAYED: { label: 'Hoãn', variant: 'warning' },
+            COMPLETED: { label: 'Hoàn thành', variant: 'default' },
+            CANCELLED: { label: 'Đã hủy', variant: 'destructive' },
+            DELAYED: { label: 'Hoãn', variant: 'secondary' },
           };
           const config = statusMap[trip.status] || {
             label: trip.status,
@@ -366,7 +365,12 @@ export const TripManagementPage = () => {
   return (
     <div className="flex flex-col gap-8 p-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold tracking-tight">Quản lý Chuyến đi</h1>
+        <div className="space-y-1">
+          <h1 className="text-2xl font-bold tracking-tight">Quản lý Chuyến đi</h1>
+          <p className="text-sm text-muted-foreground">
+            Danh sách các chuyến đi được cấu hình trong hệ thống.
+          </p>
+        </div>
         <Sheet
           open={isOpen}
           onOpenChange={(open) => {
@@ -398,7 +402,8 @@ export const TripManagementPage = () => {
             </SheetHeader>
             <div className="py-4">
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                <FormField label="Tuyến đường" error={errors.routeId?.message}>
+                <Field data-invalid={!!errors.routeId}>
+                  <FieldLabel>Tuyến đường</FieldLabel>
                   <select
                     className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                     {...register('routeId')}
@@ -410,8 +415,10 @@ export const TripManagementPage = () => {
                       </option>
                     ))}
                   </select>
-                </FormField>
-                <FormField label="Xe" error={errors.busId?.message}>
+                  <FieldError>{errors.routeId?.message}</FieldError>
+                </Field>
+                <Field data-invalid={!!errors.busId}>
+                  <FieldLabel>Xe</FieldLabel>
                   <select
                     className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                     {...register('busId')}
@@ -423,35 +430,38 @@ export const TripManagementPage = () => {
                       </option>
                     ))}
                   </select>
-                </FormField>
-                <FormField label="Thời gian đi" error={errors.departureTime?.message}>
+                  <FieldError>{errors.busId?.message}</FieldError>
+                </Field>
+                <Field data-invalid={!!errors.departureTime}>
+                  <FieldLabel>Thời gian đi</FieldLabel>
                   <Input type="datetime-local" {...register('departureTime')} />
-                </FormField>
-                <FormField label="Thời gian đến (Tự động tính)" error={errors.arrivalTime?.message}>
+                  <FieldError>{errors.departureTime?.message}</FieldError>
+                </Field>
+                <Field data-invalid={!!errors.arrivalTime}>
+                  <FieldLabel>Thời gian đến (Tự động tính)</FieldLabel>
                   <Input
                     type="datetime-local"
                     {...register('arrivalTime')}
                     readOnly
                     className="bg-muted"
                   />
-                </FormField>
+                  <FieldError>{errors.arrivalTime?.message}</FieldError>
+                </Field>
 
                 <div className="space-y-2">
                   <h3 className="text-sm font-medium">Giá vé</h3>
                   {fields.map((field, index) => (
                     <div key={field.id} className="flex gap-2 items-end">
-                      <FormField
-                        label={`Loại ghế: ${field.seatType}`}
-                        error={errors.pricings?.[index]?.price?.message}
-                        className="flex-1"
-                      >
+                      <Field data-invalid={!!errors.pricings?.[index]?.price} className="flex-1">
+                        <FieldLabel>Loại ghế: {field.seatType}</FieldLabel>
                         <Input
                           type="number"
                           {...register(`pricings.${index}.price`, {
                             valueAsNumber: true,
                           })}
                         />
-                      </FormField>
+                        <FieldError>{errors.pricings?.[index]?.price?.message}</FieldError>
+                      </Field>
                       <input type="hidden" {...register(`pricings.${index}.seatType`)} />
                     </div>
                   ))}
@@ -474,38 +484,31 @@ export const TripManagementPage = () => {
         </Sheet>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Danh sách Chuyến đi</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <GenericTable<Trip>
-            data={sortedPaged.data}
-            columns={columns}
-            isLoading={isLoadingTrips}
-            meta={meta}
-            pageIndex={meta.page}
-            pageSize={pageSize}
-            sorting={sorting}
-            onPageChange={setPageIndex}
-            onPageSizeChange={(size) => {
-              setPageSize(size);
-              setPageIndex(1);
-            }}
-            onSort={(key) =>
-              setSorting((prev) =>
-                prev.key === key
-                  ? {
-                      key,
-                      direction: prev.direction === 'asc' ? 'desc' : 'asc',
-                    }
-                  : { key, direction: 'asc' },
-              )
-            }
-            getRowId={(trip) => trip.id}
-          />
-        </CardContent>
-      </Card>
+      <GenericTable<Trip>
+        data={sortedPaged.data}
+        columns={columns}
+        isLoading={isLoadingTrips}
+        meta={meta}
+        pageIndex={meta.page}
+        pageSize={pageSize}
+        sorting={sorting}
+        onPageChange={setPageIndex}
+        onPageSizeChange={(size) => {
+          setPageSize(size);
+          setPageIndex(1);
+        }}
+        onSort={(key) =>
+          setSorting((prev) =>
+            prev.key === key
+              ? {
+                  key,
+                  direction: prev.direction === 'asc' ? 'desc' : 'asc',
+                }
+              : { key, direction: 'asc' },
+          )
+        }
+        getRowId={(trip) => trip.id}
+      />
 
       <AlertDialog open={!!deletingTrip} onOpenChange={(open) => !open && setDeletingTrip(null)}>
         <AlertDialogContent>
