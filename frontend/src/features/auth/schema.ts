@@ -1,19 +1,19 @@
 import { z } from 'zod';
 
 export const loginSchema = z.object({
-  email: z.string().email('Enter a valid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
+  email: z.string().email('Vui lòng nhập email hợp lệ'),
+  password: z.string().min(6, 'Mật khẩu phải có ít nhất 6 ký tự'),
 });
 
 export type LoginFormValues = z.infer<typeof loginSchema>;
 
 export const registerSchema = loginSchema
   .extend({
-    fullName: z.string().min(2, 'Enter your full name'),
-    confirmPassword: z.string().min(6, 'Confirm your password'),
+    fullName: z.string().min(2, 'Vui lòng nhập họ và tên'),
+    confirmPassword: z.string().min(6, 'Vui lòng nhập mật khẩu'),
   })
   .refine((data) => data.password === data.confirmPassword, {
-    message: 'Passwords do not match',
+    message: 'Mật khẩu không khớp',
     path: ['confirmPassword'],
   });
 
