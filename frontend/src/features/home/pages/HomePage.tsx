@@ -13,10 +13,10 @@ export const HomePage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
+    <div className="min-h-screen bg-linear-to-b from-background via-background to-muted/30">
       {/* Hero Section */}
       <div className="relative h-[500px] w-full bg-primary/10 flex flex-col items-center justify-center text-center px-4 overflow-hidden">
-        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?q=80&w=2069&auto=format&fit=crop')] bg-cover bg-center opacity-20" />
+        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?q=80&w=2069&auto=format&fit=crop')] bg-cover bg-center opacity-20 dark:opacity-10" />
         <div className="relative z-10 max-w-3xl mx-auto space-y-6">
           <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-primary">
             Vi vu khắp mọi nẻo đường
@@ -29,7 +29,7 @@ export const HomePage = () => {
       </div>
 
       {/* Search Section - Overlapping Hero */}
-      <div className="relative z-20 -mt-24 px-4">
+      <div className="relative z-20 -mt-26 px-4">
         <SearchForm />
       </div>
 
@@ -38,7 +38,7 @@ export const HomePage = () => {
         <h2 className="text-3xl font-bold text-center mb-12">Tại sao chọn chúng tôi?</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* Feature 1 */}
-          <div className="flex flex-col items-center text-center space-y-4 p-6 rounded-lg bg-white shadow-sm border">
+          <div className="flex flex-col items-center text-center space-y-4 p-6 rounded-lg bg-card shadow-sm border">
             <div className="p-3 rounded-full bg-primary/10 text-primary">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -62,7 +62,7 @@ export const HomePage = () => {
             </p>
           </div>
           {/* Feature 2 */}
-          <div className="flex flex-col items-center text-center space-y-4 p-6 rounded-lg bg-white shadow-sm border">
+          <div className="flex flex-col items-center text-center space-y-4 p-6 rounded-lg bg-card shadow-sm border">
             <div className="p-3 rounded-full bg-primary/10 text-primary">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -85,7 +85,7 @@ export const HomePage = () => {
             </p>
           </div>
           {/* Feature 3 */}
-          <div className="flex flex-col items-center text-center space-y-4 p-6 rounded-lg bg-white shadow-sm border">
+          <div className="flex flex-col items-center text-center space-y-4 p-6 rounded-lg bg-card shadow-sm border">
             <div className="p-3 rounded-full bg-primary/10 text-primary">
               <svg
                 xmlns="http://www.w3.org/2000/svg"

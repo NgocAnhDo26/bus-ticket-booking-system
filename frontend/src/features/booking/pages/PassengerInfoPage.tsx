@@ -4,6 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { ArrowLeft, Clock, Loader2, Mail, MapPin, Ticket, User } from 'lucide-react';
+import { toast } from 'sonner';
 import { useShallow } from 'zustand/react/shallow';
 
 import { Button } from '@/components/ui/button';
@@ -12,7 +13,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { getBusLayout } from '@/features/bus-layout/api';
-import { toast } from '@/hooks/use-toast';
 import { useAuthStore } from '@/store/auth-store';
 
 import { bookingApi, createBooking } from '../api';
@@ -137,17 +137,15 @@ export const PassengerInfoPage = () => {
       };
     });
     setTicketsDetails(newDetails);
-    toast({ title: 'Đã sao chép thông tin' });
+    toast.success('Đã sao chép thông tin');
   };
 
   const handleSubmit = async () => {
     if (!tripId) return;
 
     if (finalSeatDetails.length === 0) {
-      toast({
-        title: 'Chưa chọn ghế',
+      toast.error('Chưa chọn ghế', {
         description: 'Vui lòng quay lại chọn ghế trước.',
-        variant: 'destructive',
       });
       navigate(`/booking/${tripId}`);
       return;
@@ -155,29 +153,23 @@ export const PassengerInfoPage = () => {
 
     // Validate totalPrice is calculated correctly
     if (finalTotalPrice <= 0) {
-      toast({
-        title: 'Lỗi tính giá',
+      toast.error('Lỗi tính giá', {
         description: 'Không thể tính được tổng tiền. Vui lòng thử lại hoặc chọn lại ghế.',
-        variant: 'destructive',
       });
       navigate(`/booking/${tripId}`);
       return;
     }
 
     if (!contactName.trim() || !contactPhone.trim()) {
-      toast({
-        title: 'Thiếu thông tin liên hệ',
+      toast.error('Thiếu thông tin liên hệ', {
         description: 'Vui lòng nhập họ tên và số điện thoại người đặt.',
-        variant: 'destructive',
       });
       return;
     }
 
     if (!user && !contactEmail.trim()) {
-      toast({
-        title: 'Thiếu email',
+      toast.error('Thiếu email', {
         description: 'Vui lòng nhập email để nhận vé (bắt buộc với khách vãng lai).',
-        variant: 'destructive',
       });
       return;
     }
@@ -189,10 +181,8 @@ export const PassengerInfoPage = () => {
     });
 
     if (missingInfo) {
-      toast({
-        title: 'Thiếu thông tin hành khách',
+      toast.error('Thiếu thông tin hành khách', {
         description: `Vui lòng nhập đủ tên và SĐT cho ghế ${missingInfo.seatCode}`,
-        variant: 'destructive',
       });
       return;
     }
@@ -216,8 +206,7 @@ export const PassengerInfoPage = () => {
         })),
       });
 
-      toast({
-        title: 'Đang giữ vé cho bạn!',
+      toast.success('Đang giữ vé cho bạn!', {
         description: `Mã đặt vé: #${booking.code}. Vé sẽ được giữ trong 15 phút, vui lòng thanh toán để hoàn tất.`,
       });
 
@@ -232,10 +221,8 @@ export const PassengerInfoPage = () => {
 
       navigate(`/booking/confirmation/${booking.id}`);
     } catch {
-      toast({
-        title: 'Đặt vé thất bại',
+      toast.error('Đặt vé thất bại', {
         description: 'Có lỗi xảy ra, vui lòng thử lại.',
-        variant: 'destructive',
       });
     } finally {
       setIsSubmitting(false);
@@ -345,9 +332,7 @@ export const PassengerInfoPage = () => {
                             phone: contactPhone,
                           },
                         }));
-                        toast({
-                          title: `Đã sao chép cho ghế ${seat.seatCode}`,
-                        });
+                        toast.success(`Đã sao chép cho ghế ${seat.seatCode}`);
                       }}
                     >
                       Sao chép từ người đặt

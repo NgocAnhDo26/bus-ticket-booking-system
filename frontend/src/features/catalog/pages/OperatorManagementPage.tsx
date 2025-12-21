@@ -20,7 +20,6 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -28,7 +27,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { FormField } from '@/components/ui/form-field';
+import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import {
   Sheet,
@@ -250,7 +249,7 @@ export const OperatorManagementPage = () => {
         header: 'Trạng thái',
         sortable: true,
         cell: (operator) => (
-          <Badge variant={operator.isActive ? 'success' : 'default'}>
+          <Badge variant={operator.isActive ? 'default' : 'secondary'}>
             {operator.isActive ? 'Hoạt động' : 'Ngừng hoạt động'}
           </Badge>
         ),
@@ -292,7 +291,12 @@ export const OperatorManagementPage = () => {
   return (
     <div className="flex flex-col gap-8 p-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold tracking-tight">Quản lý Nhà xe</h1>
+        <div className="space-y-1">
+          <h1 className="text-2xl font-bold tracking-tight">Quản lý Nhà xe</h1>
+          <p className="text-sm text-muted-foreground">
+            Danh sách các nhà xe được cấu hình trong hệ thống.
+          </p>
+        </div>
         <Sheet
           open={isOpen}
           onOpenChange={(open) => {
@@ -320,18 +324,26 @@ export const OperatorManagementPage = () => {
             </SheetHeader>
             <div className="py-4">
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                <FormField label="Tên nhà xe" error={errors.name?.message}>
+                <Field data-invalid={!!errors.name}>
+                  <FieldLabel>Tên nhà xe</FieldLabel>
                   <Input placeholder="Phương Trang" {...register('name')} />
-                </FormField>
-                <FormField label="Số điện thoại" error={errors.phone?.message}>
+                  <FieldError>{errors.name?.message}</FieldError>
+                </Field>
+                <Field data-invalid={!!errors.phone}>
+                  <FieldLabel>Số điện thoại</FieldLabel>
                   <Input placeholder="0909..." {...register('phone')} />
-                </FormField>
-                <FormField label="Email" error={errors.email?.message}>
+                  <FieldError>{errors.phone?.message}</FieldError>
+                </Field>
+                <Field data-invalid={!!errors.email}>
+                  <FieldLabel>Email</FieldLabel>
                   <Input placeholder="contact@example.com" {...register('email')} />
-                </FormField>
-                <FormField label="Website" error={errors.website?.message}>
+                  <FieldError>{errors.email?.message}</FieldError>
+                </Field>
+                <Field data-invalid={!!errors.website}>
+                  <FieldLabel>Website</FieldLabel>
                   <Input placeholder="https://example.com" {...register('website')} />
-                </FormField>
+                  <FieldError>{errors.website?.message}</FieldError>
+                </Field>
                 <Button
                   type="submit"
                   className="w-full"
@@ -349,38 +361,31 @@ export const OperatorManagementPage = () => {
         </Sheet>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Danh sách Nhà xe</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <GenericTable<Operator>
-            data={sortedPaged.data}
-            columns={columns}
-            isLoading={isLoading}
-            meta={meta}
-            pageIndex={meta.page}
-            pageSize={pageSize}
-            sorting={sorting}
-            onPageChange={setPageIndex}
-            onPageSizeChange={(size) => {
-              setPageSize(size);
-              setPageIndex(1);
-            }}
-            onSort={(key) =>
-              setSorting((prev) =>
-                prev.key === key
-                  ? {
-                      key,
-                      direction: prev.direction === 'asc' ? 'desc' : 'asc',
-                    }
-                  : { key, direction: 'asc' },
-              )
-            }
-            getRowId={(operator) => operator.id}
-          />
-        </CardContent>
-      </Card>
+      <GenericTable<Operator>
+        data={sortedPaged.data}
+        columns={columns}
+        isLoading={isLoading}
+        meta={meta}
+        pageIndex={meta.page}
+        pageSize={pageSize}
+        sorting={sorting}
+        onPageChange={setPageIndex}
+        onPageSizeChange={(size) => {
+          setPageSize(size);
+          setPageIndex(1);
+        }}
+        onSort={(key) =>
+          setSorting((prev) =>
+            prev.key === key
+              ? {
+                  key,
+                  direction: prev.direction === 'asc' ? 'desc' : 'asc',
+                }
+              : { key, direction: 'asc' },
+          )
+        }
+        getRowId={(operator) => operator.id}
+      />
 
       <AlertDialog
         open={!!deletingOperator}

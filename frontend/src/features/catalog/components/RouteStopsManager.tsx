@@ -6,7 +6,7 @@ import * as z from 'zod';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { FormField } from '@/components/ui/form-field';
+import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import {
   Table,
@@ -147,7 +147,8 @@ export const RouteStopsManager = ({ route }: RouteStopsManagerProps) => {
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField label="Trạm dừng" error={errors.stationId?.message}>
+              <Field data-invalid={!!errors.stationId}>
+                <FieldLabel>Trạm dừng</FieldLabel>
                 <select
                   className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   {...register('stationId')}
@@ -159,9 +160,11 @@ export const RouteStopsManager = ({ route }: RouteStopsManagerProps) => {
                     </option>
                   ))}
                 </select>
-              </FormField>
+                <FieldError>{errors.stationId?.message}</FieldError>
+              </Field>
 
-              <FormField label="Loại điểm dừng" error={errors.stopType?.message}>
+              <Field data-invalid={!!errors.stopType}>
+                <FieldLabel>Loại điểm dừng</FieldLabel>
                 <select
                   className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   {...register('stopType')}
@@ -170,21 +173,23 @@ export const RouteStopsManager = ({ route }: RouteStopsManagerProps) => {
                   <option value="DROPOFF">Trả khách</option>
                   <option value="BOTH">Đón và Trả</option>
                 </select>
-              </FormField>
+                <FieldError>{errors.stopType?.message}</FieldError>
+              </Field>
 
-              <FormField label="Thứ tự" error={errors.stopOrder?.message}>
+              <Field data-invalid={!!errors.stopOrder}>
+                <FieldLabel>Thứ tự</FieldLabel>
                 <Input type="number" {...register('stopOrder', { valueAsNumber: true })} />
-              </FormField>
+                <FieldError>{errors.stopOrder?.message}</FieldError>
+              </Field>
 
-              <FormField
-                label="Thời gian từ điểm đi (phút)"
-                error={errors.durationMinutesFromOrigin?.message}
-              >
+              <Field data-invalid={!!errors.durationMinutesFromOrigin}>
+                <FieldLabel>Thời gian từ điểm đi (phút)</FieldLabel>
                 <Input
                   type="number"
                   {...register('durationMinutesFromOrigin', { valueAsNumber: true })}
                 />
-              </FormField>
+                <FieldError>{errors.durationMinutesFromOrigin?.message}</FieldError>
+              </Field>
             </div>
 
             <Button type="submit" disabled={addStop.isPending}>

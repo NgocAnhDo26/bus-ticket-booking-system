@@ -49,12 +49,12 @@ const formatDateTime = (dateStr: string): string => {
 
 const getStateBadgeVariant = (
   status: TransactionResponse['status'],
-): 'default' | 'success' | 'warning' => {
+): 'default' | 'secondary' | 'destructive' => {
   switch (status) {
     case 'CONFIRMED':
-      return 'success';
+      return 'default';
     case 'PENDING':
-      return 'warning';
+      return 'secondary';
     case 'CANCELLED':
     case 'REFUNDED':
       return 'default';
@@ -219,14 +219,14 @@ export const RecentTransactionsList = ({ transactions = [] }: RecentTransactions
         <CardTitle>Giao dịch gần đây</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="rounded-md border">
+        <div className="rounded-md border bg-card overflow-x-auto">
           <Table>
-            <TableHeader>
+            <TableHeader className="bg-muted/50">
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id}>
                   {headerGroup.headers.map((header) => {
                     return (
-                      <TableHead key={header.id}>
+                      <TableHead key={header.id} className="text-muted-foreground">
                         {header.isPlaceholder
                           ? null
                           : flexRender(header.column.columnDef.header, header.getContext())}
@@ -249,7 +249,10 @@ export const RecentTransactionsList = ({ transactions = [] }: RecentTransactions
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={columns.length} className="h-24 text-center">
+                  <TableCell
+                    colSpan={columns.length}
+                    className="h-24 text-center text-muted-foreground"
+                  >
                     Không có dữ liệu
                   </TableCell>
                 </TableRow>

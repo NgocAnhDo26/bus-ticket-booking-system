@@ -3,11 +3,11 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 
 import { useQueryClient } from '@tanstack/react-query';
 import { AlertCircle, CheckCircle2, Clock, Download, Home, XCircle } from 'lucide-react';
+import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { toast } from '@/hooks/use-toast';
 
 import { verifyPayment } from '../api';
 import { useBookingById, useCancelBooking, useCreatePayment } from '../hooks';
@@ -86,18 +86,15 @@ export const BookingConfirmationPage = () => {
           await verifyPayment(bookingId);
           // Refetch booking to get updated status
           queryClient.invalidateQueries({ queryKey: ['booking', bookingId] });
-          toast({
-            title: 'Thanh toán thành công!',
+          toast.success('Thanh toán thành công!', {
             description: 'Đặt vé của bạn đã được xác nhận.',
           });
           // Clean URL params
           window.history.replaceState({}, '', window.location.pathname);
         } catch (err: unknown) {
           console.error('Verify payment failed:', err);
-          toast({
-            title: 'Lỗi xác nhận thanh toán',
+          toast.error('Lỗi xác nhận thanh toán', {
             description: 'Không thể xác nhận thanh toán. Vui lòng liên hệ hỗ trợ.',
-            variant: 'destructive',
           });
         } finally {
           setIsVerifying(false);
@@ -107,18 +104,14 @@ export const BookingConfirmationPage = () => {
       // Execute async verification
       verify();
     } else if (status === 'CANCELLED' || searchParams.get('cancel') === 'true') {
-      toast({
-        title: 'Thanh toán bị hủy',
+      toast.error('Thanh toán bị hủy', {
         description: 'Bạn đã hủy thanh toán. Vui lòng thử lại nếu muốn tiếp tục đặt vé.',
-        variant: 'destructive',
       });
       // Clean URL params
       window.history.replaceState({}, '', window.location.pathname);
     } else if (status === 'EXPIRED') {
-      toast({
-        title: 'Thanh toán hết hạn',
+      toast.error('Thanh toán hết hạn', {
         description: 'Phiên thanh toán đã hết hạn. Vui lòng tạo thanh toán mới.',
-        variant: 'destructive',
       });
       // Clean URL params
       window.history.replaceState({}, '', window.location.pathname);
@@ -130,10 +123,8 @@ export const BookingConfirmationPage = () => {
         '03': 'Thẻ đã hết hạn hoặc bị khóa',
         '04': 'Lỗi kết nối ngân hàng',
       };
-      toast({
-        title: 'Thanh toán thất bại',
+      toast.error('Thanh toán thất bại', {
         description: errorMessages[code] || `Lỗi thanh toán (mã: ${code}). Vui lòng thử lại.`,
-        variant: 'destructive',
       });
       // Clean URL params
       window.history.replaceState({}, '', window.location.pathname);
@@ -154,10 +145,8 @@ export const BookingConfirmationPage = () => {
         window.location.href = payment.checkoutUrl;
       }
     } catch {
-      toast({
-        title: 'Tạo thanh toán thất bại',
+      toast.error('Tạo thanh toán thất bại', {
         description: 'Có lỗi xảy ra, vui lòng thử lại.',
-        variant: 'destructive',
       });
     }
   };
@@ -166,15 +155,12 @@ export const BookingConfirmationPage = () => {
     if (!bookingId) return;
     try {
       await cancelMutation.mutateAsync(bookingId);
-      toast({
-        title: 'Hủy vé thành công',
+      toast.success('Hủy vé thành công', {
         description: 'Đặt vé của bạn đã được hủy.',
       });
     } catch {
-      toast({
-        title: 'Hủy vé thất bại',
+      toast.error('Hủy vé thất bại', {
         description: 'Có lỗi xảy ra, vui lòng thử lại.',
-        variant: 'destructive',
       });
     }
   };

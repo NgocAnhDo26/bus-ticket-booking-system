@@ -103,9 +103,9 @@ export const FilterSidebar = () => {
 
   return (
     <div className="w-full md:w-64 space-y-6">
-      <div className="bg-white p-4 rounded-lg shadow-sm border">
+      <div className="bg-card p-4 rounded-lg shadow-sm border">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="font-semibold">Bộ lọc tìm kiếm</h3>
+          <h3 className="font-semibold text-foreground">Bộ lọc tìm kiếm</h3>
           <Button variant="ghost" size="sm" onClick={handleApplyFilters}>
             Áp dụng
           </Button>
@@ -114,7 +114,7 @@ export const FilterSidebar = () => {
         <div className="space-y-6">
           {/* Price Filter */}
           <div className="space-y-4">
-            <h4 className="text-sm font-medium">Giá vé</h4>
+            <h4 className="text-sm font-medium text-foreground">Giá vé</h4>
             <Slider
               defaultValue={[0, 2000000]}
               max={2000000}
@@ -130,7 +130,7 @@ export const FilterSidebar = () => {
 
           {/* Time Filter */}
           <div className="space-y-3">
-            <h4 className="text-sm font-medium">Giờ đi</h4>
+            <h4 className="text-sm font-medium text-foreground">Giờ đi</h4>
             {timeRanges.map((time) => (
               <div key={time.id} className="flex items-center space-x-2">
                 <Checkbox
@@ -147,7 +147,7 @@ export const FilterSidebar = () => {
 
           {/* Operator Filter */}
           <div className="space-y-3">
-            <h4 className="text-sm font-medium">Nhà xe</h4>
+            <h4 className="text-sm font-medium text-foreground">Nhà xe</h4>
             {operators?.map((op) => (
               <div key={op.id} className="flex items-center space-x-2">
                 <Checkbox

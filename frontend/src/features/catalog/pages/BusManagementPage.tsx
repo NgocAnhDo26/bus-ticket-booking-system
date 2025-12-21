@@ -20,7 +20,6 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
   DropdownMenu,
@@ -29,7 +28,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { FormField } from '@/components/ui/form-field';
+import { Field, FieldDescription, FieldError, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -242,7 +241,7 @@ export const BusManagementPage = () => {
         cell: (bus) => (
           <div className="flex flex-wrap gap-1">
             {bus.amenities?.map((amenity, index) => (
-              <Badge key={index} className="text-xs">
+              <Badge key={index} className="text-xs" variant="outline">
                 {amenity}
               </Badge>
             ))}
@@ -254,7 +253,7 @@ export const BusManagementPage = () => {
         header: 'Trạng thái',
         sortable: true,
         cell: (bus) => (
-          <Badge variant={bus.isActive ? 'success' : 'default'}>
+          <Badge variant={bus.isActive ? 'default' : 'secondary'}>
             {bus.isActive ? 'Hoạt động' : 'Bảo trì'}
           </Badge>
         ),
@@ -296,7 +295,12 @@ export const BusManagementPage = () => {
   return (
     <div className="flex flex-col gap-8 p-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold tracking-tight">Quản lý Xe</h1>
+        <div className="space-y-1">
+          <h1 className="text-2xl font-bold tracking-tight">Quản lý Xe</h1>
+          <p className="text-sm text-muted-foreground">
+            Danh sách các xe được cấu hình trong hệ thống.
+          </p>
+        </div>
         <Sheet
           open={isOpen}
           onOpenChange={(open) => {
@@ -322,19 +326,21 @@ export const BusManagementPage = () => {
               <SheetTitle>{editingBus ? 'Cập nhật Xe' : 'Thêm Xe mới'}</SheetTitle>
               <SheetDescription>Nhập thông tin chi tiết về xe mới.</SheetDescription>
             </SheetHeader>
-            <div className="py-4">
+            <div className="p-4">
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                <FormField label="Biển số xe" error={errors.plateNumber?.message}>
+                <Field data-invalid={!!errors.plateNumber}>
+                  <FieldLabel>Biển số xe</FieldLabel>
                   <Input placeholder="51B-123.45" {...register('plateNumber')} />
-                </FormField>
-                <FormField
-                  label="Layout ID"
-                  hint="Nhập UUID của layout đã tạo"
-                  error={errors.busLayoutId?.message}
-                >
+                  <FieldError>{errors.plateNumber?.message}</FieldError>
+                </Field>
+                <Field data-invalid={!!errors.busLayoutId}>
+                  <FieldLabel>Layout ID</FieldLabel>
+                  <FieldDescription>Nhập UUID của layout đã tạo</FieldDescription>
                   <Input placeholder="Layout UUID" {...register('busLayoutId')} />
-                </FormField>
-                <FormField label="Nhà xe" error={errors.operatorId?.message}>
+                  <FieldError>{errors.busLayoutId?.message}</FieldError>
+                </Field>
+                <Field data-invalid={!!errors.operatorId}>
+                  <FieldLabel>Nhà xe</FieldLabel>
                   <select
                     className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                     {...register('operatorId')}
@@ -346,7 +352,8 @@ export const BusManagementPage = () => {
                       </option>
                     ))}
                   </select>
-                </FormField>
+                  <FieldError>{errors.operatorId?.message}</FieldError>
+                </Field>
                 <div className="space-y-2">
                   <Label>Tiện ích</Label>
                   <div className="grid grid-cols-2 gap-2">
@@ -381,39 +388,32 @@ export const BusManagementPage = () => {
         </Sheet>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Danh sách Xe</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <GenericTable<Bus>
-            data={sortedPaged.data}
-            columns={columns}
-            isLoading={isLoadingBuses}
-            meta={meta}
-            pageIndex={meta.page}
-            pageSize={pageSize}
-            sorting={sorting}
-            onPageChange={(page) => setPageIndex(page)}
-            onPageSizeChange={(size) => {
-              setPageSize(size);
-              setPageIndex(1);
-            }}
-            onSort={(key) =>
-              setSorting((prev) => {
-                if (prev.key === key) {
-                  return {
-                    key,
-                    direction: prev.direction === 'asc' ? 'desc' : 'asc',
-                  };
-                }
-                return { key, direction: 'asc' };
-              })
+      <GenericTable<Bus>
+        data={sortedPaged.data}
+        columns={columns}
+        isLoading={isLoadingBuses}
+        meta={meta}
+        pageIndex={meta.page}
+        pageSize={pageSize}
+        sorting={sorting}
+        onPageChange={(page) => setPageIndex(page)}
+        onPageSizeChange={(size) => {
+          setPageSize(size);
+          setPageIndex(1);
+        }}
+        onSort={(key) =>
+          setSorting((prev) => {
+            if (prev.key === key) {
+              return {
+                key,
+                direction: prev.direction === 'asc' ? 'desc' : 'asc',
+              };
             }
-            getRowId={(bus) => bus.id}
-          />
-        </CardContent>
-      </Card>
+            return { key, direction: 'asc' };
+          })
+        }
+        getRowId={(bus) => bus.id}
+      />
 
       <AlertDialog open={!!deletingBus} onOpenChange={(open) => !open && setDeletingBus(null)}>
         <AlertDialogContent>
