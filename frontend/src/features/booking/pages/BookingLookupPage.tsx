@@ -48,7 +48,7 @@ export const BookingLookupPage = () => {
   return (
     <div className="container mx-auto p-4 flex items-center justify-center min-h-[calc(100vh-4rem)]">
       <Card className="w-full max-w-md shadow-lg border-t-4 border-t-primary">
-        <CardHeader className="text-center">
+        <CardHeader className="text-center mb-4">
           <div className="mx-auto bg-primary/10 w-12 h-12 rounded-full flex items-center justify-center mb-2">
             <Ticket className="h-6 w-6 text-primary" />
           </div>
@@ -82,7 +82,12 @@ export const BookingLookupPage = () => {
           </CardContent>
 
           <CardFooter>
-            <Button type="submit" className="w-full" size="lg" disabled={lookupMutation.isPending}>
+            <Button
+              type="submit"
+              className="w-full mt-8"
+              size="lg"
+              disabled={lookupMutation.isPending}
+            >
               {lookupMutation.isPending ? (
                 'Đang tìm kiếm...'
               ) : (

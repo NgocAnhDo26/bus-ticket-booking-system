@@ -70,7 +70,7 @@ export const LoginPage = () => {
         onSubmit={onSubmit}
         onGoogleLogin={(credential) => googleMutation.mutate({ credential })}
         onGoogleError={() => {
-          setError('Google login failed');
+          setError('Lỗi khi đăng nhập với Google');
         }}
       />
     </AuthLayout>
