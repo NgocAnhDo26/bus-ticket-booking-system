@@ -2,8 +2,11 @@ package com.awad.ticketbooking.common.config;
 
 import com.awad.ticketbooking.common.config.security.CustomUserDetailsService;
 import com.awad.ticketbooking.common.config.security.JwtAuthenticationFilter;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -22,6 +25,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+@Slf4j
 @Configuration
 @RequiredArgsConstructor
 @EnableMethodSecurity
@@ -111,7 +115,39 @@ public class SecurityConfig {
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource(
-            @Value("${app.cors.allowed-origins}") List<String> allowedOrigins) {
+            @Value("${app.cors.allowed-origins}") String allowedOriginsProperty) {
+
+        log.info("Raw CORS allowed-origins property: {}", allowedOriginsProperty);
+
+        // Parse comma-separated list (handles both List<String> from @Value and single string)
+        List<String> allowedOrigins;
+        if (allowedOriginsProperty.contains(",")) {
+            allowedOrigins = Arrays.stream(allowedOriginsProperty.split(","))
+                    .map(String::trim)
+                    .collect(Collectors.toList());
+        } else {
+            allowedOrigins = List.of(allowedOriginsProperty.trim());
+        }
+
+        log.info("Parsed CORS allowed origins: {}", allowedOrigins);
+
+        // Normalize origins: trim whitespace, remove trailing slashes (CORS origin doesn't include path)
+        List<String> validOrigins = allowedOrigins.stream()
+                .map(String::trim)
+                .map(origin -> origin.endsWith("/") ? origin.substring(0, origin.length() - 1) : origin)
+                .filter(origin -> !origin.equals("*") && !origin.isEmpty())
+                .distinct()
+                .collect(Collectors.toList());
+
+        log.info("Normalized CORS allowed origins: {}", validOrigins);
+
+        if (validOrigins.isEmpty()) {
+            throw new IllegalStateException(
+                    "app.cors.allowed-origins must contain at least one specific origin (not '*'). " +
+                    "When credentials are enabled, wildcard '*' is not allowed. " +
+                    "Current value: '" + allowedOriginsProperty + "'. " +
+                    "Example: app.cors.allowed-origins=http://localhost:5173,https://your-vercel-app.vercel.app");
+        }
 
         // Webhook endpoints - allow all origins (PayOS server)
         CorsConfiguration webhookConfig = new CorsConfiguration();
@@ -122,7 +158,7 @@ public class SecurityConfig {
 
         // Regular endpoints - restrict to allowed origins
         CorsConfiguration defaultConfig = new CorsConfiguration();
-        defaultConfig.setAllowedOrigins(allowedOrigins);
+        defaultConfig.setAllowedOrigins(validOrigins);
         defaultConfig.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         defaultConfig.setAllowedHeaders(List.of("*"));
         defaultConfig.setAllowCredentials(true);
