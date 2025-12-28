@@ -75,8 +75,8 @@ public class AuthController {
         ResponseCookie deleteCookie = ResponseCookie.from(REFRESH_COOKIE, "")
                 .path("/")
                 .httpOnly(true)
-                .secure(false)
-                .sameSite("Lax")
+                .secure(true) // Required for SameSite=None (cross-site cookies)
+                .sameSite("None") // Allow cross-site cookies
                 .maxAge(0)
                 .build();
         response.addHeader(HttpHeaders.SET_COOKIE, deleteCookie.toString());
@@ -86,8 +86,8 @@ public class AuthController {
     private ResponseEntity<ApiResponse<AuthResponse>> buildTokenResponse(AuthService.AuthResult result) {
         ResponseCookie cookie = ResponseCookie.from(REFRESH_COOKIE, result.refreshToken())
                 .httpOnly(true)
-                .secure(false)
-                .sameSite("Lax")
+                .secure(true) // Required for SameSite=None (cross-site cookies)
+                .sameSite("None") // Allow cross-site cookies
                 .path("/")
                 .maxAge(jwtProperties.refreshTokenTtl())
                 .build();
