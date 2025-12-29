@@ -25,7 +25,9 @@ import {
   updateRoute,
   updateStation,
   updateTrip,
+  updateTripStops,
 } from './api';
+import { fetchBusLayouts } from './api';
 import type {
   AddRouteStopRequest,
   CreateBusRequest,
@@ -34,6 +36,7 @@ import type {
   CreateStationRequest,
   CreateTripRequest,
   SearchTripRequest,
+  UpdateTripStopsRequest,
 } from './types';
 
 // Stations
@@ -258,10 +261,28 @@ export const useDeleteTrip = () => {
   });
 };
 
+export const useUpdateTripStops = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: UpdateTripStopsRequest }) =>
+      updateTripStops(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['trips'] });
+    },
+  });
+};
+
 export const useSearchTrips = (params: SearchTripRequest) => {
   return useQuery({
     queryKey: ['trips', 'search', params],
     queryFn: () => searchTrips(params),
     enabled: !!params.origin && !!params.destination && !!params.date,
+  });
+};
+
+export const useBusLayouts = () => {
+  return useQuery({
+    queryKey: ['busLayouts'],
+    queryFn: fetchBusLayouts,
   });
 };

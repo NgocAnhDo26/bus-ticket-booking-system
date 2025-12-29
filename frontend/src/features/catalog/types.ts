@@ -36,18 +36,21 @@ export type CreateOperatorRequest = {
   isActive?: boolean;
 };
 
+export type BusLayout = {
+  id: string;
+  name: string;
+  busType: string;
+  totalSeats: number;
+  totalFloors: number;
+  description?: string;
+  layoutMatrix?: { rows: unknown[]; totalRows: number; totalCols: number }; // Optional for full details
+};
+
 export type Bus = {
   id: string;
   operator: Operator;
   plateNumber: string;
-  busLayout: {
-    id: string;
-    name: string;
-    busType: string;
-    totalSeats: number;
-    totalFloors: number;
-    description?: string;
-  };
+  busLayout: BusLayout;
   amenities: string[];
   isActive: boolean;
   createdAt: string;
@@ -71,7 +74,9 @@ export type Route = {
   createdAt: string;
   stops: {
     id: string;
-    station: Station;
+    station?: Station; // Optional - can be null for custom address stops
+    customName?: string; // Used when station is null
+    customAddress?: string; // Used when station is null
     stopOrder: number;
     durationMinutesFromOrigin: number;
     stopType: 'PICKUP' | 'DROPOFF' | 'BOTH';
@@ -157,4 +162,17 @@ export type SearchTripRequest = {
   sortBy?: string;
   page?: number;
   size?: number;
+};
+
+export type TripStopDto = {
+  stationId?: string; // Optional - either stationId or customAddress required
+  customName?: string; // Used when stationId is null
+  customAddress?: string; // Used when stationId is null
+  stopOrder: number;
+  durationMinutesFromOrigin: number;
+  stopType: 'PICKUP' | 'DROPOFF' | 'BOTH';
+};
+
+export type UpdateTripStopsRequest = {
+  stops: TripStopDto[];
 };

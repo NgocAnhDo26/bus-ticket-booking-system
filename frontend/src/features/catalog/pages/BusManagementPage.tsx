@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
   DropdownMenu,
@@ -28,7 +29,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Field, FieldDescription, FieldError, FieldLabel } from '@/components/ui/field';
+import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -40,7 +41,14 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet';
 
-import { useBuses, useCreateBus, useDeleteBus, useOperators, useUpdateBus } from '../hooks';
+import {
+  useBusLayouts,
+  useBuses,
+  useCreateBus,
+  useDeleteBus,
+  useOperators,
+  useUpdateBus,
+} from '../hooks';
 import type { Bus } from '../types';
 
 const AMENITIES_LIST = ['WiFi', 'Máy lạnh', 'Cổng USB', 'Chăn đắp', 'Nước uống', 'Toilet', 'TV'];
@@ -59,6 +67,7 @@ export const BusManagementPage = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { data: buses, isLoading: isLoadingBuses } = useBuses();
   const { data: operators } = useOperators();
+  const { data: busLayouts } = useBusLayouts();
   const createBus = useCreateBus();
   const updateBus = useUpdateBus();
   const deleteBus = useDeleteBus();
@@ -241,7 +250,7 @@ export const BusManagementPage = () => {
         cell: (bus) => (
           <div className="flex flex-wrap gap-1">
             {bus.amenities?.map((amenity, index) => (
-              <Badge key={index} className="text-xs" variant="outline">
+              <Badge key={index} className="text-xs">
                 {amenity}
               </Badge>
             ))}
@@ -295,15 +304,10 @@ export const BusManagementPage = () => {
   return (
     <div className="flex flex-col gap-8 p-4">
       <div className="flex items-center justify-between">
-        <div className="space-y-1">
-          <h1 className="text-2xl font-bold tracking-tight">Quản lý Xe</h1>
-          <p className="text-sm text-muted-foreground">
-            Danh sách các xe được cấu hình trong hệ thống.
-          </p>
-        </div>
+        <h1 className="text-2xl font-bold tracking-tight">Quản lý Xe</h1>
         <Sheet
           open={isOpen}
-          onOpenChange={(open) => {
+          onOpenChange={(open: boolean) => {
             setIsOpen(open);
             if (!open) {
               setEditingBus(null);
@@ -326,20 +330,29 @@ export const BusManagementPage = () => {
               <SheetTitle>{editingBus ? 'Cập nhật Xe' : 'Thêm Xe mới'}</SheetTitle>
               <SheetDescription>Nhập thông tin chi tiết về xe mới.</SheetDescription>
             </SheetHeader>
-            <div className="p-4">
+            <div className="py-4">
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                <Field data-invalid={!!errors.plateNumber}>
+                <Field>
                   <FieldLabel>Biển số xe</FieldLabel>
                   <Input placeholder="51B-123.45" {...register('plateNumber')} />
                   <FieldError>{errors.plateNumber?.message}</FieldError>
                 </Field>
-                <Field data-invalid={!!errors.busLayoutId}>
-                  <FieldLabel>Layout ID</FieldLabel>
-                  <FieldDescription>Nhập UUID của layout đã tạo</FieldDescription>
-                  <Input placeholder="Layout UUID" {...register('busLayoutId')} />
+                <Field>
+                  <FieldLabel>Loại ghế / Sơ đồ</FieldLabel>
+                  <select
+                    className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    {...register('busLayoutId')}
+                  >
+                    <option value="">Chọn sơ đồ xe...</option>
+                    {busLayouts?.map((layout) => (
+                      <option key={layout.id} value={layout.id}>
+                        {layout.name} ({layout.totalSeats} ghế, {layout.busType})
+                      </option>
+                    ))}
+                  </select>
                   <FieldError>{errors.busLayoutId?.message}</FieldError>
                 </Field>
-                <Field data-invalid={!!errors.operatorId}>
+                <Field>
                   <FieldLabel>Nhà xe</FieldLabel>
                   <select
                     className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
@@ -388,34 +401,44 @@ export const BusManagementPage = () => {
         </Sheet>
       </div>
 
-      <GenericTable<Bus>
-        data={sortedPaged.data}
-        columns={columns}
-        isLoading={isLoadingBuses}
-        meta={meta}
-        pageIndex={meta.page}
-        pageSize={pageSize}
-        sorting={sorting}
-        onPageChange={(page) => setPageIndex(page)}
-        onPageSizeChange={(size) => {
-          setPageSize(size);
-          setPageIndex(1);
-        }}
-        onSort={(key) =>
-          setSorting((prev) => {
-            if (prev.key === key) {
-              return {
-                key,
-                direction: prev.direction === 'asc' ? 'desc' : 'asc',
-              };
+      <Card>
+        <CardHeader>
+          <CardTitle>Danh sách Xe</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <GenericTable<Bus>
+            data={sortedPaged.data}
+            columns={columns}
+            isLoading={isLoadingBuses}
+            meta={meta}
+            pageIndex={meta.page}
+            pageSize={pageSize}
+            sorting={sorting}
+            onPageChange={(page) => setPageIndex(page)}
+            onPageSizeChange={(size) => {
+              setPageSize(size);
+              setPageIndex(1);
+            }}
+            onSort={(key) =>
+              setSorting((prev) => {
+                if (prev.key === key) {
+                  return {
+                    key,
+                    direction: prev.direction === 'asc' ? 'desc' : 'asc',
+                  };
+                }
+                return { key, direction: 'asc' };
+              })
             }
-            return { key, direction: 'asc' };
-          })
-        }
-        getRowId={(bus) => bus.id}
-      />
+            getRowId={(bus) => bus.id}
+          />
+        </CardContent>
+      </Card>
 
-      <AlertDialog open={!!deletingBus} onOpenChange={(open) => !open && setDeletingBus(null)}>
+      <AlertDialog
+        open={!!deletingBus}
+        onOpenChange={(open: boolean) => !open && setDeletingBus(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Bạn có chắc chắn muốn xóa?</AlertDialogTitle>
@@ -435,7 +458,10 @@ export const BusManagementPage = () => {
         </AlertDialogContent>
       </AlertDialog>
 
-      <AlertDialog open={!!forceDeleteId} onOpenChange={(open) => !open && setForceDeleteId(null)}>
+      <AlertDialog
+        open={!!forceDeleteId}
+        onOpenChange={(open: boolean) => !open && setForceDeleteId(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Cảnh báo: Dữ liệu liên quan</AlertDialogTitle>

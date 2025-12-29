@@ -260,11 +260,11 @@ export const BookingPage = () => {
                     {trip.route.originStation.name} (00:00)
                   </option>
                   {trip.route.stops
-                    ?.filter((s) => s.stopType === 'PICKUP' || s.stopType === 'BOTH')
+                    ?.filter((s) => s.station && (s.stopType === 'PICKUP' || s.stopType === 'BOTH'))
                     .sort((a, b) => a.stopOrder - b.stopOrder)
                     .map((s) => (
-                      <option key={s.id} value={s.station.id}>
-                        {s.station.name} (+{s.durationMinutesFromOrigin}m)
+                      <option key={s.id} value={s.station!.id}>
+                        {s.station!.name} (+{s.durationMinutesFromOrigin}m)
                       </option>
                     ))}
                 </select>
@@ -281,7 +281,7 @@ export const BookingPage = () => {
                 >
                   <option value="">Chọn điểm trả...</option>
                   {trip.route.stops
-                    ?.filter((s) => s.stopType === 'DROPOFF' || s.stopType === 'BOTH')
+                    .filter((s) => s.station && (s.stopType === 'DROPOFF' || s.stopType === 'BOTH'))
                     .filter((s) => {
                       // Filter based on pickup order
                       if (!pickupStationId) return true;
@@ -289,7 +289,7 @@ export const BookingPage = () => {
                       if (pickupStationId === trip.route.originStation.id) pickupOrder = 0;
                       else {
                         const pStop = trip.route.stops.find(
-                          (st) => st.station.id === pickupStationId,
+                          (st) => st.station?.id === pickupStationId,
                         );
                         if (pStop) pickupOrder = pStop.stopOrder;
                       }
@@ -297,8 +297,8 @@ export const BookingPage = () => {
                     })
                     .sort((a, b) => a.stopOrder - b.stopOrder)
                     .map((s) => (
-                      <option key={s.id} value={s.station.id}>
-                        {s.station.name} (+{s.durationMinutesFromOrigin}m)
+                      <option key={s.id} value={s.station!.id}>
+                        {s.station!.name} (+{s.durationMinutesFromOrigin}m)
                       </option>
                     ))}
                   <option value={trip.route.destinationStation.id}>

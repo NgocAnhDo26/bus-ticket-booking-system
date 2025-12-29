@@ -1,5 +1,7 @@
 import { Outlet } from 'react-router-dom';
 
+import { ChatWidget } from '@/features/ai-chat/components/ChatWidget';
+
 import { PublicHeader } from './PublicHeader';
 
 export const DashboardLayout = () => {
@@ -9,6 +11,7 @@ export const DashboardLayout = () => {
       <main className="flex-1">
         <Outlet />
       </main>
+      <ChatWidget />
     </div>
   );
 };

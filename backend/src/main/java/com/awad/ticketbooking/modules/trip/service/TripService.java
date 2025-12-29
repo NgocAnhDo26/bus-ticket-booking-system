@@ -37,6 +37,7 @@ public class TripService {
     private final BusRepository busRepository;
     private final RouteRepository routeRepository;
     private final com.awad.ticketbooking.modules.booking.repository.BookingRepository bookingRepository;
+    private final com.awad.ticketbooking.modules.catalog.repository.StationRepository stationRepository;
 
     @Transactional
     public TripResponse createTrip(CreateTripRequest request) {
@@ -72,6 +73,21 @@ public class TripService {
             }).collect(Collectors.toList());
             tripPricingRepository.saveAll(pricings);
             savedTrip.setTripPricings(pricings);
+        }
+
+        // Clone RouteStops to TripStops
+        if (route.getStops() != null && !route.getStops().isEmpty()) {
+            List<com.awad.ticketbooking.modules.trip.entity.TripStop> tripStops = route.getStops().stream().map(rs -> {
+                com.awad.ticketbooking.modules.trip.entity.TripStop ts = new com.awad.ticketbooking.modules.trip.entity.TripStop();
+                ts.setTrip(savedTrip);
+                ts.setStation(rs.getStation());
+                ts.setStopOrder(rs.getStopOrder());
+                ts.setDurationMinutesFromOrigin(rs.getDurationMinutesFromOrigin());
+                ts.setStopType(rs.getStopType());
+                return ts;
+            }).collect(Collectors.toList());
+            savedTrip.getTripStops().addAll(tripStops);
+            tripRepository.save(savedTrip);
         }
 
         return mapToResponse(savedTrip);
@@ -142,6 +158,55 @@ public class TripService {
             bookingRepository.deleteByTripId(id);
         }
         tripRepository.deleteById(id);
+    }
+
+    @Transactional
+    public TripResponse updateTripStops(java.util.UUID tripId,
+            com.awad.ticketbooking.modules.trip.dto.UpdateTripStopsRequest request) {
+        Trip trip = tripRepository.findById(tripId)
+                .orElseThrow(() -> new RuntimeException("Trip not found"));
+
+        if (request.getStops() == null) {
+            return mapToResponse(trip);
+        }
+
+        // Validate each stop - must have either stationId or customAddress
+        for (com.awad.ticketbooking.modules.trip.dto.UpdateTripStopsRequest.TripStopDto stopDto : request.getStops()) {
+            if (!stopDto.isValid()) {
+                throw new RuntimeException("Each stop must have either a stationId or a customAddress");
+            }
+            // Validate station if provided
+            if (stopDto.getStationId() != null && !stationRepository.existsById(stopDto.getStationId())) {
+                throw new RuntimeException("Station not found with id: " + stopDto.getStationId());
+            }
+        }
+
+        // Clear existing stops
+        trip.getTripStops().clear();
+
+        // Add new stops
+        List<com.awad.ticketbooking.modules.trip.entity.TripStop> newStops = request.getStops().stream().map(dto -> {
+            com.awad.ticketbooking.modules.trip.entity.TripStop ts = new com.awad.ticketbooking.modules.trip.entity.TripStop();
+            ts.setTrip(trip);
+
+            if (dto.getStationId() != null) {
+                // Station-linked stop
+                ts.setStation(stationRepository.getReferenceById(dto.getStationId()));
+            } else {
+                // Custom address stop
+                ts.setCustomName(dto.getCustomName());
+                ts.setCustomAddress(dto.getCustomAddress());
+            }
+
+            ts.setStopOrder(dto.getStopOrder());
+            ts.setDurationMinutesFromOrigin(dto.getDurationMinutesFromOrigin());
+            ts.setStopType(dto.getStopType());
+            return ts;
+        }).collect(Collectors.toList());
+
+        trip.getTripStops().addAll(newStops);
+
+        return mapToResponse(tripRepository.save(trip));
     }
 
     @Transactional(readOnly = true)
@@ -248,19 +313,37 @@ public class TripService {
                                 .city(trip.getRoute().getDestinationStation().getCity())
                                 .build())
                         .durationMinutes(trip.getRoute().getDurationMinutes())
-                        .stops(trip.getRoute().getStops().stream()
-                                .map(stop -> TripResponse.RouteStopInfo.builder()
-                                        .id(stop.getId())
-                                        .station(TripResponse.StationInfo.builder()
-                                                .id(stop.getStation().getId())
-                                                .name(stop.getStation().getName())
-                                                .city(stop.getStation().getCity())
+                        .stops(trip.getTripStops() != null && !trip.getTripStops().isEmpty()
+                                ? trip.getTripStops().stream()
+                                        .map(stop -> TripResponse.RouteStopInfo.builder()
+                                                .id(stop.getId())
+                                                .station(stop.getStation() != null
+                                                        ? TripResponse.StationInfo.builder()
+                                                                .id(stop.getStation().getId())
+                                                                .name(stop.getStation().getName())
+                                                                .city(stop.getStation().getCity())
+                                                                .build()
+                                                        : null)
+                                                .customName(stop.getCustomName())
+                                                .customAddress(stop.getCustomAddress())
+                                                .stopOrder(stop.getStopOrder())
+                                                .durationMinutesFromOrigin(stop.getDurationMinutesFromOrigin())
+                                                .stopType(stop.getStopType().name())
                                                 .build())
-                                        .stopOrder(stop.getStopOrder())
-                                        .durationMinutesFromOrigin(stop.getDurationMinutesFromOrigin())
-                                        .stopType(stop.getStopType().name())
-                                        .build())
-                                .collect(Collectors.toList()))
+                                        .collect(Collectors.toList())
+                                : trip.getRoute().getStops().stream()
+                                        .map(stop -> TripResponse.RouteStopInfo.builder()
+                                                .id(stop.getId())
+                                                .station(TripResponse.StationInfo.builder()
+                                                        .id(stop.getStation().getId())
+                                                        .name(stop.getStation().getName())
+                                                        .city(stop.getStation().getCity())
+                                                        .build())
+                                                .stopOrder(stop.getStopOrder())
+                                                .durationMinutesFromOrigin(stop.getDurationMinutesFromOrigin())
+                                                .stopType(stop.getStopType().name())
+                                                .build())
+                                        .collect(Collectors.toList()))
                         .build())
                 .bus(TripResponse.BusInfo.builder()
                         .id(trip.getBus().getId())

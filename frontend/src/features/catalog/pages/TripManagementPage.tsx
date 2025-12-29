@@ -5,7 +5,16 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
 import { format } from 'date-fns';
-import { ArrowRight, Calendar, Clock, MoreHorizontal, Pencil, Plus, Trash2 } from 'lucide-react';
+import {
+  ArrowRight,
+  Calendar,
+  Clock,
+  MapPin,
+  MoreHorizontal,
+  Pencil,
+  Plus,
+  Trash2,
+} from 'lucide-react';
 import * as z from 'zod';
 
 import { type ColumnDef, GenericTable } from '@/components/common';
@@ -21,6 +30,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -39,6 +49,7 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet';
 
+import { TripStopsDialog } from '../components/TripStopsDialog';
 import {
   useBuses,
   useCreateTrip,
@@ -73,6 +84,7 @@ export const TripManagementPage = () => {
   const deleteTrip = useDeleteTrip();
   const [editingTrip, setEditingTrip] = useState<Trip | null>(null);
   const [deletingTrip, setDeletingTrip] = useState<Trip | null>(null);
+  const [managingStopsTrip, setManagingStopsTrip] = useState<Trip | null>(null);
 
   const {
     register,
@@ -314,9 +326,9 @@ export const TripManagementPage = () => {
         cell: (trip) => {
           const statusMap: Record<
             string,
-            { label: string; variant: 'default' | 'secondary' | 'destructive' }
+            { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
           > = {
-            SCHEDULED: { label: 'Sắp diễn ra', variant: 'default' },
+            SCHEDULED: { label: 'Sắp diễn ra', variant: 'outline' },
             COMPLETED: { label: 'Hoàn thành', variant: 'default' },
             CANCELLED: { label: 'Đã hủy', variant: 'destructive' },
             DELAYED: { label: 'Hoãn', variant: 'secondary' },
@@ -353,6 +365,10 @@ export const TripManagementPage = () => {
                   <Trash2 className="mr-2 h-4 w-4" />
                   Xóa
                 </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setManagingStopsTrip(trip)}>
+                  <MapPin className="mr-2 h-4 w-4" />
+                  Quản lý trạm
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -365,15 +381,10 @@ export const TripManagementPage = () => {
   return (
     <div className="flex flex-col gap-8 p-4">
       <div className="flex items-center justify-between">
-        <div className="space-y-1">
-          <h1 className="text-2xl font-bold tracking-tight">Quản lý Chuyến đi</h1>
-          <p className="text-sm text-muted-foreground">
-            Danh sách các chuyến đi được cấu hình trong hệ thống.
-          </p>
-        </div>
+        <h1 className="text-2xl font-bold tracking-tight">Quản lý Chuyến đi</h1>
         <Sheet
           open={isOpen}
-          onOpenChange={(open) => {
+          onOpenChange={(open: boolean) => {
             setIsOpen(open);
             if (!open) {
               setEditingTrip(null);
@@ -402,7 +413,7 @@ export const TripManagementPage = () => {
             </SheetHeader>
             <div className="py-4">
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                <Field data-invalid={!!errors.routeId}>
+                <Field>
                   <FieldLabel>Tuyến đường</FieldLabel>
                   <select
                     className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
@@ -417,7 +428,7 @@ export const TripManagementPage = () => {
                   </select>
                   <FieldError>{errors.routeId?.message}</FieldError>
                 </Field>
-                <Field data-invalid={!!errors.busId}>
+                <Field>
                   <FieldLabel>Xe</FieldLabel>
                   <select
                     className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
@@ -432,12 +443,12 @@ export const TripManagementPage = () => {
                   </select>
                   <FieldError>{errors.busId?.message}</FieldError>
                 </Field>
-                <Field data-invalid={!!errors.departureTime}>
+                <Field>
                   <FieldLabel>Thời gian đi</FieldLabel>
                   <Input type="datetime-local" {...register('departureTime')} />
                   <FieldError>{errors.departureTime?.message}</FieldError>
                 </Field>
-                <Field data-invalid={!!errors.arrivalTime}>
+                <Field>
                   <FieldLabel>Thời gian đến (Tự động tính)</FieldLabel>
                   <Input
                     type="datetime-local"
@@ -452,8 +463,8 @@ export const TripManagementPage = () => {
                   <h3 className="text-sm font-medium">Giá vé</h3>
                   {fields.map((field, index) => (
                     <div key={field.id} className="flex gap-2 items-end">
-                      <Field data-invalid={!!errors.pricings?.[index]?.price} className="flex-1">
-                        <FieldLabel>Loại ghế: {field.seatType}</FieldLabel>
+                      <Field className="flex-1">
+                        <FieldLabel>{`Loại ghế: ${field.seatType}`}</FieldLabel>
                         <Input
                           type="number"
                           {...register(`pricings.${index}.price`, {
@@ -484,33 +495,43 @@ export const TripManagementPage = () => {
         </Sheet>
       </div>
 
-      <GenericTable<Trip>
-        data={sortedPaged.data}
-        columns={columns}
-        isLoading={isLoadingTrips}
-        meta={meta}
-        pageIndex={meta.page}
-        pageSize={pageSize}
-        sorting={sorting}
-        onPageChange={setPageIndex}
-        onPageSizeChange={(size) => {
-          setPageSize(size);
-          setPageIndex(1);
-        }}
-        onSort={(key) =>
-          setSorting((prev) =>
-            prev.key === key
-              ? {
-                  key,
-                  direction: prev.direction === 'asc' ? 'desc' : 'asc',
-                }
-              : { key, direction: 'asc' },
-          )
-        }
-        getRowId={(trip) => trip.id}
-      />
+      <Card>
+        <CardHeader>
+          <CardTitle>Danh sách Chuyến đi</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <GenericTable<Trip>
+            data={sortedPaged.data}
+            columns={columns}
+            isLoading={isLoadingTrips}
+            meta={meta}
+            pageIndex={meta.page}
+            pageSize={pageSize}
+            sorting={sorting}
+            onPageChange={setPageIndex}
+            onPageSizeChange={(size) => {
+              setPageSize(size);
+              setPageIndex(1);
+            }}
+            onSort={(key) =>
+              setSorting((prev) =>
+                prev.key === key
+                  ? {
+                      key,
+                      direction: prev.direction === 'asc' ? 'desc' : 'asc',
+                    }
+                  : { key, direction: 'asc' },
+              )
+            }
+            getRowId={(trip) => trip.id}
+          />
+        </CardContent>
+      </Card>
 
-      <AlertDialog open={!!deletingTrip} onOpenChange={(open) => !open && setDeletingTrip(null)}>
+      <AlertDialog
+        open={!!deletingTrip}
+        onOpenChange={(open: boolean) => !open && setDeletingTrip(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Bạn có chắc chắn muốn xóa?</AlertDialogTitle>
@@ -530,7 +551,10 @@ export const TripManagementPage = () => {
         </AlertDialogContent>
       </AlertDialog>
 
-      <AlertDialog open={!!forceDeleteId} onOpenChange={(open) => !open && setForceDeleteId(null)}>
+      <AlertDialog
+        open={!!forceDeleteId}
+        onOpenChange={(open: boolean) => !open && setForceDeleteId(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Cảnh báo: Dữ liệu liên quan</AlertDialogTitle>
@@ -550,6 +574,12 @@ export const TripManagementPage = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <TripStopsDialog
+        trip={managingStopsTrip}
+        open={!!managingStopsTrip}
+        onOpenChange={(open: boolean) => !open && setManagingStopsTrip(null)}
+      />
     </div>
   );
 };

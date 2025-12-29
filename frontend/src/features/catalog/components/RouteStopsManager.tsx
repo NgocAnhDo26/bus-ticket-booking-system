@@ -107,8 +107,10 @@ export const RouteStopsManager = ({ route }: RouteStopsManagerProps) => {
                       <TableCell>{stop.stopOrder}</TableCell>
                       <TableCell>
                         <div className="flex flex-col">
-                          <span className="font-medium">{stop.station.name}</span>
-                          <span className="text-xs text-muted-foreground">{stop.station.city}</span>
+                          <span className="font-medium">{stop.station?.name ?? 'Custom Stop'}</span>
+                          <span className="text-xs text-muted-foreground">
+                            {stop.station?.city ?? '-'}
+                          </span>
                         </div>
                       </TableCell>
                       <TableCell>{stop.durationMinutesFromOrigin} phút</TableCell>

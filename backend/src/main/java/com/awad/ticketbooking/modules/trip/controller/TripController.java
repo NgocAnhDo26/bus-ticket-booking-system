@@ -50,7 +50,7 @@ public class TripController {
     @PutMapping("/{id}")
     @Operation(summary = "Update trip", description = "Updates an existing trip.")
     public ResponseEntity<TripResponse> updateTrip(@PathVariable UUID id,
-                                                   @RequestBody @Valid CreateTripRequest request) {
+            @RequestBody @Valid CreateTripRequest request) {
         return ResponseEntity.ok(tripService.updateTrip(id, request));
     }
 
@@ -59,5 +59,12 @@ public class TripController {
     public ResponseEntity<Void> deleteTrip(@PathVariable UUID id, @RequestParam(defaultValue = "false") boolean force) {
         tripService.deleteTrip(id, force);
         return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/{id}/stops")
+    @Operation(summary = "Update trip stops", description = "Updates the specific stops for a trip.")
+    public ResponseEntity<TripResponse> updateTripStops(@PathVariable UUID id,
+            @RequestBody @Valid com.awad.ticketbooking.modules.trip.dto.UpdateTripStopsRequest request) {
+        return ResponseEntity.ok(tripService.updateTripStops(id, request));
     }
 }
