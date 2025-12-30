@@ -64,6 +64,25 @@ export type CreateBusRequest = {
   isActive?: boolean;
 };
 
+export type TripSchedule = {
+  id: string;
+  departureTime: string; // "HH:mm:ss"
+  frequency?: string;
+  startDate: string;
+  endDate?: string;
+  isActive: boolean;
+};
+
+export type TripPoint = {
+  id: string;
+  station: Station;
+  scheduledTime: string; // ISO timestamp
+  actualTime?: string; // ISO timestamp
+  surcharge: number;
+  pointOrder: number;
+  pointType: 'PICKUP' | 'DROPOFF' | 'BOTH';
+};
+
 export type Route = {
   id: string;
   originStation: Station;
@@ -74,11 +93,12 @@ export type Route = {
   createdAt: string;
   stops: {
     id: string;
-    station?: Station; // Optional - can be null for custom address stops
-    customName?: string; // Used when station is null
-    customAddress?: string; // Used when station is null
+    station?: Station;
+    customName?: string;
+    customAddress?: string;
     stopOrder: number;
     durationMinutesFromOrigin: number;
+    defaultSurcharge?: number; // Added
     stopType: 'PICKUP' | 'DROPOFF' | 'BOTH';
   }[];
 };
@@ -87,6 +107,7 @@ export type AddRouteStopRequest = {
   stationId: string;
   stopOrder: number;
   durationMinutesFromOrigin: number;
+  defaultSurcharge?: number;
   stopType: 'PICKUP' | 'DROPOFF' | 'BOTH';
 };
 
@@ -132,10 +153,12 @@ export type Trip = {
   id: string;
   route: Route;
   bus: BusInfo;
+  tripSchedule?: TripSchedule; // Added
   departureTime: string;
   arrivalTime: string;
   status: string;
   tripPricings: TripPricing[];
+  tripPoints: TripPoint[]; // Added
   createdAt: string;
 };
 

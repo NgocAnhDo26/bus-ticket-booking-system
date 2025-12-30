@@ -30,6 +30,10 @@ public class Trip {
     @JoinColumn(name = "bus_id", nullable = false)
     private Bus bus;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "trip_schedule_id")
+    private TripSchedule tripSchedule;
+
     @Column(name = "departure_time", nullable = false)
     private Instant departureTime;
 

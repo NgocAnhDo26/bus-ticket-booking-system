@@ -44,6 +44,8 @@ type EditableStop = {
   stopOrder: number;
   durationMinutesFromOrigin: number;
   stopType: 'PICKUP' | 'DROPOFF' | 'BOTH';
+  scheduledTime?: string;
+  actualTime?: string;
 };
 
 // Inner component that resets state when remounted via key
@@ -56,18 +58,32 @@ const TripStopsDialogContent = ({
 }) => {
   const updateTripStops = useUpdateTripStops();
 
-  // Derive initial stops from trip - useMemo ensures it's calculated once per trip
-  const initialStops = useMemo<EditableStop[]>(
-    () =>
-      trip.route.stops.map((s) => ({
-        customName: s.customName ?? s.station?.name ?? '',
-        customAddress: s.customAddress ?? s.station?.address ?? '',
-        stopOrder: s.stopOrder,
-        durationMinutesFromOrigin: s.durationMinutesFromOrigin,
-        stopType: s.stopType,
-      })),
-    [trip],
-  );
+  // Derive initial stops from trip points if available, otherwise fallback to route stops template
+  const initialStops = useMemo<EditableStop[]>(() => {
+    if (trip.tripPoints && trip.tripPoints.length > 0) {
+      // Sort by pointOrder
+      return [...trip.tripPoints]
+        .sort((a, b) => a.pointOrder - b.pointOrder)
+        .map((p) => ({
+          customName: p.station?.name ?? '', // TripPoints always have station or we should handle custom names if added to TripPoint
+          customAddress: p.station?.address ?? '',
+          stopOrder: p.pointOrder,
+          durationMinutesFromOrigin: 0, // Not used primarily for display anymore, but kept for compatibility
+          stopType: p.pointType,
+          scheduledTime: p.scheduledTime, // Display absolute time
+          actualTime: p.actualTime,
+        }));
+    }
+
+    // Fallback to route stops (Template mode)
+    return trip.route.stops.map((s) => ({
+      customName: s.customName ?? s.station?.name ?? '',
+      customAddress: s.customAddress ?? s.station?.address ?? '',
+      stopOrder: s.stopOrder,
+      durationMinutesFromOrigin: s.durationMinutesFromOrigin,
+      stopType: s.stopType,
+    }));
+  }, [trip]);
 
   const [stops, setStops] = useState<EditableStop[]>(initialStops);
 
@@ -79,14 +95,26 @@ const TripStopsDialogContent = ({
     if (!newAddress.trim()) return;
 
     const maxOrder = stops.length > 0 ? Math.max(...stops.map((s) => s.stopOrder)) : 0;
-    const lastDuration = stops.length > 0 ? stops[stops.length - 1].durationMinutesFromOrigin : 0;
+    
+    // Simple heuristic for new stop time: +30 mins from last stop or departure time
+    const lastStop = stops.length > 0 ? stops[stops.length - 1] : null;
+    let newScheduledTime = new Date(trip.departureTime); // Default to departure
+    
+    if (lastStop && lastStop.scheduledTime) {
+        newScheduledTime = new Date(lastStop.scheduledTime);
+        newScheduledTime.setMinutes(newScheduledTime.getMinutes() + 30);
+    } else {
+         newScheduledTime.setMinutes(newScheduledTime.getMinutes() + 30);
+    }
+
 
     const newStop: EditableStop = {
       customName: newName.trim() || newAddress.trim(),
       customAddress: newAddress.trim(),
       stopOrder: maxOrder + 1,
-      durationMinutesFromOrigin: lastDuration + 30, // Default 30 minutes after last stop
+      durationMinutesFromOrigin: 0, 
       stopType: 'BOTH',
+      scheduledTime: newScheduledTime.toISOString(),
     };
 
     setStops((prev) => [...prev, newStop]);
@@ -102,10 +130,20 @@ const TripStopsDialogContent = ({
     setStops((prev) => prev.map((s, i) => (i === index ? { ...s, customAddress: value } : s)));
   };
 
-  const handleDurationChange = (index: number, value: number) => {
-    setStops((prev) =>
-      prev.map((s, i) => (i === index ? { ...s, durationMinutesFromOrigin: value } : s)),
-    );
+  const handleScheduledTimeChange = (index: number, value: string) => {
+     // Value comes from input type="datetime-local" (YYYY-MM-DDTHH:mm)
+     // Need to convert to ISO string
+     const date = new Date(value);
+     if (!isNaN(date.getTime())) {
+         setStops((prev) => prev.map((s, i) => (i === index ? { ...s, scheduledTime: date.toISOString() } : s)));
+     }
+  };
+
+    const handleActualTimeChange = (index: number, value: string) => {
+     const date = new Date(value);
+     if (!isNaN(date.getTime())) {
+         setStops((prev) => prev.map((s, i) => (i === index ? { ...s, actualTime: date.toISOString() } : s)));
+     }
   };
 
   const handleStopTypeChange = (index: number, value: 'PICKUP' | 'DROPOFF' | 'BOTH') => {
@@ -128,7 +166,7 @@ const TripStopsDialogContent = ({
       customName: s.customName,
       customAddress: s.customAddress,
       stopOrder: s.stopOrder,
-      durationMinutesFromOrigin: s.durationMinutesFromOrigin,
+      durationMinutesFromOrigin: s.durationMinutesFromOrigin, // Might calculate delta if backend requires it
       stopType: s.stopType,
     }));
 
@@ -145,11 +183,22 @@ const TripStopsDialogContent = ({
     );
   };
 
+  const formatDateTimeLocal = (isoString?: string) => {
+      if (!isoString) return '';
+      const date = new Date(isoString);
+      // Format to YYYY-MM-DDTHH:mm for input type="datetime-local"
+      // Adjust to local timezone logic if needed, but simple slice works for UTC-like behavior in browsers sometimes
+      // Better to use library or simple offset construction
+      const offset = date.getTimezoneOffset(); 
+      const localDate = new Date(date.getTime() - (offset*60*1000));
+      return localDate.toISOString().slice(0, 16);
+  };
+
   return (
     <>
       <DialogHeader>
-        <DialogTitle>Quản lý Trạm dừng</DialogTitle>
-        <DialogDescription>Thêm, sửa hoặc xóa các trạm dừng cho chuyến xe này.</DialogDescription>
+        <DialogTitle>Quản lý Trạm dừng & Lịch trình</DialogTitle>
+        <DialogDescription>Cập nhật giờ đón/trả thực tế cho chuyến xe.</DialogDescription>
       </DialogHeader>
 
       {/* Add new stop section */}
@@ -182,13 +231,14 @@ const TripStopsDialogContent = ({
       </div>
 
       {/* Stops table */}
+      <div className="border rounded-md">
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="w-[60px]">#</TableHead>
-            <TableHead>Tên trạm</TableHead>
-            <TableHead>Địa chỉ</TableHead>
-            <TableHead className="w-[100px]">Phút</TableHead>
+            <TableHead className="w-[50px]">#</TableHead>
+            <TableHead>Tên trạm / Địa chỉ</TableHead>
+            <TableHead className="w-[180px]">Giờ Dự Kiến</TableHead>
+            <TableHead className="w-[180px]">Giờ Thực Tế</TableHead>
             <TableHead className="w-[100px]">Loại</TableHead>
             <TableHead className="w-[50px]"></TableHead>
           </TableRow>
@@ -202,30 +252,39 @@ const TripStopsDialogContent = ({
                   min={1}
                   value={stop.stopOrder}
                   onChange={(e) => handleStopOrderChange(index, parseInt(e.target.value) || 1)}
-                  className="w-14"
+                  className="w-12 px-2"
                 />
               </TableCell>
               <TableCell>
-                <Input
-                  value={stop.customName}
-                  onChange={(e) => handleNameChange(index, e.target.value)}
-                  placeholder="Tên trạm"
-                />
+                <div className="space-y-1">
+                    <Input
+                    value={stop.customName}
+                    onChange={(e) => handleNameChange(index, e.target.value)}
+                    placeholder="Tên trạm"
+                    className="h-8 text-sm"
+                    />
+                    <Input
+                    value={stop.customAddress}
+                    onChange={(e) => handleAddressChange(index, e.target.value)}
+                    placeholder="Địa chỉ"
+                    className="h-8 text-xs text-muted-foreground"
+                    />
+                </div>
               </TableCell>
               <TableCell>
                 <Input
-                  value={stop.customAddress}
-                  onChange={(e) => handleAddressChange(index, e.target.value)}
-                  placeholder="Địa chỉ"
+                  type="datetime-local"
+                  value={formatDateTimeLocal(stop.scheduledTime)}
+                  onChange={(e) => handleScheduledTimeChange(index, e.target.value)}
+                  className="w-full text-xs"
                 />
               </TableCell>
-              <TableCell>
+               <TableCell>
                 <Input
-                  type="number"
-                  min={0}
-                  value={stop.durationMinutesFromOrigin}
-                  onChange={(e) => handleDurationChange(index, parseInt(e.target.value) || 0)}
-                  className="w-full"
+                  type="datetime-local"
+                  value={formatDateTimeLocal(stop.actualTime)}
+                  onChange={(e) => handleActualTimeChange(index, e.target.value)}
+                  className="w-full text-xs"
                 />
               </TableCell>
               <TableCell>
@@ -235,7 +294,7 @@ const TripStopsDialogContent = ({
                     handleStopTypeChange(index, v as 'PICKUP' | 'DROPOFF' | 'BOTH')
                   }
                 >
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger className="w-full h-8">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -250,7 +309,7 @@ const TripStopsDialogContent = ({
                   variant="ghost"
                   size="icon"
                   onClick={() => handleRemove(index)}
-                  className="text-destructive hover:text-destructive"
+                  className="text-destructive hover:text-destructive h-8 w-8"
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
@@ -266,6 +325,7 @@ const TripStopsDialogContent = ({
           )}
         </TableBody>
       </Table>
+      </div>
 
       <DialogFooter>
         <Button variant="outline" onClick={() => onOpenChange(false)}>

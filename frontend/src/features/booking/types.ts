@@ -57,6 +57,18 @@ export type BookingResponse = {
   tickets: TicketInfo[];
   pickupStation?: StationInfo;
   dropoffStation?: StationInfo;
+  pickupTripPoint?: { // Added
+    id: string;
+    scheduledTime: string;
+    actualTime?: string;
+    surcharge: number;
+  };
+  dropoffTripPoint?: { // Added
+    id: string;
+    scheduledTime: string;
+    actualTime?: string;
+    surcharge: number;
+  };
 };
 
 // Prefer OpenAPI/Orval request models as the source of truth.
