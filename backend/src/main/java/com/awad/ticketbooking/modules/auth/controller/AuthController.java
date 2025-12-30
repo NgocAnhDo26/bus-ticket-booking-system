@@ -33,10 +33,20 @@ public class AuthController {
 
     private final AuthService authService;
     private final JwtProperties jwtProperties;
+
     @PostMapping("/register")
-    @Operation(summary = "Register new user", description = "Creates a new user account and returns access/refresh tokens.")
-    public ResponseEntity<ApiResponse<AuthResponse>> register(@Valid @RequestBody RegisterRequest request) {
-        AuthService.AuthResult result = authService.register(request);
+    @Operation(summary = "Register new user", description = "Creates a new user account. Returns message to check email for activation.")
+    public ResponseEntity<ApiResponse<Void>> register(@Valid @RequestBody RegisterRequest request) {
+        authService.register(request);
+        return ResponseEntity.ok(
+                ApiResponse.message(200, "Registration successful. Please check your email to activate your account."));
+    }
+
+    @PostMapping("/activate")
+    @Operation(summary = "Activate account", description = "Activates user account using the token from email.")
+    public ResponseEntity<ApiResponse<AuthResponse>> activate(
+            @org.springframework.web.bind.annotation.RequestParam String token) {
+        AuthService.AuthResult result = authService.activateAccount(token);
         return buildTokenResponse(result);
     }
 
@@ -56,7 +66,8 @@ public class AuthController {
 
     @PostMapping("/refresh")
     @Operation(summary = "Refresh access token", description = "Uses the HTTP-only refresh token cookie to issue a new access token.")
-    public ResponseEntity<ApiResponse<AuthResponse>> refresh(@CookieValue(name = REFRESH_COOKIE, required = false) String refreshToken) {
+    public ResponseEntity<ApiResponse<AuthResponse>> refresh(
+            @CookieValue(name = REFRESH_COOKIE, required = false) String refreshToken) {
         if (refreshToken == null || refreshToken.isBlank()) {
             return ResponseEntity.status(401).body(new ApiResponse<>(401, "Missing refresh token", null));
         }
@@ -97,4 +108,3 @@ public class AuthController {
                 .body(ApiResponse.success(result.payload()));
     }
 }
-

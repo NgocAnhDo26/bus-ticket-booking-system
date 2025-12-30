@@ -209,4 +209,48 @@ public class EmailService {
             log.error("Failed to send reminder email to {}: {}", recipientEmail, e.getMessage());
         }
     }
+
+    @Async
+    public void sendActivationEmail(String recipientEmail, String name, String token) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setFrom(fromEmail, fromName);
+            helper.setTo(recipientEmail);
+            helper.setSubject("Kích hoạt tài khoản - Bus Ticket Booking");
+
+            String activationLink = "http://localhost:5173/auth/activate?token=" + token; // Should be configurable
+
+            String content = """
+                    <!DOCTYPE html>
+                    <html>
+                    <body style="font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px;">
+                        <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
+                            <h2 style="color: #333333; text-align: center;">Kích hoạt tài khoản</h2>
+                            <p>Xin chào <strong>%s</strong>,</p>
+                            <p>Cảm ơn bạn đã đăng ký tài khoản. Vui lòng nhấn vào nút bên dưới để kích hoạt tài khoản của bạn:</p>
+
+                            <div style="text-align: center; margin: 30px 0;">
+                                <a href="%s" style="background-color: #007bff; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;">Kích hoạt ngay</a>
+                            </div>
+
+                            <p>Hoặc truy cập liên kết sau:</p>
+                            <p><a href="%s">%s</a></p>
+
+                            <p>Link này sẽ hết hạn sau 24 giờ.</p>
+                        </div>
+                    </body>
+                    </html>
+                    """
+                    .formatted(name, activationLink, activationLink, activationLink);
+
+            helper.setText(content, true);
+
+            mailSender.send(message);
+            log.info("Activation email sent to: {}", recipientEmail);
+        } catch (MessagingException | java.io.UnsupportedEncodingException e) {
+            log.error("Failed to send activation email to {}: {}", recipientEmail, e.getMessage());
+        }
+    }
 }

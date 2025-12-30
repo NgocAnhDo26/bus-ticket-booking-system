@@ -4,7 +4,7 @@ import { Navigate, createBrowserRouter } from 'react-router-dom';
 import { ProtectedRoute, PublicRoute } from '@/components/common';
 import { DashboardLayout } from '@/components/layout';
 import { AdminDashboardLayout } from '@/components/layout/AdminLayout';
-import { LoginPage, RegisterPage } from '@/features/auth';
+import { ActivationPage, LoginPage, RegisterPage } from '@/features/auth';
 import { useHydrateAuth } from '@/features/auth/hooks';
 import { BookingLookupPage, BookingPage, PassengerInfoPage } from '@/features/booking';
 import { BookingConfirmationPage } from '@/features/booking/pages/BookingConfirmationPage';
@@ -97,6 +97,7 @@ export const router = createBrowserRouter([
     children: [
       { path: '/login', element: <LoginPage /> },
       { path: '/register', element: <RegisterPage /> },
+      { path: '/auth/activate', element: <ActivationPage /> },
     ],
   },
   {

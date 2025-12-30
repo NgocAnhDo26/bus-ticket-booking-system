@@ -42,8 +42,9 @@ const unwrapAuth = (resp: ApiResponseAuthResponse): AuthData => {
 };
 
 export const register = async (payload: RegisterRequest) => {
-  const resp = await orvalRegister(payload);
-  return unwrapAuth(resp);
+  await orvalRegister(payload);
+  // No return value logic as backend returns void/message now.
+  // The mutation onSuccess in RegisterPage handles the flow.
 };
 
 export const login = async (payload: LoginRequest) => {
