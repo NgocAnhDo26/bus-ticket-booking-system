@@ -25,6 +25,8 @@ import {
   updateRoute,
   updateStation,
   updateTrip,
+  searchStations,
+  searchRoutes,
   updateTripStops,
 } from './api';
 import { fetchBusLayouts } from './api';
@@ -44,6 +46,14 @@ export const useStations = () => {
   return useQuery({
     queryKey: ['stations'],
     queryFn: fetchStations,
+  });
+};
+
+export const useSearchStations = (query: string) => {
+  return useQuery({
+    queryKey: ['stations', 'search', query],
+    queryFn: () => searchStations(query),
+    enabled: !!query,
   });
 };
 
@@ -160,6 +170,14 @@ export const useRoutes = () => {
   return useQuery({
     queryKey: ['routes'],
     queryFn: fetchRoutes,
+  });
+};
+
+export const useSearchRoutes = (query: string) => {
+  return useQuery({
+    queryKey: ['routes', 'search', query],
+    queryFn: () => searchRoutes(query),
+    enabled: !!query,
   });
 };
 

@@ -24,7 +24,7 @@ const searchSchema = z.object({
 export const SearchForm = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { data: stations } = useStations();
+  const { data: stations, isLoading, error } = useStations();
 
   const cityOptions = useMemo(() => {
     if (!stations) return [];
@@ -59,6 +59,14 @@ export const SearchForm = () => {
     navigate(`/search?${searchParams.toString()}`);
   };
 
+  if (error) {
+    return (
+     <div className="p-4 text-red-500 bg-red-50 rounded-lg">
+       Lỗi tải dữ liệu: {(error as any).message || 'Không thể kết nối server'}
+     </div>
+    );
+  }
+
   return (
     <Card className="w-full max-w-4xl mx-auto supports-backdrop-filter:bg-card/80">
       <CardContent className="px-6 pt-2 py-3">
@@ -68,7 +76,7 @@ export const SearchForm = () => {
         >
           <div className="space-y-2">
             <Label className="flex items-center gap-2">
-              <MapPin className="w-4 h-4 text-primary" /> Điểm đi
+              <MapPin className="w-4 h-4 text-primary" /> Điểm đi {isLoading && <span className="text-xs text-muted-foreground">(Đang tải...)</span>}
             </Label>
             <div className="relative">
               <Combobox

@@ -17,6 +17,8 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 import java.util.stream.Collectors;
+import com.awad.ticketbooking.common.utils.QrCodeUtils;
+import org.springframework.core.io.ByteArrayResource;
 
 @Service
 @RequiredArgsConstructor
@@ -47,6 +49,10 @@ public class EmailService {
             helper.setSubject("Xác nhận đặt vé - #" + booking.getCode());
             helper.setText(buildEmailContent(booking), true);
 
+            // Generate and attach QR Code
+            byte[] qrCodeImage = QrCodeUtils.generateQrCodeImage(booking.getCode(), 200, 200);
+            helper.addInline("qrcode", new ByteArrayResource(qrCodeImage), "image/png");
+
             mailSender.send(message);
             log.info("Booking confirmation email sent to: {}", recipientEmail);
         } catch (MessagingException | java.io.UnsupportedEncodingException e) {
@@ -74,7 +80,8 @@ public class EmailService {
                         </div>
 
                         <div style="text-align: center; margin-bottom: 20px;">
-                            <p style="margin: 0;">Ma ve: <span style="font-weight: bold;">#%s</span></p>
+                            <img src="cid:qrcode" alt="QR Code" width="150" height="150" style="display: block; margin: 0 auto;"/>
+                            <p style="margin: 5px 0 0 0;">Ma ve: <span style="font-weight: bold;">#%s</span></p>
                         </div>
 
                         <div style="border-bottom: 1px dashed #000000; margin-bottom: 15px;"></div>

@@ -64,7 +64,20 @@ public class AiChatService {
                             - AUTO-FILL info (Name, Email) from context. Ask Phone if missing.
                           - IF "Đặt hộ / Cho người khác":
                             - Ask for **Người đi** info: Name, Phone, Email (to receive ticket).
-                        - SCENARIO B: GUEST (Chưa đăng nhập)
+
+                        3. City Name Normalization (IMPORTANT)
+                        - Users often type lazily (e.g., "hanoi", "saigon", "dn").
+                        - You ALWAYs convert them to standard full city names before calling `search_trips`.
+                        - Examples:
+                          - "hanoi", "hn" -> "Hà Nội" (or "Ha Noi")
+                          - "saigon", "hcm", "hồ chí minh" -> "Hồ Chí Minh"
+                          - "đà nẵng", "dn", "da nang" -> "Đà Nẵng"
+                          - "buon me thuot", "bmt" -> "Buôn Ma Thuột"
+                        - Try to use the Accented version first, or the version you think matches the database best.
+
+                        4. Booking Logic (CRITICAL)
+                        - CHECK "User Context" at the start of the message.
+                        - SCENARIO A: USER LOGGED IN
                           - DETECTED: "GUEST"
                           - ACTION: Ask for **Người đi** info.
                           - EXPLAIN: "Vì bạn chưa đăng nhập, vui lòng cung cấp Email để nhận vé, và Họ tên/SĐT người đi để nhà xe liên hệ."
@@ -96,9 +109,12 @@ public class AiChatService {
                 this.objectMapper = objectMapper;
         }
 
+        private final Map<String, List<Content>> chatHistory = new java.util.concurrent.ConcurrentHashMap<>();
+
         public ChatResponse getChatResponse(ChatRequest request) {
                 try {
                         Client client = new Client.Builder().apiKey(apiKey).build();
+                        String userId = request.getUserId() != null ? request.getUserId().toString() : "GUEST";
 
                         // Build Context String
                         StringBuilder contextBuilder = new StringBuilder();
@@ -112,7 +128,9 @@ public class AiChatService {
                         } else {
                                 contextBuilder.append("GUEST");
                         }
-                        String fullMessage = contextBuilder.toString() + "\nUser Message: " + request.getMessage();
+
+                        // Retrieve history
+                        List<Content> history = chatHistory.computeIfAbsent(userId, k -> new ArrayList<>());
 
                         // 1. Tool: search_trips
                         FunctionDeclaration searchTool = FunctionDeclaration.builder()
@@ -194,16 +212,30 @@ public class AiChatService {
                                         .functionDeclarations(List.of(searchTool, detailsTool, bookingTool))
                                         .build();
 
+                        // System Prompt Configuration
+                        String PROMPT_WITH_DATE = SYSTEM_PROMPT + "\n\nCURRENT DATE: "
+                                        + java.time.LocalDate.now(java.time.ZoneId.of("Asia/Ho_Chi_Minh"));
                         GenerateContentConfig config = GenerateContentConfig.builder()
                                         .systemInstruction(Content.builder()
-                                                        .parts(List.of(Part.builder().text(SYSTEM_PROMPT).build()))
+                                                        .parts(List.of(Part.builder().text(PROMPT_WITH_DATE).build()))
                                                         .build())
                                         .tools(List.of(toolObj))
                                         .build();
 
-                        // First turn
+                        // Add current message to history
+                        String userMessageText = contextBuilder.toString() + "\nUser Message: " + request.getMessage();
+                        Content userContent = Content.builder().role("user")
+                                        .parts(List.of(Part.builder().text(userMessageText).build())).build();
+                        history.add(userContent);
+
+                        // Prune history to keep only the last 20 entries (10 turns)
+                        final int MAX_HISTORY_SIZE = 20;
+                        if (history.size() > MAX_HISTORY_SIZE) {
+                                history.subList(0, history.size() - MAX_HISTORY_SIZE).clear();
+                        }
+
                         GenerateContentResponse response = client.models.generateContent("gemini-2.5-flash",
-                                        fullMessage, config);
+                                        history, config);
 
                         // Handle response
                         List<Candidate> candidates = response.candidates().orElse(Collections.emptyList());
@@ -212,6 +244,11 @@ public class AiChatService {
 
                         Candidate candidate = candidates.get(0);
                         Content content = candidate.content().orElse(null);
+
+                        if (content != null) {
+                                history.add(content); // Add model response to history
+                        }
+
                         if (content == null)
                                 return new ChatResponse("...");
 
@@ -249,22 +286,29 @@ public class AiChatService {
                                                                 request.getUserId());
                                         }
 
-                                        // Send back to model
-                                        List<Content> history = List.of(
-                                                        Content.builder().role("user").parts(List.of(Part.builder()
-                                                                        .text(fullMessage).build())).build(),
-                                                        content,
-                                                        Content.builder().role("function").parts(List.of(
-                                                                        Part.builder().functionResponse(FunctionResponse
-                                                                                        .builder()
-                                                                                        .name(funcName)
-                                                                                        .response(Map.of("content",
-                                                                                                        toolResult))
-                                                                                        .build()).build()))
-                                                                        .build());
+                                        // Send tool response back to model
+                                        Content toolResponseContent = Content.builder().role("function").parts(List.of(
+                                                        Part.builder().functionResponse(FunctionResponse
+                                                                        .builder()
+                                                                        .name(funcName)
+                                                                        .response(Map.of("content",
+                                                                                        toolResult))
+                                                                        .build()).build()))
+                                                        .build();
+                                        history.add(toolResponseContent);
 
                                         GenerateContentResponse finalRes = client.models
                                                         .generateContent("gemini-2.5-flash", history, config);
+
+                                        // Add final model response to history
+                                        if (finalRes.candidates().isPresent()
+                                                        && !finalRes.candidates().get().isEmpty()) {
+                                                Content finalContent = finalRes.candidates().get().get(0).content()
+                                                                .orElse(null);
+                                                if (finalContent != null)
+                                                        history.add(finalContent);
+                                                return new ChatResponse(finalRes.text());
+                                        }
                                         return new ChatResponse(finalRes.text());
                                 }
                         }
@@ -280,6 +324,8 @@ public class AiChatService {
         private String executeSearch(String origin, String destination, String dateStr) {
                 try {
                         com.awad.ticketbooking.modules.trip.dto.SearchTripRequest searchRequest = new com.awad.ticketbooking.modules.trip.dto.SearchTripRequest();
+
+                        // 1. Try search with original terms
                         searchRequest.setOrigin(origin);
                         searchRequest.setDestination(destination);
                         if (dateStr != null) {
@@ -290,6 +336,17 @@ public class AiChatService {
                                 }
                         }
                         var trips = tripService.searchTrips(searchRequest);
+
+                        // 2. If empty, try search with unaccented terms (handling case where DB is
+                        // unaccented but user typed accented)
+                        if (trips.isEmpty() && (hasAccents(origin) || hasAccents(destination))) {
+                                String originUnaccented = removeAccents(origin);
+                                String destUnaccented = removeAccents(destination);
+                                searchRequest.setOrigin(originUnaccented);
+                                searchRequest.setDestination(destUnaccented);
+                                trips = tripService.searchTrips(searchRequest);
+                        }
+
                         if (trips.isEmpty())
                                 return "Không tìm thấy chuyến xe.";
 
@@ -310,6 +367,20 @@ public class AiChatService {
                 } catch (Exception e) {
                         return "Lỗi: " + e.getMessage();
                 }
+        }
+
+        private boolean hasAccents(String str) {
+                if (str == null)
+                        return false;
+                return !str.equals(removeAccents(str));
+        }
+
+        private String removeAccents(String str) {
+                if (str == null)
+                        return null;
+                String nfdNormalizedString = java.text.Normalizer.normalize(str, java.text.Normalizer.Form.NFD);
+                java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("\\p{InCombiningDiacriticalMarks}+");
+                return pattern.matcher(nfdNormalizedString).replaceAll("").replace('đ', 'd').replace('Đ', 'D');
         }
 
         private String executeGetTripDetails(String tripIdStr) {

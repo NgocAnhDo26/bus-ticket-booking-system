@@ -53,6 +53,8 @@ import type {
   TripPricingInfoSeatType,
   TripResponse,
   TripResponseStatus,
+  PagedModelStation,
+  PagedModelRouteResponse,
 } from '@/model';
 
 import {
@@ -100,7 +102,7 @@ const toRoute = (r: ApiRoute | RouteResponse | undefined): Route => ({
   ),
   destinationStation: toStation(
     (r as ApiRoute | undefined)?.destinationStation ??
-      (r as RouteResponse | undefined)?.destinationStation,
+    (r as RouteResponse | undefined)?.destinationStation,
   ),
   durationMinutes: r?.durationMinutes ?? 0,
   distanceKm: 'distanceKm' in (r ?? {}) ? ((r as ApiRoute).distanceKm ?? 0) : 0,
@@ -176,6 +178,7 @@ const toTrip = (t: TripResponse | undefined): Trip => ({
   arrivalTime: t?.arrivalTime ?? '',
   status: (t?.status as unknown as TripResponseStatus) ?? 'ACTIVE',
   tripPricings: (t?.tripPricings ?? []).map(toTripPricing),
+  tripPoints: [],
   createdAt: '',
 });
 
@@ -197,6 +200,13 @@ export const updateStation = async (id: string, data: CreateStationRequest): Pro
 
 export const deleteStation = async (id: string, force?: boolean): Promise<void> => {
   await orvalDeleteStation(id, force ? { force } : undefined);
+};
+
+export const searchStations = async (query: string): Promise<Station[]> => {
+  const response = await apiClient.get<PagedModelStation>(`/api/stations/search`, {
+    params: { query, page: 0, size: 20 },
+  });
+  return (response.data.content ?? []).map(toStation);
 };
 
 // Operators
@@ -265,6 +275,13 @@ export const deleteRoute = async (id: string, force?: boolean): Promise<void> =>
 export const addRouteStop = async (routeId: string, data: AddRouteStopRequest): Promise<Route> => {
   const response = await apiClient.post<Route>(`/api/routes/${routeId}/stops`, data);
   return response.data;
+};
+
+export const searchRoutes = async (query: string): Promise<Route[]> => {
+  const response = await apiClient.get<PagedModelRouteResponse>(`/api/routes/search`, {
+    params: { query, page: 0, size: 20 },
+  });
+  return (response.data.content ?? []).map(toRoute);
 };
 
 export const deleteRouteStop = async (routeId: string, stopId: string): Promise<void> => {

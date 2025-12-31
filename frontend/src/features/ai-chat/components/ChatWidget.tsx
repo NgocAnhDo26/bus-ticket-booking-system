@@ -97,7 +97,7 @@ export const ChatWidget = () => {
                 className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
               >
                 <div
-                  className={`max-w-[80%] rounded-lg px-3 py-2 text-sm ${
+                  className={`max-w-[80%] rounded-lg px-3 py-2 text-sm whitespace-pre-wrap ${
                     msg.sender === 'user'
                       ? 'bg-primary text-primary-foreground'
                       : 'bg-white text-gray-800 shadow-sm dark:bg-zinc-800 dark:text-gray-100'

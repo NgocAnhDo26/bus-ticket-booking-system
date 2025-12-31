@@ -83,12 +83,20 @@ export const BookingConfirmationPage = () => {
       const verify = async () => {
         setIsVerifying(true);
         try {
-          await verifyPayment(bookingId);
-          // Refetch booking to get updated status
+          const res = await verifyPayment(bookingId);
+          // Refetch booking
           queryClient.invalidateQueries({ queryKey: ['booking', bookingId] });
-          toast.success('Thanh toán thành công!', {
-            description: 'Đặt vé của bạn đã được xác nhận.',
-          });
+          
+          if (res.data.status === 'SUCCESS') {
+            toast.success('Thanh toán thành công!', {
+              description: 'Đặt vé của bạn đã được xác nhận.',
+            });
+          } else {
+             // Handle cancelled/failed returned from verification
+             toast.error('Thanh toán không thành công', {
+                description: 'Giao dịch đã bị hủy hoặc thất bại.',
+             });
+          }
           // Clean URL params
           window.history.replaceState({}, '', window.location.pathname);
         } catch (err: unknown) {
@@ -211,6 +219,14 @@ export const BookingConfirmationPage = () => {
           <CardTitle className="text-xl font-bold">{status.label}</CardTitle>
           <p className="text-lg font-mono font-bold text-primary mt-1">{booking.code}</p>
           <p className="text-xs text-muted-foreground">Mã đặt vé</p>
+          
+          <div className="mt-4 flex justify-center">
+            <img 
+              src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${booking.code}`} 
+              alt="QR Code" 
+              className="border p-2 rounded-lg"
+            />
+          </div>
         </CardHeader>
 
         <div className="px-6">
