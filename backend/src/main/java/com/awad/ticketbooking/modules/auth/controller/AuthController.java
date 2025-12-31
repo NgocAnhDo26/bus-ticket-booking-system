@@ -50,6 +50,23 @@ public class AuthController {
         return buildTokenResponse(result);
     }
 
+    @PostMapping("/forgot-password")
+    @Operation(summary = "Request password reset", description = "Sends a password reset link to the registered email.")
+    public ResponseEntity<ApiResponse<Void>> forgotPassword(
+            @Valid @RequestBody com.awad.ticketbooking.modules.auth.dto.ForgotPasswordRequest request) {
+        authService.initiatePasswordReset(request.getEmail());
+        return ResponseEntity.ok(ApiResponse.message(200,
+                "If your email is registered, you will receive a password reset link shortly."));
+    }
+
+    @PostMapping("/reset-password")
+    @Operation(summary = "Reset password", description = "Resets user password using the token.")
+    public ResponseEntity<ApiResponse<Void>> resetPassword(
+            @Valid @RequestBody com.awad.ticketbooking.modules.auth.dto.ResetPasswordRequest request) {
+        authService.resetPassword(request.getToken(), request.getNewPassword());
+        return ResponseEntity.ok(ApiResponse.message(200, "Password reset successful. You can now login."));
+    }
+
     @PostMapping("/login")
     @Operation(summary = "Login with email and password", description = "Authenticates user with credentials and returns JWT tokens.")
     public ResponseEntity<ApiResponse<AuthResponse>> login(@Valid @RequestBody LoginRequest request) {

@@ -41,7 +41,9 @@ public class Ticket {
     @Column(name = "passenger_phone", nullable = false)
     private String passengerPhone;
 
+    @Column(name = "passenger_id_number")
+    private String passengerIdNumber;
+
     @Column(nullable = false)
     private BigDecimal price;
 }
-

@@ -260,4 +260,50 @@ public class EmailService {
             log.error("Failed to send activation email to {}: {}", recipientEmail, e.getMessage());
         }
     }
+
+    @Async
+    public void sendPasswordResetEmail(String recipientEmail, String name, String token) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setFrom(fromEmail, fromName);
+            helper.setTo(recipientEmail);
+            helper.setSubject("Đặt lại mật khẩu - Bus Ticket Booking");
+
+            String resetLink = "http://localhost:5173/auth/reset-password?token=" + token; // Should be configurable
+
+            // TODO: Use frontend URL from properties
+
+            String content = """
+                    <!DOCTYPE html>
+                    <html>
+                    <body style="font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px;">
+                        <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
+                            <h2 style="color: #333333; text-align: center;">Đặt lại mật khẩu</h2>
+                            <p>Xin chào <strong>%s</strong>,</p>
+                            <p>Chúng tôi nhận được yêu cầu đặt lại mật khẩu cho tài khoản của bạn. Vui lòng nhấn vào nút bên dưới để đặt lại mật khẩu:</p>
+
+                            <div style="text-align: center; margin: 30px 0;">
+                                <a href="%s" style="background-color: #dc3545; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;">Đặt lại mật khẩu</a>
+                            </div>
+
+                            <p>Hoặc truy cập liên kết sau:</p>
+                            <p><a href="%s">%s</a></p>
+
+                            <p>Link này sẽ hết hạn sau 15 phút. Nếu bạn không yêu cầu đặt lại mật khẩu, vui lòng bỏ qua email này.</p>
+                        </div>
+                    </body>
+                    </html>
+                    """
+                    .formatted(name, resetLink, resetLink, resetLink);
+
+            helper.setText(content, true);
+
+            mailSender.send(message);
+            log.info("Password reset email sent to: {}", recipientEmail);
+        } catch (MessagingException | java.io.UnsupportedEncodingException e) {
+            log.error("Failed to send password reset email to {}: {}", recipientEmail, e.getMessage());
+        }
+    }
 }

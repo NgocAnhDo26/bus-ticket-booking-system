@@ -108,6 +108,7 @@ public class BookingService {
                 booking.setUser(user); // Can be null for guest
                 booking.setPassengerName(request.getPassengerName());
                 booking.setPassengerPhone(request.getPassengerPhone());
+                booking.setPassengerIdNumber(request.getPassengerIdNumber());
                 booking.setPassengerEmail(request.getPassengerEmail());
                 booking.setStatus(BookingStatus.PENDING);
 
@@ -447,6 +448,7 @@ public class BookingService {
                 ticket.setSeatCode(ticketReq.getSeatCode());
                 ticket.setPassengerName(ticketReq.getPassengerName());
                 ticket.setPassengerPhone(ticketReq.getPassengerPhone());
+                ticket.setPassengerIdNumber(ticketReq.getPassengerIdNumber());
                 ticket.setPrice(ticketReq.getPrice());
                 return ticket;
         }

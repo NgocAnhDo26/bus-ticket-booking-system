@@ -67,3 +67,22 @@ export const fetchCurrentUser = async () => {
 export const logout = async () => {
   await orvalLogout();
 };
+
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
+export interface ResetPasswordRequest {
+  token: string;
+  newPassword: string;
+}
+
+import { apiClient } from '@/lib/api-client';
+
+export const forgotPassword = async (data: ForgotPasswordRequest) => {
+  return apiClient.post('/api/auth/forgot-password', data);
+};
+
+export const resetPassword = async (data: ResetPasswordRequest) => {
+  return apiClient.post('/api/auth/reset-password', data);
+};

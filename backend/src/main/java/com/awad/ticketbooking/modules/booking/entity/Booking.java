@@ -58,6 +58,9 @@ public class Booking extends BaseEntity {
     @Column(name = "passenger_phone", nullable = false)
     private String passengerPhone;
 
+    @Column(name = "passenger_id_number")
+    private String passengerIdNumber;
+
     @Column(name = "passenger_email")
     private String passengerEmail;
 

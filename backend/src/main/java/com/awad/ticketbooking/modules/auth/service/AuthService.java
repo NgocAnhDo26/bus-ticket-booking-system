@@ -27,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class AuthService {
 
     private final UserRepository userRepository;
+    private final com.awad.ticketbooking.modules.auth.repository.PasswordResetTokenRepository passwordResetTokenRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
@@ -136,6 +137,43 @@ public class AuthService {
     @Transactional
     public void logout(User user) {
         refreshTokenService.revokeAll(user);
+    }
+
+    @Transactional
+    public void initiatePasswordReset(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + email));
+
+        passwordResetTokenRepository.findByUser(user).ifPresent(passwordResetTokenRepository::delete);
+
+        String token = java.util.UUID.randomUUID().toString();
+        com.awad.ticketbooking.modules.auth.entity.PasswordResetToken resetToken = com.awad.ticketbooking.modules.auth.entity.PasswordResetToken
+                .builder()
+                .token(token)
+                .user(user)
+                .expiryDate(java.time.LocalDateTime.now().plusMinutes(15))
+                .build();
+
+        passwordResetTokenRepository.save(resetToken);
+        emailService.sendPasswordResetEmail(user.getEmail(), user.getFullName(), token);
+    }
+
+    @Transactional
+    public void resetPassword(String token, String newPassword) {
+        com.awad.ticketbooking.modules.auth.entity.PasswordResetToken resetToken = passwordResetTokenRepository
+                .findByToken(token)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid or expired password reset token"));
+
+        if (resetToken.isExpired()) {
+            passwordResetTokenRepository.delete(resetToken);
+            throw new IllegalArgumentException("Token expired");
+        }
+
+        User user = resetToken.getUser();
+        user.setPasswordHash(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+
+        passwordResetTokenRepository.delete(resetToken);
     }
 
     private AuthResult issueTokens(User user) {
