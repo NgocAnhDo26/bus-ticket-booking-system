@@ -4,6 +4,7 @@ import { Navigate, createBrowserRouter } from 'react-router-dom';
 import { ProtectedRoute, PublicRoute } from '@/components/common';
 import { DashboardLayout } from '@/components/layout';
 import { AdminDashboardLayout } from '@/components/layout/AdminLayout';
+import { UserDashboardLayout } from '@/components/layout/UserDashboardLayout';
 import { BookingManagementPage } from '@/features/admin-booking';
 import {
   ActivationPage,
@@ -15,7 +16,6 @@ import {
 import { useHydrateAuth } from '@/features/auth/hooks';
 import { BookingLookupPage, BookingPage, PassengerInfoPage } from '@/features/booking';
 import { BookingConfirmationPage } from '@/features/booking/pages/BookingConfirmationPage';
-import { BookingHistoryPage } from '@/features/booking/pages/BookingHistoryPage';
 import { BusLayoutCreatePage, BusLayoutManagementPage } from '@/features/bus-layout';
 import {
   BusManagementPage,
@@ -24,7 +24,7 @@ import {
   StationManagementPage,
   TripManagementPage,
 } from '@/features/catalog';
-import { DashboardPage } from '@/features/dashboard';
+import { UserDashboardPage } from '@/features/dashboard';
 import { AdminDashboardPage } from '@/features/dashboard-admin';
 import { HomePage } from '@/features/home/pages/HomePage';
 import { SearchResultsPage } from '@/features/search/pages/SearchResultsPage';
@@ -94,13 +94,25 @@ export const router = createBrowserRouter([
       {
         element: <ProtectedRoute allowedRoles={['PASSENGER']} />,
         children: [
-          { path: '/dashboard', element: <DashboardPage /> },
-          { path: '/dashboard/bookings', element: <BookingHistoryPage /> },
           {
-            path: '/dashboard/*',
-            element: <Navigate to="/dashboard" replace />,
+            element: <UserDashboardLayout />,
+            children: [
+              { path: '/dashboard', element: <UserDashboardPage /> },
+              {
+                path: '/dashboard/bookings',
+                element: <Navigate to="/dashboard?tab=tickets" replace />,
+              },
+              {
+                path: '/dashboard/*',
+                element: <Navigate to="/dashboard" replace />,
+              },
+            ],
           },
         ],
+      },
+      {
+        element: <ProtectedRoute allowedRoles={['PASSENGER', 'ADMIN', 'STAFF']} />,
+        children: [{ path: '/profile', element: <Navigate to="/dashboard?tab=profile" replace /> }],
       },
     ],
   },

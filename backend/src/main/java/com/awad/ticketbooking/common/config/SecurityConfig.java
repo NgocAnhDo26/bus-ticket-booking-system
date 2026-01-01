@@ -92,6 +92,9 @@ public class SecurityConfig {
                         // Webhooks (no auth - signature verified internally)
                         .requestMatchers("/api/webhooks/**").permitAll()
 
+                        // Image upload endpoints (require authentication)
+                        .requestMatchers("/api/images/**").authenticated()
+
                         .requestMatchers(HttpMethod.PUT, "/api/routes/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/routes/**").hasRole("ADMIN")
                         .anyRequest().authenticated())

@@ -64,13 +64,10 @@ export const BookingHistoryPage = () => {
   const totalElements = data?.totalElements ?? 0;
 
   return (
-    <div className="container mx-auto p-8 max-w-6xl space-y-6">
-      <div className="flex items-center gap-3">
-        <Ticket className="h-8 w-8 text-primary" />
-        <div>
-          <h1 className="text-2xl font-bold">Lịch sử đặt vé</h1>
-          <p className="text-muted-foreground">Bạn có {totalElements} đặt vé</p>
-        </div>
+    <div className="container mx-auto max-w-4xl space-y-6">
+      <div className="flex flex-col items-start gap-2">
+        <h1 className="text-3xl font-bold">Lịch sử đặt vé</h1>
+        <p className="text-muted-foreground">Bạn đã đặt {totalElements} vé</p>
       </div>
 
       {bookings.length === 0 ? (
