@@ -28,6 +28,7 @@ type BookingState = {
   selectedSeats: string[];
 
   // Actions
+  clearSelection: () => void;
   initialize: (tripId: string) => Promise<void>;
   cleanup: () => void;
   toggleSeat: (seatCode: string) => Promise<void>;
@@ -52,6 +53,15 @@ export const useBookingStore = create<BookingState>()(
         pendingBookingId: null,
         pendingSelectedSeats: [],
         selectedSeats: [],
+
+        clearSelection: () =>
+          set({
+            selectedSeats: [],
+            pendingBookingId: null,
+            pendingSelectedSeats: [],
+            pickupStationId: null,
+            dropoffStationId: null,
+          }),
 
         setPendingBooking: (id, seats) =>
           set({ pendingBookingId: id, pendingSelectedSeats: seats }),

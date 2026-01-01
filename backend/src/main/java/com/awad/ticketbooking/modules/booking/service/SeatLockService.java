@@ -87,18 +87,34 @@ public class SeatLockService {
             String lockKey = String.format(LOCK_KEY_PREFIX, tripId, seatCode);
             RLock lock = redissonClient.getLock(lockKey);
 
-            // Force unlock if locked, regardless of map status
-            // This ensures no zombie locks remain if map entry is lost
             if (lock.isLocked()) {
                 lock.forceUnlock();
             }
 
-            // Also clean up map
             if (locksMap.containsKey(seatCode)) {
                 locksMap.remove(seatCode);
             }
-            // Always broadcast available status to ensure frontend updates
             broadcastSeatStatus(tripId, seatCode, "AVAILABLE", null);
+        }
+    }
+
+    public void markSeatsAsBooked(UUID tripId, java.util.List<String> seatCodes) {
+        RMap<String, UUID> locksMap = redissonClient.getMap(String.format(LOCK_INFO_MAP_PREFIX, tripId));
+
+        for (String seatCode : seatCodes) {
+            String lockKey = String.format(LOCK_KEY_PREFIX, tripId, seatCode);
+            RLock lock = redissonClient.getLock(lockKey);
+
+            // Unlock the temporary hold since it's now permanently booked in DB
+            if (lock.isLocked()) {
+                lock.forceUnlock();
+            }
+
+            if (locksMap.containsKey(seatCode)) {
+                locksMap.remove(seatCode);
+            }
+            // Broadcast BOOKED status so other clients update their map
+            broadcastSeatStatus(tripId, seatCode, "BOOKED", null);
         }
     }
 

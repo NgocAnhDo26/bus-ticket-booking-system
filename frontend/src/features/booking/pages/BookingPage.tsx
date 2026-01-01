@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { useQuery } from '@tanstack/react-query';
@@ -12,7 +12,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import { Separator } from '@/components/ui/separator';
 import { getBusLayout } from '@/features/bus-layout/api';
 
-import { bookingApi, getBookingById } from '../api';
+import { bookingApi } from '../api';
 import { BookingSeatMap } from '../components/BookingSeatMap';
 import { useBookingStore } from '../store';
 
@@ -48,8 +48,6 @@ export const BookingPage = () => {
     })),
   );
 
-  const [restoredBookingSheets, setRestoredBookingSheets] = useState<string[]>([]);
-
   const { data: trip, isLoading } = useQuery({
     queryKey: ['trip', tripId],
     queryFn: () => bookingApi.getTrip(tripId!),
@@ -63,54 +61,11 @@ export const BookingPage = () => {
   });
 
   useEffect(() => {
-    const restoreDraft = async () => {
-      const { pendingBookingId, setPendingBooking } = useBookingStore.getState();
-
-      if (tripId) {
-        // If there is a pending booking (user came back from confirmation or refresh)
-        if (pendingBookingId) {
-          try {
-            // Fetch booking to see if it's still PENDING
-            const booking = await getBookingById(pendingBookingId);
-
-            if (booking.status === 'PENDING') {
-              // Restore seats
-              const bookedSeats = booking.tickets.map((t) => t.seatCode);
-              setRestoredBookingSheets(bookedSeats);
-
-              // Sync store selectedSeats if needed, BUT store might already have them persisted.
-              // If store persisted them, great. If not, we might need to "re-select" them in UI.
-              // But `toggleSeat` logic locks them.
-              // If they are BOOKED in backend (PENDING status), we can't "Lock" them again.
-              // We just need UI to show them as Selected.
-              // We force them into store if missing?
-              // `useBookingStore.setState({ selectedSeats: bookedSeats })` ?
-              // Yes, directly updating state is cleaner for hydration.
-              useBookingStore.setState({ selectedSeats: bookedSeats });
-
-              toast.success('Khôi phục phiên đặt vé', {
-                description: 'Bạn đang tiếp tục chỉnh sửa đơn đặt vé trước đó.',
-              });
-            } else {
-              // If confirmed or cancelled, clear draft
-              setPendingBooking(null, []);
-              useBookingStore.setState({ selectedSeats: [] });
-            }
-          } catch (e) {
-            console.error('Failed to restore booking', e);
-            // If not found (404), clear draft
-            setPendingBooking(null, []);
-          }
-        }
-
-        initialize(tripId);
-      }
-    };
-
-    restoreDraft();
-
-    // Don't cleanup on unmount to persist state for next step
-    // return () => cleanup();
+    if (tripId) {
+      // Clear any previous session state before initializing new booking
+      useBookingStore.getState().clearSelection();
+      initialize(tripId);
+    }
   }, [tripId, initialize]);
 
   // Calculate selected seats and price
@@ -175,10 +130,7 @@ export const BookingPage = () => {
             </CardHeader>
             <CardContent>
               {trip.bus.busLayoutId ? (
-                <BookingSeatMap
-                  busLayoutId={trip.bus.busLayoutId}
-                  alreadyBookedSeats={restoredBookingSheets}
-                />
+                <BookingSeatMap busLayoutId={trip.bus.busLayoutId} />
               ) : (
                 <div className="text-center text-muted-foreground py-8">
                   Không tìm thấy sơ đồ ghế cho chuyến đi này.
