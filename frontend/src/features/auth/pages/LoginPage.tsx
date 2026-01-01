@@ -7,6 +7,7 @@ import { useMutation } from '@tanstack/react-query';
 import type { AxiosError } from 'axios';
 
 import { LoginForm } from '@/features/auth/components/LoginForm';
+import { getDashboardPath } from '@/lib/navigation';
 import { useAuthStore } from '@/store/auth-store';
 
 import { login, loginWithGoogle } from '../api';
@@ -33,8 +34,8 @@ export const LoginPage = () => {
       console.log('Login success, data:', data);
       setError('');
       setAuth(data);
-      console.log('Auth set, navigating to home');
-      navigate('/');
+      console.log('Auth set, navigating to dashboard');
+      navigate(getDashboardPath(data.user.role));
     },
     onError: (error: AxiosError<ErrorResponse>) => {
       const errorMessage = error.response?.data?.message || error.message || 'Login failed';
@@ -48,7 +49,7 @@ export const LoginPage = () => {
     onSuccess: (data) => {
       setError('');
       setAuth(data);
-      navigate('/');
+      navigate(getDashboardPath(data.user.role));
     },
     onError: (error: AxiosError<ErrorResponse>) => {
       const errorMessage = error.response?.data?.message || error.message || 'Google login failed';
@@ -70,7 +71,7 @@ export const LoginPage = () => {
         onSubmit={onSubmit}
         onGoogleLogin={(credential) => googleMutation.mutate({ credential })}
         onGoogleError={() => {
-          setError('Lỗi khi đăng nhập với Google');
+          setError('Google login failed');
         }}
       />
     </AuthLayout>

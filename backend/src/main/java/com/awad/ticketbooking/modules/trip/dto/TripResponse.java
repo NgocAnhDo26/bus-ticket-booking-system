@@ -36,9 +36,7 @@ public class TripResponse {
     @Builder
     public static class RouteStopInfo {
         private UUID id;
-        private StationInfo station; // null if custom address
-        private String customName; // used when station is null
-        private String customAddress; // used when station is null
+        private StationInfo station;
         private int stopOrder;
         private int durationMinutesFromOrigin;
         private String stopType;

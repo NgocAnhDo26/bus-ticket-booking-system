@@ -6,7 +6,7 @@ import * as z from 'zod';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Field, FieldError, FieldLabel } from '@/components/ui/field';
+import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
 import {
   Table,
@@ -107,10 +107,8 @@ export const RouteStopsManager = ({ route }: RouteStopsManagerProps) => {
                       <TableCell>{stop.stopOrder}</TableCell>
                       <TableCell>
                         <div className="flex flex-col">
-                          <span className="font-medium">{stop.station?.name ?? 'Custom Stop'}</span>
-                          <span className="text-xs text-muted-foreground">
-                            {stop.station?.city ?? '-'}
-                          </span>
+                          <span className="font-medium">{stop.station.name}</span>
+                          <span className="text-xs text-muted-foreground">{stop.station.city}</span>
                         </div>
                       </TableCell>
                       <TableCell>{stop.durationMinutesFromOrigin} phút</TableCell>
@@ -149,8 +147,7 @@ export const RouteStopsManager = ({ route }: RouteStopsManagerProps) => {
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Field data-invalid={!!errors.stationId}>
-                <FieldLabel>Trạm dừng</FieldLabel>
+              <FormField label="Trạm dừng" error={errors.stationId?.message}>
                 <select
                   className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   {...register('stationId')}
@@ -162,11 +159,9 @@ export const RouteStopsManager = ({ route }: RouteStopsManagerProps) => {
                     </option>
                   ))}
                 </select>
-                <FieldError>{errors.stationId?.message}</FieldError>
-              </Field>
+              </FormField>
 
-              <Field data-invalid={!!errors.stopType}>
-                <FieldLabel>Loại điểm dừng</FieldLabel>
+              <FormField label="Loại điểm dừng" error={errors.stopType?.message}>
                 <select
                   className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   {...register('stopType')}
@@ -175,23 +170,21 @@ export const RouteStopsManager = ({ route }: RouteStopsManagerProps) => {
                   <option value="DROPOFF">Trả khách</option>
                   <option value="BOTH">Đón và Trả</option>
                 </select>
-                <FieldError>{errors.stopType?.message}</FieldError>
-              </Field>
+              </FormField>
 
-              <Field data-invalid={!!errors.stopOrder}>
-                <FieldLabel>Thứ tự</FieldLabel>
+              <FormField label="Thứ tự" error={errors.stopOrder?.message}>
                 <Input type="number" {...register('stopOrder', { valueAsNumber: true })} />
-                <FieldError>{errors.stopOrder?.message}</FieldError>
-              </Field>
+              </FormField>
 
-              <Field data-invalid={!!errors.durationMinutesFromOrigin}>
-                <FieldLabel>Thời gian từ điểm đi (phút)</FieldLabel>
+              <FormField
+                label="Thời gian từ điểm đi (phút)"
+                error={errors.durationMinutesFromOrigin?.message}
+              >
                 <Input
                   type="number"
                   {...register('durationMinutesFromOrigin', { valueAsNumber: true })}
                 />
-                <FieldError>{errors.durationMinutesFromOrigin?.message}</FieldError>
-              </Field>
+              </FormField>
             </div>
 
             <Button type="submit" disabled={addStop.isPending}>

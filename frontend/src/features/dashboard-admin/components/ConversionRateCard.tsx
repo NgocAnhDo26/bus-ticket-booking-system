@@ -1,6 +1,7 @@
 import { PercentIcon } from 'lucide-react';
 
-import { AdminSummaryCard } from './AdminSummaryCard';
+import { Card } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export interface ConversionRateCardProps {
   conversionRate?: number; // 0..1
@@ -23,21 +24,26 @@ export const ConversionRateCard = ({
   isLoading,
 }: ConversionRateCardProps) => {
   return (
-    <AdminSummaryCard
-      title="Tỷ lệ chuyển đổi đơn"
-      icon={PercentIcon}
-      iconBgColor="bg-red-400"
-      isLoading={isLoading}
-      data={
-        <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-          <span className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            {formatPercent(conversionRate ?? 0)}
-          </span>
-          <span className="text-sm text-muted-foreground">
-            ({confirmed ?? 0}/{total ?? 0} đơn đã xác nhận)
-          </span>
-        </div>
-      }
-    />
+    <Card className="p-6 flex-1 min-w-64">
+      <div className="flex items-center justify-center p-2 rounded-xl size-12 bg-red-400 mb-4">
+        <PercentIcon className="text-white size-6" />
+      </div>
+      <div className="space-y-1">
+        <p>Tỷ lệ chuyển đổi đơn</p>
+        {isLoading ? (
+          <div className="space-y-2">
+            <Skeleton className="h-7 w-24" />
+            <Skeleton className="h-4 w-32" />
+          </div>
+        ) : (
+          <div className="flex items-center">
+            <span className="font-semibold text-xl">{formatPercent(conversionRate ?? 0)}</span>
+            <span className="text-sm text-muted-foreground ml-2">
+              ({confirmed ?? 0}/{total ?? 0} đơn đã xác nhận)
+            </span>
+          </div>
+        )}
+      </div>
+    </Card>
   );
 };

@@ -36,21 +36,18 @@ export type CreateOperatorRequest = {
   isActive?: boolean;
 };
 
-export type BusLayout = {
-  id: string;
-  name: string;
-  busType: string;
-  totalSeats: number;
-  totalFloors: number;
-  description?: string;
-  layoutMatrix?: { rows: unknown[]; totalRows: number; totalCols: number }; // Optional for full details
-};
-
 export type Bus = {
   id: string;
   operator: Operator;
   plateNumber: string;
-  busLayout: BusLayout;
+  busLayout: {
+    id: string;
+    name: string;
+    busType: string;
+    totalSeats: number;
+    totalFloors: number;
+    description?: string;
+  };
   amenities: string[];
   isActive: boolean;
   createdAt: string;
@@ -64,25 +61,6 @@ export type CreateBusRequest = {
   isActive?: boolean;
 };
 
-export type TripSchedule = {
-  id: string;
-  departureTime: string; // "HH:mm:ss"
-  frequency?: string;
-  startDate: string;
-  endDate?: string;
-  isActive: boolean;
-};
-
-export type TripPoint = {
-  id: string;
-  station: Station;
-  scheduledTime: string; // ISO timestamp
-  actualTime?: string; // ISO timestamp
-  surcharge: number;
-  pointOrder: number;
-  pointType: 'PICKUP' | 'DROPOFF' | 'BOTH';
-};
-
 export type Route = {
   id: string;
   originStation: Station;
@@ -93,12 +71,9 @@ export type Route = {
   createdAt: string;
   stops: {
     id: string;
-    station?: Station;
-    customName?: string;
-    customAddress?: string;
+    station: Station;
     stopOrder: number;
     durationMinutesFromOrigin: number;
-    defaultSurcharge?: number; // Added
     stopType: 'PICKUP' | 'DROPOFF' | 'BOTH';
   }[];
 };
@@ -107,7 +82,6 @@ export type AddRouteStopRequest = {
   stationId: string;
   stopOrder: number;
   durationMinutesFromOrigin: number;
-  defaultSurcharge?: number;
   stopType: 'PICKUP' | 'DROPOFF' | 'BOTH';
 };
 
@@ -153,12 +127,10 @@ export type Trip = {
   id: string;
   route: Route;
   bus: BusInfo;
-  tripSchedule?: TripSchedule; // Added
   departureTime: string;
   arrivalTime: string;
   status: string;
   tripPricings: TripPricing[];
-  tripPoints: TripPoint[]; // Added
   createdAt: string;
 };
 
@@ -185,29 +157,4 @@ export type SearchTripRequest = {
   sortBy?: string;
   page?: number;
   size?: number;
-};
-
-export type TripStopDto = {
-  stationId?: string; // Optional - either stationId or customAddress required
-  customName?: string; // Used when stationId is null
-  customAddress?: string; // Used when stationId is null
-  stopOrder: number;
-  durationMinutesFromOrigin: number;
-  stopType: 'PICKUP' | 'DROPOFF' | 'BOTH';
-};
-
-export type UpdateTripStopsRequest = {
-  stops: TripStopDto[];
-};
-
-export type TripPassenger = {
-  ticketId: string;
-  bookingCode: string;
-  passengerName: string;
-  passengerPhone: string;
-  seatCode: string;
-  isBoarded: boolean;
-  bookingStatus: string;
-  pickupStation: string;
-  dropoffStation: string;
 };

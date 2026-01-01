@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react';
-import { Controller, useForm } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Loader2 } from 'lucide-react';
-import { toast } from 'sonner';
 import * as z from 'zod';
 
 import { Button } from '@/components/ui/button';
@@ -16,10 +15,18 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { getBusLayout } from '@/features/bus-layout/api';
+import { useToast } from '@/hooks/use-toast';
 
 import { bookingApi, updateBooking } from '../api';
 import { useCancelBooking } from '../hooks';
@@ -42,6 +49,7 @@ type BookingEditDialogProps = {
 };
 
 export const BookingEditDialog = ({ booking, open, onOpenChange }: BookingEditDialogProps) => {
+  const { toast } = useToast();
   const queryClient = useQueryClient();
   const { initialize, cleanup, toggleSeat } = useBookingStore();
   const [localSelectedSeats, setLocalSelectedSeats] = useState<string[]>([]);
@@ -53,10 +61,10 @@ export const BookingEditDialog = ({ booking, open, onOpenChange }: BookingEditDi
   const handleCancelBooking = async () => {
     try {
       await cancelMutation.mutateAsync(booking.id);
-      toast.success('Hủy vé thành công');
+      toast({ title: 'Hủy vé thành công' });
       onOpenChange(false);
     } catch {
-      toast.error('Hủy vé thất bại');
+      toast({ title: 'Hủy vé thất bại', variant: 'destructive' });
     }
   };
 
@@ -166,12 +174,12 @@ export const BookingEditDialog = ({ booking, open, onOpenChange }: BookingEditDi
       });
     },
     onSuccess: () => {
-      toast.success('Cập nhật thành công');
+      toast({ title: 'Cập nhật thành công' });
       onOpenChange(false);
       queryClient.invalidateQueries({ queryKey: ['user-bookings'] });
     },
     onError: () => {
-      toast.error('Cập nhật thất bại');
+      toast({ title: 'Cập nhật thất bại', variant: 'destructive' });
     },
   });
 
@@ -186,133 +194,112 @@ export const BookingEditDialog = ({ booking, open, onOpenChange }: BookingEditDi
         <ScrollArea className="flex-1 px-6 py-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div>
-              <form
-                id="update-booking-form"
-                onSubmit={form.handleSubmit((d) => updateBookingMutation(d))}
-              >
-                <FieldGroup className="space-y-4">
-                  <Controller
+              <Form {...form}>
+                <form
+                  id="update-booking-form"
+                  onSubmit={form.handleSubmit((d) => updateBookingMutation(d))}
+                  className="space-y-4"
+                >
+                  <FormField
+                    control={form.control}
                     name="passengerName"
-                    control={form.control}
-                    render={({ field, fieldState }) => (
-                      <Field data-invalid={fieldState.invalid}>
-                        <FieldLabel htmlFor="update-booking-form-passengerName">
-                          Tên hành khách
-                        </FieldLabel>
-                        <Input
-                          {...field}
-                          id="update-booking-form-passengerName"
-                          aria-invalid={fieldState.invalid}
-                        />
-                        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-                      </Field>
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Tên hành khách</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
                     )}
                   />
-                  <Controller
+                  <FormField
+                    control={form.control}
                     name="passengerPhone"
-                    control={form.control}
-                    render={({ field, fieldState }) => (
-                      <Field data-invalid={fieldState.invalid}>
-                        <FieldLabel htmlFor="update-booking-form-passengerPhone">
-                          Số điện thoại
-                        </FieldLabel>
-                        <Input
-                          {...field}
-                          id="update-booking-form-passengerPhone"
-                          aria-invalid={fieldState.invalid}
-                        />
-                        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-                      </Field>
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Số điện thoại</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
                     )}
                   />
-                  <Controller
+                  <FormField
+                    control={form.control}
                     name="passengerEmail"
-                    control={form.control}
-                    render={({ field, fieldState }) => (
-                      <Field data-invalid={fieldState.invalid}>
-                        <FieldLabel htmlFor="update-booking-form-passengerEmail">
-                          Email (Tùy chọn)
-                        </FieldLabel>
-                        <Input
-                          {...field}
-                          id="update-booking-form-passengerEmail"
-                          type="email"
-                          aria-invalid={fieldState.invalid}
-                        />
-                        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-                      </Field>
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Email (Tùy chọn)</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
                     )}
                   />
-                  <Controller
+                  <FormField
+                    control={form.control}
                     name="pickupStationId"
-                    control={form.control}
-                    render={({ field, fieldState }) => (
-                      <Field data-invalid={fieldState.invalid}>
-                        <FieldLabel htmlFor="update-booking-form-pickupStationId">
-                          Điểm đón
-                        </FieldLabel>
-                        <select
-                          id="update-booking-form-pickupStationId"
-                          className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                          value={field.value || ''}
-                          onChange={field.onChange}
-                          aria-invalid={fieldState.invalid}
-                        >
-                          <option value={trip?.route.originStation.id}>
-                            {trip?.route.originStation.name} (Xuất phát)
-                          </option>
-                          {trip?.route.stops
-                            ?.filter(
-                              (s) =>
-                                s.station && (s.stopType === 'PICKUP' || s.stopType === 'BOTH'),
-                            )
-                            .sort((a, b) => a.stopOrder - b.stopOrder)
-                            .map((stop) => (
-                              <option key={stop.id} value={stop.station!.id}>
-                                {stop.station!.name} ({stop.durationMinutesFromOrigin}m)
-                              </option>
-                            ))}
-                        </select>
-                        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-                      </Field>
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Điểm đón</FormLabel>
+                        <FormControl>
+                          <select
+                            className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                            value={field.value || ''}
+                            onChange={field.onChange}
+                          >
+                            <option value={trip?.route.originStation.id}>
+                              {trip?.route.originStation.name} (Xuất phát)
+                            </option>
+                            {trip?.route.stops
+                              ?.filter((s) => s.stopType === 'PICKUP' || s.stopType === 'BOTH')
+                              .sort((a, b) => a.stopOrder - b.stopOrder)
+                              .map((stop) => (
+                                <option key={stop.id} value={stop.station.id}>
+                                  {stop.station.name} ({stop.durationMinutesFromOrigin}m)
+                                </option>
+                              ))}
+                          </select>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
                     )}
                   />
-                  <Controller
+
+                  <FormField
+                    control={form.control}
                     name="dropoffStationId"
-                    control={form.control}
-                    render={({ field, fieldState }) => (
-                      <Field data-invalid={fieldState.invalid}>
-                        <FieldLabel htmlFor="update-booking-form-dropoffStationId">
-                          Điểm trả
-                        </FieldLabel>
-                        <select
-                          id="update-booking-form-dropoffStationId"
-                          className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                          value={field.value || ''}
-                          onChange={field.onChange}
-                          aria-invalid={fieldState.invalid}
-                        >
-                          <option value={trip?.route.destinationStation.id}>
-                            {trip?.route.destinationStation.name} (Điểm cuối)
-                          </option>
-                          {trip?.route.stops
-                            ?.filter(
-                              (s) =>
-                                s.station && (s.stopType === 'DROPOFF' || s.stopType === 'BOTH'),
-                            )
-                            .sort((a, b) => a.stopOrder - b.stopOrder)
-                            .map((stop) => (
-                              <option key={stop.id} value={stop.station!.id}>
-                                {stop.station!.name} ({stop.durationMinutesFromOrigin}m)
-                              </option>
-                            ))}
-                        </select>
-                        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-                      </Field>
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Điểm trả</FormLabel>
+                        <FormControl>
+                          <select
+                            className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                            value={field.value || ''}
+                            onChange={field.onChange}
+                          >
+                            <option value={trip?.route.destinationStation.id}>
+                              {trip?.route.destinationStation.name} (Điểm cuối)
+                            </option>
+                            {trip?.route.stops
+                              ?.filter((s) => s.stopType === 'DROPOFF' || s.stopType === 'BOTH')
+                              .sort((a, b) => a.stopOrder - b.stopOrder)
+                              .map((stop) => (
+                                <option key={stop.id} value={stop.station.id}>
+                                  {stop.station.name} ({stop.durationMinutesFromOrigin}m)
+                                </option>
+                              ))}
+                          </select>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
                     )}
                   />
-                </FieldGroup>
-              </form>
+                </form>
+              </Form>
 
               <div className="mt-8">
                 <h4 className="font-medium mb-4">Ghế đã chọn</h4>

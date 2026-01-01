@@ -1,6 +1,6 @@
 'use client';
 
-import { Link, useLocation } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
 import { ChevronRight, type LucideIcon } from 'lucide-react';
 
@@ -31,79 +31,57 @@ type NavMainProps = {
   items: NavItem[];
 };
 
-// Helper function to check if a path matches the current location
-const isPathActive = (path: string, currentPath: string): boolean => {
-  if (path === '#' || !path) return false;
-  if (path === currentPath) return true;
-  // Check if current path starts with the item path (for nested routes)
-  // But only if the path is not just a prefix (e.g., /admin should not match /admin/dashboard)
-  // We want exact matches or paths that are clearly nested
-  if (currentPath.startsWith(path + '/')) {
-    return true;
-  }
-  return false;
-};
-
-function SubMenuItems({ items, currentPath }: { items: NavItem['items']; currentPath: string }) {
+function SubMenuItems({ items }: { items: NavItem['items'] }) {
   if (!items) return null;
 
   return (
     <SidebarMenuSub>
-      {items.map((subItem) => {
-        const isActive = isPathActive(subItem.url, currentPath);
-        return (
-          <SidebarMenuSubItem key={subItem.title}>
-            <SidebarMenuSubButton asChild isActive={isActive}>
-              <Link to={subItem.url}>
-                <span>{subItem.title}</span>
-              </Link>
-            </SidebarMenuSubButton>
-          </SidebarMenuSubItem>
-        );
-      })}
+      {items.map((subItem) => (
+        <SidebarMenuSubItem key={subItem.title}>
+          <SidebarMenuSubButton asChild>
+            <Link to={subItem.url}>
+              <span>{subItem.title}</span>
+            </Link>
+          </SidebarMenuSubButton>
+        </SidebarMenuSubItem>
+      ))}
     </SidebarMenuSub>
   );
 }
 
-function CollapsibleNavItem({ item, currentPath }: { item: NavItem; currentPath: string }) {
-  // Check if any sub-item is active
-  const hasActiveSubItem =
-    item.items?.some((subItem) => isPathActive(subItem.url, currentPath)) ?? false;
-  const isOpen = hasActiveSubItem || item.isActive;
-
+function CollapsibleNavItem({ item }: { item: NavItem }) {
   return (
-    <Collapsible key={item.title} asChild defaultOpen={isOpen} className="group/collapsible">
+    <Collapsible key={item.title} asChild defaultOpen={item.isActive} className="group/collapsible">
       <SidebarMenuItem>
         <CollapsibleTrigger asChild>
-          <SidebarMenuButton tooltip={item.title} isActive={hasActiveSubItem}>
+          <SidebarMenuButton tooltip={item.title}>
             {item.icon && <item.icon />}
             <span>{item.title}</span>
             <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
           </SidebarMenuButton>
         </CollapsibleTrigger>
         <CollapsibleContent>
-          <SubMenuItems items={item.items} currentPath={currentPath} />
+          <SubMenuItems items={item.items} />
         </CollapsibleContent>
       </SidebarMenuItem>
     </Collapsible>
   );
 }
 
-function SimpleNavItem({ item, currentPath }: { item: NavItem; currentPath: string }) {
+function SimpleNavItem({ item }: { item: NavItem }) {
   // If item has sub-items, render them
   if (item.items && item.items.length > 0) {
     return (
       <SidebarMenuItem key={item.title}>
-        <SubMenuItems items={item.items} currentPath={currentPath} />
+        <SubMenuItems items={item.items} />
       </SidebarMenuItem>
     );
   }
 
   // Otherwise, render the item itself as a simple link
-  const isActive = isPathActive(item.url, currentPath);
   return (
     <SidebarMenuItem key={item.title}>
-      <SidebarMenuButton tooltip={item.title} asChild isActive={isActive}>
+      <SidebarMenuButton tooltip={item.title} asChild isActive={item.isActive}>
         <Link to={item.url}>
           {item.icon && <item.icon />}
           <span>{item.title}</span>
@@ -114,17 +92,14 @@ function SimpleNavItem({ item, currentPath }: { item: NavItem; currentPath: stri
 }
 
 export function NavMain({ items }: NavMainProps) {
-  const location = useLocation();
-  const currentPath = location.pathname;
-
   return (
     <SidebarGroup>
       <SidebarMenu>
         {items.map((item) =>
           item.isCollapsible ? (
-            <CollapsibleNavItem key={item.title} item={item} currentPath={currentPath} />
+            <CollapsibleNavItem key={item.title} item={item} />
           ) : (
-            <SimpleNavItem key={item.title} item={item} currentPath={currentPath} />
+            <SimpleNavItem key={item.title} item={item} />
           ),
         )}
       </SidebarMenu>

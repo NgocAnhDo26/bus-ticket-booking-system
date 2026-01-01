@@ -61,20 +61,11 @@ public class AdminDashboardService {
     public List<RevenueChartResponse> getRevenueChart(Instant start, Instant end) {
         List<Object[]> data = bookingRepository.getRevenueChartData(start, end);
         return data.stream().map(row -> {
-            Object dateObj = (row != null && row.length > 0) ? row[0] : null;
-            String dateStr = (dateObj == null) ? "" : dateObj.toString();
-
-            BigDecimal revenue = BigDecimal.ZERO;
-            if (row != null && row.length > 1 && row[1] != null) {
-                Object revObj = row[1];
-                if (revObj instanceof BigDecimal bd) {
-                    revenue = bd;
-                } else if (revObj instanceof Number n) {
-                    revenue = BigDecimal.valueOf(n.doubleValue());
-                } else {
-                    revenue = new BigDecimal(revObj.toString());
-                }
-            }
+            // Assuming row[0] is Date/Timestamp and row[1] is BigDecimal
+            // Need to handle type conversion carefully depending on DB
+            // For now assuming row[0] is java.sql.Date or java.sql.Timestamp
+            String dateStr = row[0].toString();
+            BigDecimal revenue = (BigDecimal) row[1];
             return RevenueChartResponse.builder()
                     .date(dateStr)
                     .revenue(revenue)

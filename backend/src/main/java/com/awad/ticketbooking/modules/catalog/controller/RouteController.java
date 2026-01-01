@@ -29,13 +29,6 @@ public class RouteController {
         return ResponseEntity.ok(routeService.getAllRoutes(pageable));
     }
 
-    @GetMapping("/search")
-    public ResponseEntity<org.springframework.data.domain.Page<com.awad.ticketbooking.modules.catalog.dto.RouteResponse>> searchRoutes(
-            @org.springframework.web.bind.annotation.RequestParam String query,
-            org.springframework.data.domain.Pageable pageable) {
-        return ResponseEntity.ok(routeService.searchRoutes(query, pageable));
-    }
-
     @org.springframework.web.bind.annotation.PostMapping
     public ResponseEntity<Route> createRoute(
             @jakarta.validation.Valid @org.springframework.web.bind.annotation.RequestBody com.awad.ticketbooking.modules.catalog.dto.CreateRouteRequest request) {
@@ -51,7 +44,7 @@ public class RouteController {
 
     @org.springframework.web.bind.annotation.DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteRoute(@org.springframework.web.bind.annotation.PathVariable UUID id,
-            @org.springframework.web.bind.annotation.RequestParam(defaultValue = "false") boolean force) {
+                                            @org.springframework.web.bind.annotation.RequestParam(defaultValue = "false") boolean force) {
         routeService.deleteRoute(id, force);
         return ResponseEntity.noContent().build();
     }

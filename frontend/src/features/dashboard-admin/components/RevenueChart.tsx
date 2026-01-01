@@ -9,7 +9,7 @@ import {
 } from 'recharts';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart';
+import { ChartContainer, ChartLegend, ChartTooltipContent } from '@/components/ui/chart';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { RevenueChartResponse } from '@/model';
 
@@ -62,78 +62,82 @@ export const RevenueChart = ({ data, isLoading }: RevenueChartProps) => {
           </div>
         ) : (
           <>
-            <div className="flex items-center justify-center gap-4 pb-3">
-              <div className="flex items-center gap-1.5">
-                <div className="h-2 w-2 shrink-0 rounded-[2px] bg-chart-1" />
-                <span className="text-xs text-muted-foreground">Doanh thu</span>
-              </div>
-            </div>
+            <ChartLegend
+              items={[
+                {
+                  id: 'revenue',
+                  label: 'Doanh thu',
+                  colorClass: 'bg-chart-1',
+                },
+              ]}
+            />
             <ChartContainer
-              // Our theme defines --chart-* as oklch(...) values, so don't wrap with hsl(...).
-              config={{ revenue: { label: 'Doanh thu', color: 'var(--chart-1)' } }}
+              config={{ revenue: { label: 'Doanh thu', color: 'hsl(var(--chart-1))' } }}
             >
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={chartData} margin={{ left: 8, right: 8, top: 4, bottom: 0 }}>
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    className="stroke-muted/60"
-                    vertical={false}
-                  />
-                  <XAxis
-                    dataKey="date"
-                    tickLine={false}
-                    axisLine={false}
-                    tickMargin={8}
-                    tickFormatter={formatXAxisDate}
-                    className="fill-muted-foreground text-xs"
-                  />
-                  <YAxis
-                    tickLine={false}
-                    axisLine={false}
-                    tickMargin={8}
-                    tickFormatter={(v) => formatCurrencyCompact(Number(v))}
-                    className="fill-muted-foreground text-xs"
-                  />
-                  <Tooltip
-                    content={({ label, payload }) => {
-                      if (!payload?.length) return null;
-                      const firstPoint = payload[0]?.payload as
-                        | { date?: string; revenue?: number }
-                        | undefined;
-                      const value = firstPoint?.revenue ?? payload[0]?.value ?? 0;
-                      const dateLabel =
-                        firstPoint?.date ?? (typeof label === 'string' ? label : undefined);
-                      return (
-                        <ChartTooltipContent>
-                          <div className="space-y-1">
-                            <p className="text-[11px] font-medium text-muted-foreground">
-                              {dateLabel ? `Ngày ${formatXAxisDate(String(dateLabel))}` : 'Ngày'}
-                            </p>
-                            <p className="text-xs font-semibold text-foreground">
-                              {formatCurrencyCompact(Number(value))}
-                            </p>
-                          </div>
-                        </ChartTooltipContent>
-                      );
-                    }}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="revenue"
-                    stroke="var(--chart-1)"
-                    fill="url(#revenueGradient)"
-                    strokeWidth={2}
-                    dot={false}
-                    activeDot={{ r: 4 }}
-                  />
-                  <defs>
-                    <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="var(--chart-1)" stopOpacity={0.35} />
-                      <stop offset="95%" stopColor="var(--chart-1)" stopOpacity={0.02} />
-                    </linearGradient>
-                  </defs>
-                </AreaChart>
-              </ResponsiveContainer>
+              <div className="h-[260px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={chartData} margin={{ left: 8, right: 8, top: 4, bottom: 0 }}>
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      className="stroke-muted/60"
+                      vertical={false}
+                    />
+                    <XAxis
+                      dataKey="date"
+                      tickLine={false}
+                      axisLine={false}
+                      tickMargin={8}
+                      tickFormatter={formatXAxisDate}
+                      className="fill-muted-foreground text-xs"
+                    />
+                    <YAxis
+                      tickLine={false}
+                      axisLine={false}
+                      tickMargin={8}
+                      tickFormatter={(v) => formatCurrencyCompact(Number(v))}
+                      className="fill-muted-foreground text-xs"
+                    />
+                    <Tooltip
+                      content={({ label, payload }) => {
+                        if (!payload?.length) return null;
+                        const firstPoint = payload[0]?.payload as
+                          | { date?: string; revenue?: number }
+                          | undefined;
+                        const value = firstPoint?.revenue ?? payload[0]?.value ?? 0;
+                        const dateLabel =
+                          firstPoint?.date ?? (typeof label === 'string' ? label : undefined);
+                        return (
+                          <ChartTooltipContent>
+                            <div className="space-y-1">
+                              <p className="text-[11px] font-medium text-muted-foreground">
+                                {dateLabel ? `Ngày ${formatXAxisDate(String(dateLabel))}` : 'Ngày'}
+                              </p>
+                              <p className="text-xs font-semibold text-foreground">
+                                {formatCurrencyCompact(Number(value))}
+                              </p>
+                            </div>
+                          </ChartTooltipContent>
+                        );
+                      }}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="revenue"
+                      stroke="hsl(var(--chart-1))"
+                      fill="url(#revenueGradient)"
+                      strokeWidth={2}
+                      dot={false}
+                      activeDot={{ r: 4 }}
+                    />
+                    <defs>
+                      <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="hsl(var(--chart-1))" stopOpacity={0.35} />
+                        <stop offset="95%" stopColor="hsl(var(--chart-1))" stopOpacity={0.02} />
+                      </linearGradient>
+                    </defs>
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
             </ChartContainer>
           </>
         )}
