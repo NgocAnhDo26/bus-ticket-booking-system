@@ -17,6 +17,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useGetTripById } from '@/features/api/trips/trips';
+import { BookingSeatMap } from '@/features/booking/components/BookingSeatMap';
+import { useBookedSeats } from '@/features/booking/hooks';
 import { TripPricingInfoSeatType } from '@/model/tripPricingInfoSeatType';
 import type { TripResponse } from '@/model/tripResponse';
 import { mapAmenityToVietnamese } from '@/utils/amenities';
@@ -32,6 +34,8 @@ export const TripDetailsPage = () => {
   } = useGetTripById(tripId || '', {
     query: { enabled: !!tripId },
   });
+
+  const { data: bookedSeats = [] } = useBookedSeats(tripId);
 
   if (isLoading) {
     return (
@@ -369,6 +373,31 @@ export const TripDetailsPage = () => {
                 )}
               </CardContent>
             </Card>
+
+            {/* Seat Availability */}
+            {bus?.busLayoutId && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Bus className="h-5 w-5 text-primary" />
+                    Sơ đồ ghế
+                  </CardTitle>
+                  <CardDescription>
+                    Xem tình trạng ghế trống và đã đặt của chuyến xe
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <BookingSeatMap
+                    busLayoutId={bus.busLayoutId}
+                    alreadyBookedSeats={bookedSeats}
+                    selectedSeats={[]}
+                    onSeatClick={() => {
+                      // Read-only mode - no action on click
+                    }}
+                  />
+                </CardContent>
+              </Card>
+            )}
 
             {/* Pricing Information */}
             {tripPricings.length > 0 && (
