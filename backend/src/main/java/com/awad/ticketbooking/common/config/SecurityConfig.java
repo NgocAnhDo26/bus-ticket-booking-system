@@ -85,11 +85,19 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/bookings/tickets/*/check-in").hasRole("ADMIN") // Check-in
                                                                                                                // passenger
 
+                        // Reviews
+                        .requestMatchers(HttpMethod.GET, "/api/reviews/**").permitAll() // View reviews (public)
+                        // POST /api/reviews requires authentication and PASSENGER role (handled by
+                        // @PreAuthorize)
+
                         // Webhooks (no auth - signature verified internally)
                         .requestMatchers("/api/webhooks/**").permitAll()
 
-                        .requestMatchers(HttpMethod.PUT, "/api/routes/**").permitAll()
-                        .requestMatchers(HttpMethod.DELETE, "/api/routes/**").permitAll()
+                        // Image upload endpoints (require authentication)
+                        .requestMatchers("/api/images/**").authenticated()
+
+                        .requestMatchers(HttpMethod.PUT, "/api/routes/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/routes/**").hasRole("ADMIN")
                         .anyRequest().authenticated())
                 .authenticationProvider(daoAuthenticationProvider())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

@@ -31,7 +31,8 @@ import type {
   GetAllRoutesParams,
   PagedModelRouteResponse,
   Route,
-  RouteResponse
+  RouteResponse,
+  SearchRoutesParams
 } from '../../../model';
 
 import { customInstance } from '../../../lib/api-client';
@@ -435,6 +436,93 @@ export function useGetTopRoutes<TData = Awaited<ReturnType<typeof getTopRoutes>>
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetTopRoutesQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+export const searchRoutes = (
+    params: SearchRoutesParams,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<PagedModelRouteResponse>(
+      {url: `/api/routes/search`, method: 'GET',
+        params, signal
+    },
+      options);
+    }
+  
+
+
+
+export const getSearchRoutesQueryKey = (params?: SearchRoutesParams,) => {
+    return [
+    `/api/routes/search`, ...(params ? [params]: [])
+    ] as const;
+    }
+
+    
+export const getSearchRoutesQueryOptions = <TData = Awaited<ReturnType<typeof searchRoutes>>, TError = unknown>(params: SearchRoutesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchRoutes>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSearchRoutesQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof searchRoutes>>> = ({ signal }) => searchRoutes(params, requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof searchRoutes>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SearchRoutesQueryResult = NonNullable<Awaited<ReturnType<typeof searchRoutes>>>
+export type SearchRoutesQueryError = unknown
+
+
+export function useSearchRoutes<TData = Awaited<ReturnType<typeof searchRoutes>>, TError = unknown>(
+ params: SearchRoutesParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchRoutes>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof searchRoutes>>,
+          TError,
+          Awaited<ReturnType<typeof searchRoutes>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSearchRoutes<TData = Awaited<ReturnType<typeof searchRoutes>>, TError = unknown>(
+ params: SearchRoutesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchRoutes>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof searchRoutes>>,
+          TError,
+          Awaited<ReturnType<typeof searchRoutes>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSearchRoutes<TData = Awaited<ReturnType<typeof searchRoutes>>, TError = unknown>(
+ params: SearchRoutesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchRoutes>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useSearchRoutes<TData = Awaited<ReturnType<typeof searchRoutes>>, TError = unknown>(
+ params: SearchRoutesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchRoutes>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSearchRoutesQueryOptions(params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

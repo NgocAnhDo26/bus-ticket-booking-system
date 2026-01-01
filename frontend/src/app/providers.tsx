@@ -4,7 +4,7 @@ import { GoogleOAuthProvider } from '@react-oauth/google';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import { ThemeProvider } from '@/components/theme-provider';
-import { Toaster as SonnerToaster, Toaster } from '@/components/ui/sonner';
+import { Toaster } from '@/components/ui/sonner';
 import { useHydrateAuth } from '@/features/auth/hooks';
 
 type Props = {
@@ -37,8 +37,7 @@ export const AppProviders = ({ children }: Props) => {
       <GoogleOAuthProvider clientId={googleClientId}>
         <QueryClientProvider client={queryClient}>
           <AuthHydrator>{children}</AuthHydrator>
-          <SonnerToaster position="top-center" richColors />
-          <Toaster />
+          <Toaster position="top-center" richColors />
         </QueryClientProvider>
       </GoogleOAuthProvider>
     </ThemeProvider>

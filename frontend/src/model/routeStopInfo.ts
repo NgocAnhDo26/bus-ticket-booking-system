@@ -10,6 +10,8 @@ import type { StationInfo } from './stationInfo';
 export interface RouteStopInfo {
   id?: string;
   station?: StationInfo;
+  customName?: string;
+  customAddress?: string;
   stopOrder?: number;
   durationMinutesFromOrigin?: number;
   stopType?: string;

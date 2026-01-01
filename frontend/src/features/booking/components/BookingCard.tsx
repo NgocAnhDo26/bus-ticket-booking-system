@@ -3,6 +3,16 @@ import { Link } from 'react-router-dom';
 
 import { Calendar, Clock, Edit2, Eye, X } from 'lucide-react';
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -64,25 +74,31 @@ const statusConfig = {
 
 export const BookingCard = ({ booking, onCancel, isCancelling }: BookingCardProps) => {
   const [showEdit, setShowEdit] = useState(false);
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
   const status = statusConfig[booking.status];
   const canCancel =
     booking.status !== 'CANCELLED' && new Date(booking.trip.departureTime) > new Date();
 
   const canEdit = booking.status === 'PENDING';
 
+  const handleCancelConfirm = () => {
+    if (onCancel) {
+      onCancel(booking.id);
+      setShowCancelDialog(false);
+    }
+  };
+
   return (
     <>
-      <Card className="overflow-hidden hover:shadow-md transition-shadow">
+      <Card className="overflow-hidden hover:shadow-md transition-shadow p-0">
         <CardContent className="p-0">
           <div className="flex flex-col md:flex-row">
             {/* Left: Trip Info */}
             <div className="flex-1 p-4 space-y-3">
               {/* Header with ID and status */}
-              <div className="flex items-center justify-between">
-                <div>
-                  <span className="text-sm text-muted-foreground">Mã đặt vé</span>
-                  <p className="font-mono font-bold text-lg">#{booking.code}</p>
-                </div>
+
+              <div className="flex items-center gap-2">
+                <p className="font-mono font-bold text-lg">#{booking.code}</p>
                 <Badge className={status.className}>{status.label}</Badge>
               </div>
 
@@ -90,44 +106,29 @@ export const BookingCard = ({ booking, onCancel, isCancelling }: BookingCardProp
               <div className="flex items-center gap-3">
                 <div className="flex flex-col items-center">
                   <div className="w-2 h-2 rounded-full bg-primary" />
-                  <div className="w-0.5 h-4 bg-gray-200" />
+                  <div className="w-0.5 h-6 bg-gray-200" />
                   <div className="w-2 h-2 rounded-full bg-green-500" />
                 </div>
-                <div className="flex-1">
-                  <p className="font-medium text-sm">{booking.trip.route.originStation.name}</p>
-                  <p className="text-sm text-muted-foreground">
-                    → {booking.trip.route.destinationStation.name}
-                  </p>
-                </div>
-              </div>
+                <div className="flex-1 space-y-2">
+                  <div className="flex items-center gap-1">
+                    <p className="font-medium text-sm">{booking.trip.route.originStation.name}</p>
+                    <span className="text-sm text-muted-foreground">
+                      {' '}
+                      ({booking.pickupStation?.name})
+                    </span>
+                  </div>
 
-              {/* Pickup/Dropoff Details */}
-              {(booking.pickupStation || booking.dropoffStation) && (
-                <div className="flex items-center gap-3 text-sm text-muted-foreground mt-2">
-                  <div className="flex gap-2">
-                    {booking.pickupStation && (
-                      <div className="bg-blue-50 text-blue-700 px-2 py-0.5 rounded border border-blue-200 text-xs text-nowrap">
-                        Đón: {booking.pickupStation.name}
-                        {booking.pickupTripPoint && (
-                          <span className="ml-1 font-mono">
-                            ({formatTime(booking.pickupTripPoint.scheduledTime)})
-                          </span>
-                        )}
-                      </div>
-                    )}
-                    {booking.dropoffStation && (
-                      <div className="bg-orange-50 text-orange-700 px-2 py-0.5 rounded border border-orange-200 text-xs text-nowrap">
-                        Trả: {booking.dropoffStation.name}
-                        {booking.dropoffTripPoint && (
-                          <span className="ml-1 font-mono">
-                            ({formatTime(booking.dropoffTripPoint.scheduledTime)})
-                          </span>
-                        )}
-                      </div>
-                    )}
+                  <div className="flex items-center gap-1">
+                    <p className="font-medium text-sm">
+                      {booking.trip.route.destinationStation.name}
+                    </p>
+                    <span className="text-sm text-muted-foreground">
+                      {' '}
+                      ({booking.dropoffStation?.name})
+                    </span>
                   </div>
                 </div>
-              )}
+              </div>
 
               {/* Date and Time */}
               <div className="flex items-center gap-4 text-sm mt-3">
@@ -153,7 +154,7 @@ export const BookingCard = ({ booking, onCancel, isCancelling }: BookingCardProp
             </div>
 
             {/* Right: Price and Actions */}
-            <div className="bg-muted/50 p-4 flex flex-col justify-between md:w-48 border-t md:border-t-0 md:border-l">
+            <div className="p-4 flex flex-col justify-between md:w-48 border-t md:border-t-0 md:border-l">
               <div>
                 <p className="text-sm text-muted-foreground">Tổng tiền</p>
                 <p className="text-xl font-bold text-primary">
@@ -177,13 +178,13 @@ export const BookingCard = ({ booking, onCancel, isCancelling }: BookingCardProp
                   </Button>
                 )}
 
-                {canCancel && onCancel && (
+                {onCancel && (
                   <Button
-                    variant="ghost"
+                    variant="destructive"
                     size="sm"
                     className="text-destructive hover:text-destructive"
-                    onClick={() => onCancel(booking.id)}
-                    disabled={isCancelling}
+                    onClick={() => setShowCancelDialog(true)}
+                    disabled={!canCancel || isCancelling}
                   >
                     <X className="h-4 w-4 mr-1" />
                     {isCancelling ? 'Đang hủy...' : 'Hủy vé'}
@@ -196,6 +197,31 @@ export const BookingCard = ({ booking, onCancel, isCancelling }: BookingCardProp
       </Card>
 
       <BookingEditDialog booking={booking} open={showEdit} onOpenChange={setShowEdit} />
+
+      {onCancel && (
+        <AlertDialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Xác nhận hủy vé</AlertDialogTitle>
+              <AlertDialogDescription>
+                Bạn có chắc chắn muốn hủy đặt vé{' '}
+                <span className="font-mono font-bold">#{booking.code}</span>? Hành động này không
+                thể hoàn tác.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={isCancelling}>Không</AlertDialogCancel>
+              <AlertDialogAction
+                variant="destructive"
+                onClick={handleCancelConfirm}
+                disabled={isCancelling}
+              >
+                {isCancelling ? 'Đang hủy...' : 'Xác nhận hủy'}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
     </>
   );
 };

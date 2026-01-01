@@ -73,17 +73,27 @@ export const PublicHeader = () => {
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link to="/profile">
-                    <User className="mr-2 h-4 w-4" />
-                    Hồ sơ của tôi
-                  </Link>
-                </DropdownMenuItem>
                 {user.role === 'PASSENGER' && (
+                  <>
+                    <DropdownMenuItem asChild>
+                      <Link to="/dashboard?tab=profile">
+                        <User className="mr-2 h-4 w-4" />
+                        Hồ sơ của tôi
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/dashboard?tab=tickets">
+                        <Ticket className="mr-2 h-4 w-4" />
+                        Vé của tôi
+                      </Link>
+                    </DropdownMenuItem>
+                  </>
+                )}
+                {user.role !== 'PASSENGER' && (
                   <DropdownMenuItem asChild>
-                    <Link to="/dashboard/bookings">
-                      <Ticket className="mr-2 h-4 w-4" />
-                      Vé của tôi
+                    <Link to="/dashboard?tab=profile">
+                      <User className="mr-2 h-4 w-4" />
+                      Hồ sơ của tôi
                     </Link>
                   </DropdownMenuItem>
                 )}

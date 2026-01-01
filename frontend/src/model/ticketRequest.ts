@@ -13,5 +13,6 @@ export interface TicketRequest {
   passengerName: string;
   /** @minLength 1 */
   passengerPhone: string;
+  passengerIdNumber?: string;
   price: number;
 }

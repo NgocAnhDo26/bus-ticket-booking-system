@@ -38,4 +38,10 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.FORBIDDEN)
                 .body("Access Denied: You do not have permission to access this resource.");
     }
+
+    @ExceptionHandler(ImageUploadException.class)
+    public ResponseEntity<String> handleImageUploadException(ImageUploadException e) {
+        logger.error("Image upload error: {}", e.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+    }
 }

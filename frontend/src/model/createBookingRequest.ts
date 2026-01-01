@@ -14,6 +14,7 @@ export interface CreateBookingRequest {
   passengerName: string;
   /** @minLength 1 */
   passengerPhone: string;
+  passengerIdNumber?: string;
   passengerEmail?: string;
   pickupStationId?: string;
   dropoffStationId?: string;

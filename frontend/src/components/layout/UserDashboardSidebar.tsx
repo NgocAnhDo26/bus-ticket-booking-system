@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 
-import { LayoutDashboard, Search, Ticket, Tickets } from 'lucide-react';
+import { LayoutDashboard, Search, Ticket, Tickets, User } from 'lucide-react';
 
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
@@ -24,16 +24,27 @@ export function UserDashboardSidebar({ ...props }: React.ComponentProps<typeof S
   const userNavItems = [
     {
       title: 'Tổng quan',
-      url: '/dashboard',
+      url: '/dashboard?tab=dashboard',
       icon: LayoutDashboard,
-      isActive: location.pathname === '/dashboard',
+      isActive:
+        location.pathname === '/dashboard' &&
+        (!location.search ||
+          location.search === '?tab=dashboard' ||
+          !location.search.includes('tab=')),
+      isCollapsible: false,
+    },
+    {
+      title: 'Hồ sơ',
+      url: '/dashboard?tab=profile',
+      icon: User,
+      isActive: location.pathname === '/dashboard' && location.search.includes('tab=profile'),
       isCollapsible: false,
     },
     {
       title: 'Vé của tôi',
-      url: '/dashboard/bookings',
+      url: '/dashboard?tab=tickets',
       icon: Ticket,
-      isActive: location.pathname === '/dashboard/bookings',
+      isActive: location.pathname === '/dashboard' && location.search.includes('tab=tickets'),
       isCollapsible: false,
     },
     {

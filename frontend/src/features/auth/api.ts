@@ -14,7 +14,7 @@ import {
   type RegisterRequest,
   type UserResponse,
 } from '@/model';
-import { type UserProfile } from '@/types/user';
+import type { AuthProvider, UserProfile } from '@/types/user';
 
 type AuthData = {
   accessToken: string;
@@ -30,6 +30,7 @@ const toUserProfile = (user: UserResponse | undefined): UserProfile | null => {
     fullName: user.fullName,
     role: user.role as UserProfile['role'],
     avatarUrl: user.avatarUrl ?? undefined,
+    authProvider: user.authProvider as AuthProvider | undefined,
   };
 };
 
