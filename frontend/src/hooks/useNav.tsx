@@ -87,7 +87,7 @@ const allAdminNavItems: AdminNavItem[] = [
     items: [
       {
         title: 'Danh sách đặt chỗ',
-        url: '/admin/bookings/list',
+        url: '/admin/bookings',
       },
       {
         title: 'Giao dịch thanh toán',
