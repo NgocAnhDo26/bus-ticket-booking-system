@@ -23,7 +23,9 @@ export const getAdminBookings = async (
     totalPages: number;
     totalElements: number;
 }> => {
-    const response = await apiClient.get<AdminBookingApiResponse>('/api/bookings/admin', { params });
+    const response = await apiClient.get<AdminBookingApiResponse>('/api/bookings/admin', {
+        params,
+    });
     const data = response.data;
     return {
         content: data.content || [],
