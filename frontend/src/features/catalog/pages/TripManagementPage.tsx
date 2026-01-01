@@ -352,11 +352,15 @@ export const TripManagementPage = () => {
                   <MoreHorizontal className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
+              <DropdownMenuContent align="end" className="w-fit">
                 <DropdownMenuLabel>Thao tác</DropdownMenuLabel>
                 <DropdownMenuItem onClick={() => handleEdit(trip)}>
                   <Pencil className="mr-2 h-4 w-4" />
                   Sửa
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setManagingStopsTrip(trip)}>
+                  <MapPin className="mr-2 h-4 w-4" />
+                  Quản lý trạm
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => setDeletingTrip(trip)}
@@ -364,10 +368,6 @@ export const TripManagementPage = () => {
                 >
                   <Trash2 className="mr-2 h-4 w-4" />
                   Xóa
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setManagingStopsTrip(trip)}>
-                  <MapPin className="mr-2 h-4 w-4" />
-                  Quản lý trạm
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

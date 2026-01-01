@@ -346,7 +346,7 @@ const TripStopsDialogContent = ({
 export const TripStopsDialog = ({ trip, open, onOpenChange }: TripStopsDialogProps) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
+      <DialogContent className="min-w-[600px]">
         {trip && <TripStopsDialogContent key={trip.id} trip={trip} onOpenChange={onOpenChange} />}
       </DialogContent>
     </Dialog>

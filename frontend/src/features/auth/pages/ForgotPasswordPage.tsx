@@ -22,7 +22,7 @@ import { AuthLayout } from '@/features/auth/components/AuthLayout';
 import { forgotPassword } from '../api';
 
 const forgotPasswordSchema = z.object({
-  email: z.string().email('Email không hợp lệ'),
+  email: z.email('Email không hợp lệ'),
 });
 
 type ForgotPasswordFormValues = z.infer<typeof forgotPasswordSchema>;
