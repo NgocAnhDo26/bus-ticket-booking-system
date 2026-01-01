@@ -34,7 +34,7 @@ export const RouteManagementPage = () => {
   const navigate = useNavigate();
   const { data: routes, isLoading: isLoadingRoutes } = useRoutes();
   const deleteRoute = useDeleteRoute();
-  
+
   const [deletingRoute, setDeletingRoute] = useState<Route | null>(null);
 
   const [forceDeleteId, setForceDeleteId] = useState<string | null>(null);
@@ -171,7 +171,9 @@ export const RouteManagementPage = () => {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuLabel>Thao tác</DropdownMenuLabel>
-                <DropdownMenuItem onClick={() => navigate(`/admin/catalog/routes/edit/${route.id}`)}>
+                <DropdownMenuItem
+                  onClick={() => navigate(`/admin/catalog/routes/edit/${route.id}`)}
+                >
                   <Pencil className="mr-2 h-4 w-4" />
                   Sửa
                 </DropdownMenuItem>

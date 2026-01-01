@@ -124,7 +124,7 @@ export interface AddRouteStopRequest {
   stopOrder: number;
   durationMinutesFromOrigin: number;
   stopType: 'PICKUP' | 'DROPOFF' | 'BOTH';
-};
+}
 
 export type CreateRouteRequest = {
   originStationId: string;
@@ -248,4 +248,3 @@ export type TripPassenger = {
   pickupStation: string;
   dropoffStation: string;
 };
-

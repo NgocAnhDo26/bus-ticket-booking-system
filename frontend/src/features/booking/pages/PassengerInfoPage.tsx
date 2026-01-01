@@ -202,29 +202,29 @@ export const PassengerInfoPage = () => {
         passengerPhone: contactPhone.trim(),
         passengerIdNumber: contactIdNumber.trim(),
         passengerEmail: !user ? contactEmail.trim() : undefined,
-        
-        // Map pickup/dropoff
-        ...((() => {
-             if (!pickupStationId || pickupStationId === 'ORIGIN') {
-                 return { pickupStationId: trip.route.originStation.id };
-             }
-             if (pickupStationId === 'DESTINATION') {
-                 return { pickupStationId: trip.route.destinationStation.id };
-             }
-             // Otherwise it's a TripStop ID
-             return { pickupTripStopId: pickupStationId };
-        })()),
 
-        ...((() => {
-             if (!dropoffStationId || dropoffStationId === 'DESTINATION') {
-                 return { dropoffStationId: trip.route.destinationStation.id };
-             }
-             if (dropoffStationId === 'ORIGIN') {
-                 return { dropoffStationId: trip.route.originStation.id };
-             }
-             // Otherwise it's a TripStop ID
-             return { dropoffTripStopId: dropoffStationId };
-        })()),
+        // Map pickup/dropoff
+        ...(() => {
+          if (!pickupStationId || pickupStationId === 'ORIGIN') {
+            return { pickupStationId: trip.route.originStation.id };
+          }
+          if (pickupStationId === 'DESTINATION') {
+            return { pickupStationId: trip.route.destinationStation.id };
+          }
+          // Otherwise it's a TripStop ID
+          return { pickupTripStopId: pickupStationId };
+        })(),
+
+        ...(() => {
+          if (!dropoffStationId || dropoffStationId === 'DESTINATION') {
+            return { dropoffStationId: trip.route.destinationStation.id };
+          }
+          if (dropoffStationId === 'ORIGIN') {
+            return { dropoffStationId: trip.route.originStation.id };
+          }
+          // Otherwise it's a TripStop ID
+          return { dropoffTripStopId: dropoffStationId };
+        })(),
 
         totalPrice: finalTotalPrice,
         tickets: finalSeatDetails.map((d) => ({

@@ -84,15 +84,17 @@ export const useBookingStore = create<BookingState>()(
             const mySelectedSeats: string[] = [];
 
             Object.entries(initialStatus).forEach(([seatCode, status]) => {
-              if ((user && status === `LOCKED:${user.id}`) ||
-                (!user && guestId && status === `LOCKED:${guestId}`)) {
+              if (
+                (user && status === `LOCKED:${user.id}`) ||
+                (!user && guestId && status === `LOCKED:${guestId}`)
+              ) {
                 mySelectedSeats.push(seatCode);
               }
             });
 
             set({
               seatStatusMap: initialStatus,
-              selectedSeats: mySelectedSeats // Auto-select my locked seats
+              selectedSeats: mySelectedSeats, // Auto-select my locked seats
             });
 
             // 2. Connect WebSocket

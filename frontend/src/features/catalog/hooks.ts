@@ -342,4 +342,3 @@ export const useCheckCanUpdateRecurrence = (tripId: string | undefined) => {
     enabled: !!tripId,
   });
 };
-

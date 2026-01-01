@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import { useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
@@ -13,8 +14,6 @@ import {
   Trash2,
   Users,
 } from 'lucide-react';
-
-import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
 import { type ColumnDef, GenericTable } from '@/components/common';
@@ -43,7 +42,7 @@ import { TripPassengersDialog } from '../components/TripPassengersDialog';
 import {
   useDeleteTrip,
   useTrips,
- // Added useStations hook
+  // Added useStations hook
 } from '../hooks';
 import { type Trip } from '../types';
 
@@ -63,12 +62,12 @@ export const TripManagementPage = () => {
 
   // Handlers
 
-
-  const handleEdit = useCallback((trip: Trip) => {
-    navigate(`/admin/catalog/trips/edit/${trip.id}`);
-  }, [navigate]);
-
-
+  const handleEdit = useCallback(
+    (trip: Trip) => {
+      navigate(`/admin/catalog/trips/edit/${trip.id}`);
+    },
+    [navigate],
+  );
 
   const handleDelete = () => {
     if (selectedTrip) {

@@ -20,11 +20,11 @@ import { BusLayoutCreatePage, BusLayoutManagementPage } from '@/features/bus-lay
 import {
   BusManagementPage,
   OperatorManagementPage,
-  RouteManagementPage,
   RouteFormPage,
+  RouteManagementPage,
   StationManagementPage,
-  TripManagementPage,
   TripFormPage,
+  TripManagementPage,
 } from '@/features/catalog';
 import { UserDashboardPage } from '@/features/dashboard';
 import { AdminDashboardPage } from '@/features/dashboard-admin';

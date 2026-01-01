@@ -208,15 +208,14 @@ export const BookingPage = () => {
                   }}
                 >
                   <option value="">Chọn điểm đón...</option>
-                  <option value="ORIGIN">
-                    {trip.route.originStation.name} (Điểm đầu)
-                  </option>
+                  <option value="ORIGIN">{trip.route.originStation.name} (Điểm đầu)</option>
                   {trip.route.stops
                     ?.filter((s) => s.stopType === 'PICKUP' || s.stopType === 'BOTH')
                     .sort((a, b) => a.stopOrder - b.stopOrder)
                     .map((s) => (
                       <option key={s.id} value={s.id}>
-                        {s.station ? s.station.name : s.customName} (+{s.durationMinutesFromOrigin}m)
+                        {s.station ? s.station.name : s.customName} (+{s.durationMinutesFromOrigin}
+                        m)
                       </option>
                     ))}
                 </select>
@@ -237,17 +236,18 @@ export const BookingPage = () => {
                     .filter((s) => {
                       // Filter based on pickup order
                       if (!pickupStationId || pickupStationId === 'ORIGIN') return true;
-                      
+
                       // Find pickup stop order
-                      const pickupStop = trip.route.stops?.find(p => p.id === pickupStationId);
+                      const pickupStop = trip.route.stops?.find((p) => p.id === pickupStationId);
                       const pickupOrder = pickupStop ? pickupStop.stopOrder : -1;
-                      
+
                       return s.stopOrder > pickupOrder;
                     })
                     .sort((a, b) => a.stopOrder - b.stopOrder)
                     .map((s) => (
                       <option key={s.id} value={s.id}>
-                        {s.station ? s.station.name : s.customName} (+{s.durationMinutesFromOrigin}m)
+                        {s.station ? s.station.name : s.customName} (+{s.durationMinutesFromOrigin}
+                        m)
                       </option>
                     ))}
                   <option value="DESTINATION">

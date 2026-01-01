@@ -35,12 +35,17 @@ type RouteStopsManagerProps = {
   setLocalStops?: (stops: RouteStop[]) => void;
 };
 
-export const RouteStopsManager = ({ route, isLocalMode = false, localStops = [], setLocalStops }: RouteStopsManagerProps) => {
+export const RouteStopsManager = ({
+  route,
+  isLocalMode = false,
+  localStops = [],
+  setLocalStops,
+}: RouteStopsManagerProps) => {
   const addStopMutation = useAddRouteStop();
   const deleteStopMutation = useDeleteRouteStop();
 
   // Use localStops if in local mode, otherwise use route.stops
-  const currentStops = isLocalMode ? localStops : (route.stops || []);
+  const currentStops = isLocalMode ? localStops : route.stops || [];
 
   const {
     register,
@@ -59,65 +64,73 @@ export const RouteStopsManager = ({ route, isLocalMode = false, localStops = [],
 
   const onSubmit = (values: z.infer<typeof formSchema>) => {
     // Basic Client-side check for order duplication warning (optional)
-    const isDuplicateOrder = currentStops.some(s => s.stopOrder === values.stopOrder);
+    const isDuplicateOrder = currentStops.some((s) => s.stopOrder === values.stopOrder);
     if (isDuplicateOrder) {
-        if (!confirm(`Thứ tự ${values.stopOrder} đã tồn tại. Bạn có muốn tiếp tục thêm (các trạm sẽ có cùng thứ tự)?`)) {
-            return;
-        }
+      if (
+        !confirm(
+          `Thứ tự ${values.stopOrder} đã tồn tại. Bạn có muốn tiếp tục thêm (các trạm sẽ có cùng thứ tự)?`,
+        )
+      ) {
+        return;
+      }
     }
 
     if (isLocalMode && setLocalStops) {
-        // Local Mode: Add to state
-        const newStop: RouteStop = {
-            id: `temp-${globalThis.crypto.randomUUID()}`, // Temporary ID
-            stopOrder: values.stopOrder,
-            durationMinutesFromOrigin: values.durationMinutesFromOrigin,
-            stopType: values.stopType as 'PICKUP' | 'DROPOFF' | 'BOTH',
-            customName: values.customName,
-        };
-        setLocalStops([...localStops, newStop]);
-        reset({
-            customName: '',
-            stopOrder: (currentStops.length || 0) + 2,
-            durationMinutesFromOrigin: 0,
-            stopType: 'BOTH',
-        });
+      // Local Mode: Add to state
+      const newStop: RouteStop = {
+        id: `temp-${globalThis.crypto.randomUUID()}`, // Temporary ID
+        stopOrder: values.stopOrder,
+        durationMinutesFromOrigin: values.durationMinutesFromOrigin,
+        stopType: values.stopType as 'PICKUP' | 'DROPOFF' | 'BOTH',
+        customName: values.customName,
+      };
+      setLocalStops([...localStops, newStop]);
+      reset({
+        customName: '',
+        stopOrder: (currentStops.length || 0) + 2,
+        durationMinutesFromOrigin: 0,
+        stopType: 'BOTH',
+      });
     } else {
-        // API Mode
-        addStopMutation.mutate(
-            { routeId: route.id, data: { ...values, stationId: undefined, customAddress: undefined } },
-            {
-                onSuccess: () => {
-                // toast.success('Đã thêm điểm dừng thành công');
-                reset({
-                    customName: '',
-                    stopOrder: (route.stops?.length || 0) + 2, // Auto-increment safely
-                    durationMinutesFromOrigin: 0,
-                    stopType: 'BOTH',
-                });
-                },
-                onError: (error: unknown) => {
-                    // Error handling matching generic backend response
-                    const msg = (error as { response?: { data?: { message?: string } } })?.response?.data?.message 
-                        || (error as Error).message 
-                        || "Có lỗi xảy ra khi thêm điểm dừng";
-                    toast.error(`Thêm thất bại: ${msg}`);
-                }
-            },
-        );
+      // API Mode
+      addStopMutation.mutate(
+        { routeId: route.id, data: { ...values, stationId: undefined, customAddress: undefined } },
+        {
+          onSuccess: () => {
+            // toast.success('Đã thêm điểm dừng thành công');
+            reset({
+              customName: '',
+              stopOrder: (route.stops?.length || 0) + 2, // Auto-increment safely
+              durationMinutesFromOrigin: 0,
+              stopType: 'BOTH',
+            });
+          },
+          onError: (error: unknown) => {
+            // Error handling matching generic backend response
+            const msg =
+              (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
+              (error as Error).message ||
+              'Có lỗi xảy ra khi thêm điểm dừng';
+            toast.error(`Thêm thất bại: ${msg}`);
+          },
+        },
+      );
     }
   };
 
   const handleDelete = (stopId: string) => {
     if (confirm('Bạn có chắc chắn muốn xóa điểm dừng này?')) {
-        if (isLocalMode && setLocalStops) {
-            setLocalStops(localStops.filter(s => s.id !== stopId));
-        } else {
-            deleteStopMutation.mutate({ routeId: route.id, stopId }, {
-                onSuccess: () => toast.success('Đã xoá điểm dừng'),
-                onError: () => toast.error('Xoá thất bại')
-            });
-        }
+      if (isLocalMode && setLocalStops) {
+        setLocalStops(localStops.filter((s) => s.id !== stopId));
+      } else {
+        deleteStopMutation.mutate(
+          { routeId: route.id, stopId },
+          {
+            onSuccess: () => toast.success('Đã xoá điểm dừng'),
+            onError: () => toast.error('Xoá thất bại'),
+          },
+        );
+      }
     }
   };
 
@@ -129,7 +142,8 @@ export const RouteStopsManager = ({ route, isLocalMode = false, localStops = [],
         <CardHeader>
           <CardTitle className="text-lg">Danh sách điểm dừng trung gian</CardTitle>
           <p className="text-sm text-muted-foreground">
-            Quản lý các điểm đón/trả khách giữa {route.originStation?.name || 'Điểm đi'} và {route.destinationStation?.name || 'Điểm đến'}
+            Quản lý các điểm đón/trả khách giữa {route.originStation?.name || 'Điểm đi'} và{' '}
+            {route.destinationStation?.name || 'Điểm đến'}
           </p>
         </CardHeader>
         <CardContent>
@@ -148,7 +162,8 @@ export const RouteStopsManager = ({ route, isLocalMode = false, localStops = [],
                 {sortedStops.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={5} className="text-center h-24 text-muted-foreground">
-                      Chưa có điểm dừng trung gian nào. {isLocalMode && '(Dữ liệu sẽ được lưu cùng Tuyến)'}
+                      Chưa có điểm dừng trung gian nào.{' '}
+                      {isLocalMode && '(Dữ liệu sẽ được lưu cùng Tuyến)'}
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -156,7 +171,9 @@ export const RouteStopsManager = ({ route, isLocalMode = false, localStops = [],
                     <TableRow key={stop.id}>
                       <TableCell>{stop.stopOrder}</TableCell>
                       <TableCell>
-                        <span className="font-medium">{stop.customName || stop.station?.name || 'N/A'}</span>
+                        <span className="font-medium">
+                          {stop.customName || stop.station?.name || 'N/A'}
+                        </span>
                       </TableCell>
                       <TableCell>{stop.durationMinutesFromOrigin} phút</TableCell>
                       <TableCell>
@@ -189,51 +206,59 @@ export const RouteStopsManager = ({ route, isLocalMode = false, localStops = [],
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Thêm điểm dừng mới {isLocalMode && '(Chế độ nháp)'}</CardTitle>
+          <CardTitle className="text-lg">
+            Thêm điểm dừng mới {isLocalMode && '(Chế độ nháp)'}
+          </CardTitle>
         </CardHeader>
         <CardContent>
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                     <Field data-invalid={!!errors.customName} className="md:col-span-2">
-                        <FieldLabel>Tên điểm dừng</FieldLabel>
-                        <Input {...register('customName')} placeholder="Ví dụ: Ngã tư Hàng Xanh..." />
-                        <FieldError>{errors.customName?.message}</FieldError>
-                    </Field>
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Field data-invalid={!!errors.customName} className="md:col-span-2">
+                <FieldLabel>Tên điểm dừng</FieldLabel>
+                <Input {...register('customName')} placeholder="Ví dụ: Ngã tư Hàng Xanh..." />
+                <FieldError>{errors.customName?.message}</FieldError>
+              </Field>
 
-                    <Field data-invalid={!!errors.stopType}>
-                        <FieldLabel>Loại điểm dừng</FieldLabel>
-                        <select
-                        className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                        {...register('stopType')}
-                        >
-                        <option value="PICKUP">Đón khách</option>
-                        <option value="DROPOFF">Trả khách</option>
-                        <option value="BOTH">Đón và Trả</option>
-                        </select>
-                        <FieldError>{errors.stopType?.message}</FieldError>
-                    </Field>
+              <Field data-invalid={!!errors.stopType}>
+                <FieldLabel>Loại điểm dừng</FieldLabel>
+                <select
+                  className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  {...register('stopType')}
+                >
+                  <option value="PICKUP">Đón khách</option>
+                  <option value="DROPOFF">Trả khách</option>
+                  <option value="BOTH">Đón và Trả</option>
+                </select>
+                <FieldError>{errors.stopType?.message}</FieldError>
+              </Field>
 
-                    <Field data-invalid={!!errors.stopOrder}>
-                        <FieldLabel>Thứ tự</FieldLabel>
-                        <Input type="number" {...register('stopOrder', { valueAsNumber: true })} />
-                        <FieldError>{errors.stopOrder?.message}</FieldError>
-                    </Field>
+              <Field data-invalid={!!errors.stopOrder}>
+                <FieldLabel>Thứ tự</FieldLabel>
+                <Input type="number" {...register('stopOrder', { valueAsNumber: true })} />
+                <FieldError>{errors.stopOrder?.message}</FieldError>
+              </Field>
 
-                    <Field data-invalid={!!errors.durationMinutesFromOrigin}>
-                        <FieldLabel>Thời gian từ điểm đi (phút)</FieldLabel>
-                        <Input
-                        type="number"
-                        {...register('durationMinutesFromOrigin', { valueAsNumber: true })}
-                        />
-                        <FieldError>{errors.durationMinutesFromOrigin?.message}</FieldError>
-                    </Field>
-                </div>
+              <Field data-invalid={!!errors.durationMinutesFromOrigin}>
+                <FieldLabel>Thời gian từ điểm đi (phút)</FieldLabel>
+                <Input
+                  type="number"
+                  {...register('durationMinutesFromOrigin', { valueAsNumber: true })}
+                />
+                <FieldError>{errors.durationMinutesFromOrigin?.message}</FieldError>
+              </Field>
+            </div>
 
-                <Button type="submit" disabled={!isLocalMode && addStopMutation.isPending} className="w-full">
-                <Plus className="mr-2 h-4 w-4" />
-                {!isLocalMode && addStopMutation.isPending ? 'Đang thêm...' : 'Thêm điểm dừng vào danh sách'}
-                </Button>
-            </form>
+            <Button
+              type="submit"
+              disabled={!isLocalMode && addStopMutation.isPending}
+              className="w-full"
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              {!isLocalMode && addStopMutation.isPending
+                ? 'Đang thêm...'
+                : 'Thêm điểm dừng vào danh sách'}
+            </Button>
+          </form>
         </CardContent>
       </Card>
     </div>

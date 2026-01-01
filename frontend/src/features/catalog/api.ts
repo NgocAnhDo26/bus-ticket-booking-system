@@ -103,7 +103,7 @@ const toRoute = (r: ApiRoute | RouteResponse | undefined): Route => ({
   ),
   destinationStation: toStation(
     (r as ApiRoute | undefined)?.destinationStation ??
-    (r as RouteResponse | undefined)?.destinationStation,
+      (r as RouteResponse | undefined)?.destinationStation,
   ),
   durationMinutes: r?.durationMinutes ?? 0,
   distanceKm: 'distanceKm' in (r ?? {}) ? ((r as ApiRoute).distanceKm ?? 0) : 0,
@@ -175,7 +175,8 @@ const toTrip = (t: TripResponse | undefined): Trip => ({
         stopOrder: s.stopOrder ?? 0,
         durationMinutesFromOrigin: s.durationMinutesFromOrigin ?? 0,
         stopType: (s.stopType ?? 'BOTH') as 'PICKUP' | 'DROPOFF' | 'BOTH',
-        estimatedArrivalTime: (s as unknown as { estimatedArrivalTime?: string }).estimatedArrivalTime,
+        estimatedArrivalTime: (s as unknown as { estimatedArrivalTime?: string })
+          .estimatedArrivalTime,
         normalPrice: (s as unknown as { normalPrice?: number }).normalPrice,
         vipPrice: (s as unknown as { vipPrice?: number }).vipPrice,
       }),
@@ -415,11 +416,10 @@ export const fetchBusLayouts = async (): Promise<BusLayout[]> => {
 
 // Check if trip recurrence can be updated (validates no future bookings exist)
 export const checkCanUpdateRecurrence = async (
-  tripId: string
+  tripId: string,
 ): Promise<{ canUpdate: boolean; futureBookingsCount: number }> => {
   const response = await apiClient.get<{ canUpdate: boolean; futureBookingsCount: number }>(
-    `/api/trips/${tripId}/can-update-recurrence`
+    `/api/trips/${tripId}/can-update-recurrence`,
   );
   return response.data;
 };
-
