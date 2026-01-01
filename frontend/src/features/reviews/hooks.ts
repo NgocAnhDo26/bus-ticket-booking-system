@@ -1,0 +1,35 @@
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+
+import { createReview, getReviewByBookingId, getReviewsByOperator } from './api';
+import type { CreateReviewRequest } from './api';
+
+export const useReviewsByOperator = (operatorId: string | undefined, page = 0, size = 10) => {
+  return useQuery({
+    queryKey: ['reviews', 'operator', operatorId, page, size],
+    queryFn: () => getReviewsByOperator(operatorId!, page, size),
+    enabled: !!operatorId,
+  });
+};
+
+export const useReviewByBookingId = (bookingId: string | undefined) => {
+  return useQuery({
+    queryKey: ['review', 'booking', bookingId],
+    queryFn: () => getReviewByBookingId(bookingId!),
+    enabled: !!bookingId,
+    retry: false,
+  });
+};
+
+export const useCreateReview = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (request: CreateReviewRequest) => createReview(request),
+    onSuccess: (_data, variables) => {
+      // Invalidate reviews for the operator
+      queryClient.invalidateQueries({ queryKey: ['reviews'] });
+      // Invalidate the specific booking review
+      queryClient.invalidateQueries({ queryKey: ['review', 'booking', variables.bookingId] });
+    },
+  });
+};

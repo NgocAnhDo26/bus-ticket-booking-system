@@ -5,14 +5,14 @@
  * REST API for searching trips, booking seats and managing bus ticket operations.
  * OpenAPI spec version: v1.0
  */
-import type { StationInfo } from './stationInfo';
+import type { TripStopDtoStopType } from './tripStopDtoStopType';
 
-export interface RouteStopInfo {
-  id?: string;
-  station?: StationInfo;
+export interface TripStopDto {
+  stationId?: string;
   customName?: string;
   customAddress?: string;
-  stopOrder?: number;
-  durationMinutesFromOrigin?: number;
-  stopType?: string;
+  stopOrder: number;
+  durationMinutesFromOrigin: number;
+  stopType: TripStopDtoStopType;
+  valid?: boolean;
 }

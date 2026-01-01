@@ -6,13 +6,12 @@
  * OpenAPI spec version: v1.0
  */
 
-export interface TicketRequest {
+export interface ResetPasswordRequest {
   /** @minLength 1 */
-  seatCode: string;
-  /** @minLength 1 */
-  passengerName: string;
-  /** @minLength 1 */
-  passengerPhone: string;
-  passengerIdNumber?: string;
-  price: number;
+  token: string;
+  /**
+   * @minLength 6
+   * @maxLength 2147483647
+   */
+  newPassword: string;
 }
