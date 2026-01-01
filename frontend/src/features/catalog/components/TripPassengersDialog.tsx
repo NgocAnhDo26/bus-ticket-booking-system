@@ -80,6 +80,14 @@ export const TripPassengersDialog = ({ trip, open, onOpenChange }: TripPassenger
     }
   };
 
+  const handleCheckIn = (ticketId: string) => {
+    toast.promise(checkInPassenger.mutateAsync(ticketId), {
+      loading: 'Đang cập nhật trạng thái...',
+      success: 'Cập nhật thành công!',
+      error: 'Cập nhật thất bại. Vui lòng thử lại.',
+    });
+  };
+
   const columns: ColumnDef<TripPassenger>[] = useMemo(
     () => [
       {
@@ -151,16 +159,10 @@ export const TripPassengersDialog = ({ trip, open, onOpenChange }: TripPassenger
         },
       },
     ],
-    [checkInPassenger],
+    [checkInPassenger, handleCheckIn],
   );
 
-  const handleCheckIn = (ticketId: string) => {
-    toast.promise(checkInPassenger.mutateAsync(ticketId), {
-      loading: 'Đang cập nhật trạng thái...',
-      success: 'Cập nhật thành công!',
-      error: 'Cập nhật thất bại. Vui lòng thử lại.',
-    });
-  };
+
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
