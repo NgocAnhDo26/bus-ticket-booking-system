@@ -11,7 +11,7 @@ export const ChatWidget = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: 'welcome',
-      text: 'Xin chào! Tôi là trợ lý ảo của Vexere (Clone). Tôi có thể giúp gì cho bạn?',
+      text: 'Xin chào! Tôi là trợ lý ảo của SwiftRide. Tôi có thể giúp gì cho bạn?',
       sender: 'bot',
       timestamp: Date.now(),
     },
