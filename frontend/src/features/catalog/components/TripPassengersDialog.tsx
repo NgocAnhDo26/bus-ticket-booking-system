@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 import { Check, Loader2, Search, X } from 'lucide-react';
 import { toast } from 'sonner';
@@ -80,13 +80,16 @@ export const TripPassengersDialog = ({ trip, open, onOpenChange }: TripPassenger
     }
   };
 
-  const handleCheckIn = (ticketId: string) => {
-    toast.promise(checkInPassenger.mutateAsync(ticketId), {
-      loading: 'Đang cập nhật trạng thái...',
-      success: 'Cập nhật thành công!',
-      error: 'Cập nhật thất bại. Vui lòng thử lại.',
-    });
-  };
+  const handleCheckIn = useCallback(
+    (ticketId: string) => {
+      toast.promise(checkInPassenger.mutateAsync(ticketId), {
+        loading: 'Đang cập nhật trạng thái...',
+        success: 'Cập nhật thành công!',
+        error: 'Cập nhật thất bại. Vui lòng thử lại.',
+      });
+    },
+    [checkInPassenger],
+  );
 
   const columns: ColumnDef<TripPassenger>[] = useMemo(
     () => [
@@ -161,8 +164,6 @@ export const TripPassengersDialog = ({ trip, open, onOpenChange }: TripPassenger
     ],
     [checkInPassenger, handleCheckIn],
   );
-
-
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
