@@ -24,11 +24,18 @@ public class RouteStop implements Serializable {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "route_id", nullable = false)
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private Route route;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "station_id", nullable = false)
+    @JoinColumn(name = "station_id", nullable = true)
     private Station station;
+
+    @Column(name = "custom_name")
+    private String customName;
+
+    @Column(name = "custom_address")
+    private String customAddress;
 
     @Column(name = "stop_order", nullable = false)
     private Integer stopOrder;

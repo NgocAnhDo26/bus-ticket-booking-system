@@ -1,5 +1,6 @@
 package com.awad.ticketbooking.modules.trip.entity;
 
+import com.awad.ticketbooking.common.enums.RecurrenceType;
 import com.awad.ticketbooking.modules.catalog.entity.Bus;
 import com.awad.ticketbooking.modules.catalog.entity.Route;
 import jakarta.persistence.*;
@@ -37,6 +38,13 @@ public class TripSchedule {
     @Column(name = "frequency")
     private String frequency;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "recurrence_type")
+    private RecurrenceType recurrenceType = RecurrenceType.NONE;
+
+    @Column(name = "weekly_days")
+    private String weeklyDays; // Format: "MON,TUE,WED,THU,FRI,SAT,SUN"
+
     @Column(name = "start_date", nullable = false)
     private LocalDate startDate;
 
@@ -45,6 +53,9 @@ public class TripSchedule {
 
     @Column(name = "is_active")
     private Boolean isActive = true;
+
+    @Column(name = "pricing_config", columnDefinition = "TEXT")
+    private String pricingConfig;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();

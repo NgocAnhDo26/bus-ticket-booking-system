@@ -208,15 +208,15 @@ export const BookingPage = () => {
                   }}
                 >
                   <option value="">Chọn điểm đón...</option>
-                  <option value={trip.route.originStation.id}>
-                    {trip.route.originStation.name} (00:00)
+                  <option value="ORIGIN">
+                    {trip.route.originStation.name} (Điểm đầu)
                   </option>
                   {trip.route.stops
-                    ?.filter((s) => s.station && (s.stopType === 'PICKUP' || s.stopType === 'BOTH'))
+                    ?.filter((s) => s.stopType === 'PICKUP' || s.stopType === 'BOTH')
                     .sort((a, b) => a.stopOrder - b.stopOrder)
                     .map((s) => (
-                      <option key={s.id} value={s.station!.id}>
-                        {s.station!.name} (+{s.durationMinutesFromOrigin}m)
+                      <option key={s.id} value={s.id}>
+                        {s.station ? s.station.name : s.customName} (+{s.durationMinutesFromOrigin}m)
                       </option>
                     ))}
                 </select>
@@ -233,28 +233,25 @@ export const BookingPage = () => {
                 >
                   <option value="">Chọn điểm trả...</option>
                   {trip.route.stops
-                    .filter((s) => s.station && (s.stopType === 'DROPOFF' || s.stopType === 'BOTH'))
+                    ?.filter((s) => s.stopType === 'DROPOFF' || s.stopType === 'BOTH')
                     .filter((s) => {
                       // Filter based on pickup order
-                      if (!pickupStationId) return true;
-                      let pickupOrder = 0;
-                      if (pickupStationId === trip.route.originStation.id) pickupOrder = 0;
-                      else {
-                        const pStop = trip.route.stops.find(
-                          (st) => st.station?.id === pickupStationId,
-                        );
-                        if (pStop) pickupOrder = pStop.stopOrder;
-                      }
+                      if (!pickupStationId || pickupStationId === 'ORIGIN') return true;
+                      
+                      // Find pickup stop order
+                      const pickupStop = trip.route.stops?.find(p => p.id === pickupStationId);
+                      const pickupOrder = pickupStop ? pickupStop.stopOrder : -1;
+                      
                       return s.stopOrder > pickupOrder;
                     })
                     .sort((a, b) => a.stopOrder - b.stopOrder)
                     .map((s) => (
-                      <option key={s.id} value={s.station!.id}>
-                        {s.station!.name} (+{s.durationMinutesFromOrigin}m)
+                      <option key={s.id} value={s.id}>
+                        {s.station ? s.station.name : s.customName} (+{s.durationMinutesFromOrigin}m)
                       </option>
                     ))}
-                  <option value={trip.route.destinationStation.id}>
-                    {trip.route.destinationStation.name} (Cuối tuyến)
+                  <option value="DESTINATION">
+                    {trip.route.destinationStation.name} (Điểm cuối)
                   </option>
                 </select>
               </div>

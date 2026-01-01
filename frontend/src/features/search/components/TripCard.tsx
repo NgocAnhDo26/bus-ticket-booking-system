@@ -18,7 +18,8 @@ export const TripCard = ({ trip, onSelect }: TripCardProps) => {
   const hours = Math.floor(duration / 60);
   const minutes = duration % 60;
 
-  const minPrice = Math.min(...trip.tripPricings.map((p) => p.price));
+  const prices = trip.tripPricings.map((p) => p.price);
+  const minPrice = prices.length > 0 ? Math.min(...prices) : 0;
 
   return (
     <Card className="hover:shadow-md transition-shadow">

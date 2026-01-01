@@ -201,6 +201,14 @@ export const useUpdateRoute = () => {
   });
 };
 
+export const useRouteById = (id: string | undefined) => {
+  return useQuery({
+    queryKey: ['route', id],
+    queryFn: () => import('./api').then((mod) => mod.getRouteById(id!)),
+    enabled: !!id,
+  });
+};
+
 export const useDeleteRoute = () => {
   const queryClient = useQueryClient();
   return useMutation({
@@ -216,8 +224,9 @@ export const useAddRouteStop = () => {
   return useMutation({
     mutationFn: ({ routeId, data }: { routeId: string; data: AddRouteStopRequest }) =>
       addRouteStop(routeId, data),
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['routes'] });
+      queryClient.invalidateQueries({ queryKey: ['route', variables.routeId] });
     },
   });
 };
@@ -227,8 +236,9 @@ export const useDeleteRouteStop = () => {
   return useMutation({
     mutationFn: ({ routeId, stopId }: { routeId: string; stopId: string }) =>
       deleteRouteStop(routeId, stopId),
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['routes'] });
+      queryClient.invalidateQueries({ queryKey: ['route', variables.routeId] });
     },
   });
 };
@@ -324,3 +334,12 @@ export const useUpdateTripStatus = () => {
     },
   });
 };
+
+export const useCheckCanUpdateRecurrence = (tripId: string | undefined) => {
+  return useQuery({
+    queryKey: ['trip', tripId, 'can-update-recurrence'],
+    queryFn: () => import('./api').then((mod) => mod.checkCanUpdateRecurrence(tripId!)),
+    enabled: !!tripId,
+  });
+};
+

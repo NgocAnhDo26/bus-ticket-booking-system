@@ -1,6 +1,5 @@
 package com.awad.ticketbooking.modules.catalog.controller;
 
-import com.awad.ticketbooking.modules.catalog.entity.Route;
 import com.awad.ticketbooking.modules.catalog.service.RouteService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -36,14 +35,20 @@ public class RouteController {
         return ResponseEntity.ok(routeService.searchRoutes(query, pageable));
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<com.awad.ticketbooking.modules.catalog.dto.RouteResponse> getRouteById(
+            @org.springframework.web.bind.annotation.PathVariable UUID id) {
+        return ResponseEntity.ok(routeService.getRouteById(id));
+    }
+
     @org.springframework.web.bind.annotation.PostMapping
-    public ResponseEntity<Route> createRoute(
+    public ResponseEntity<com.awad.ticketbooking.modules.catalog.dto.RouteResponse> createRoute(
             @jakarta.validation.Valid @org.springframework.web.bind.annotation.RequestBody com.awad.ticketbooking.modules.catalog.dto.CreateRouteRequest request) {
         return ResponseEntity.ok(routeService.createRoute(request));
     }
 
     @org.springframework.web.bind.annotation.PutMapping("/{id}")
-    public ResponseEntity<Route> updateRoute(
+    public ResponseEntity<com.awad.ticketbooking.modules.catalog.dto.RouteResponse> updateRoute(
             @org.springframework.web.bind.annotation.PathVariable UUID id,
             @jakarta.validation.Valid @org.springframework.web.bind.annotation.RequestBody com.awad.ticketbooking.modules.catalog.dto.CreateRouteRequest request) {
         return ResponseEntity.ok(routeService.updateRoute(id, request));

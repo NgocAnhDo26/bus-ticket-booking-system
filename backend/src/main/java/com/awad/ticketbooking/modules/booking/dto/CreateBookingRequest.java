@@ -35,6 +35,9 @@ public class CreateBookingRequest {
     private UUID pickupStationId;
     private UUID dropoffStationId;
 
+    private UUID pickupTripStopId;
+    private UUID dropoffTripStopId;
+
     @NotNull(message = "Total price is required")
     @PositiveOrZero(message = "Total price must be zero or positive")
     private BigDecimal totalPrice;

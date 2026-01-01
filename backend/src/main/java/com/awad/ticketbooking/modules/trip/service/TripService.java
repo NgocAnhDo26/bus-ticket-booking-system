@@ -4,13 +4,21 @@ import com.awad.ticketbooking.modules.catalog.entity.Bus;
 import com.awad.ticketbooking.modules.catalog.entity.Route;
 import com.awad.ticketbooking.modules.catalog.repository.BusRepository;
 import com.awad.ticketbooking.modules.catalog.repository.RouteRepository;
+import com.awad.ticketbooking.modules.catalog.repository.StationRepository;
 import com.awad.ticketbooking.modules.trip.dto.CreateTripRequest;
+import com.awad.ticketbooking.modules.trip.dto.RecurrenceDto;
 import com.awad.ticketbooking.modules.trip.dto.SearchTripRequest;
 import com.awad.ticketbooking.modules.trip.dto.TripResponse;
+import com.awad.ticketbooking.modules.trip.dto.TripStopDto;
+import com.awad.ticketbooking.modules.trip.dto.UpdateTripStopsRequest;
 import com.awad.ticketbooking.modules.trip.entity.Trip;
 import com.awad.ticketbooking.modules.trip.entity.TripPricing;
+import com.awad.ticketbooking.modules.trip.entity.TripSchedule;
 import com.awad.ticketbooking.modules.trip.repository.TripPricingRepository;
 import com.awad.ticketbooking.modules.trip.repository.TripRepository;
+import com.awad.ticketbooking.modules.trip.repository.TripScheduleRepository;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
@@ -32,38 +40,77 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class TripService {
 
+    // Maximum allowed days for recurrence to prevent server overload
+    private static final int MAX_RECURRENCE_DAYS = 90;
+
     private final TripRepository tripRepository;
     private final TripPricingRepository tripPricingRepository;
     private final BusRepository busRepository;
     private final RouteRepository routeRepository;
+    private final StationRepository stationRepository;
     private final com.awad.ticketbooking.modules.booking.repository.BookingRepository bookingRepository;
     private final com.awad.ticketbooking.modules.booking.repository.TicketRepository ticketRepository;
-    private final com.awad.ticketbooking.modules.catalog.repository.StationRepository stationRepository;
+    private final TripScheduleRepository tripScheduleRepository;
+    private final ObjectMapper objectMapper;
 
     @Transactional
     public TripResponse createTrip(CreateTripRequest request) {
-        Bus bus = busRepository.findById(request.getBusId())
-                .orElseThrow(() -> new RuntimeException("Bus not found"));
-
+        // Validate Bus & Route
         Route route = routeRepository.findById(request.getRouteId())
-                .orElseThrow(() -> new RuntimeException("Route not found"));
+                .orElseThrow(() -> new RuntimeException("Route not found with id: " + request.getRouteId()));
+        Bus bus = busRepository.findById(request.getBusId())
+                .orElseThrow(() -> new RuntimeException("Bus not found with id: " + request.getBusId()));
 
-        // Check for conflicts
+        // Check conflicts
         boolean hasConflict = tripRepository.existsByBusIdAndDepartureTimeLessThanAndArrivalTimeGreaterThan(
                 bus.getId(), request.getArrivalTime(), request.getDepartureTime());
 
         if (hasConflict) {
-            throw new RuntimeException("Bus is already assigned to another trip during this time");
+            throw new RuntimeException(
+                    "Bus " + bus.getPlateNumber() + " is already assigned to another trip during this time");
         }
 
+        // Create Trip
         Trip trip = new Trip();
-        trip.setBus(bus);
         trip.setRoute(route);
+        trip.setBus(bus);
         trip.setDepartureTime(request.getDepartureTime());
         trip.setArrivalTime(request.getArrivalTime());
+        trip.setStatus(com.awad.ticketbooking.common.enums.TripStatus.SCHEDULED);
+
+        // Save Recurrence Schedule if Recurring
+        if ("RECURRING".equals(request.getTripType()) && request.getRecurrence() != null) {
+            RecurrenceDto rec = request.getRecurrence();
+            // Validate Date Range
+            validateRecurrenceDateRange(rec.getStartDate(), rec.getEndDate());
+
+            TripSchedule schedule = new TripSchedule();
+            schedule.setRoute(route);
+            schedule.setBus(bus);
+            // Default time from first trip
+            schedule.setDepartureTime(request.getDepartureTime().atZone(ZoneId.systemDefault()).toLocalTime());
+            schedule.setFrequency("DAILY"); // Placeholder or mapped
+            schedule.setRecurrenceType(rec.getRecurrenceType());
+            schedule.setWeeklyDays(rec.getWeeklyDays() != null ? String.join(",", rec.getWeeklyDays()) : null);
+            schedule.setStartDate(rec.getStartDate());
+            schedule.setEndDate(rec.getEndDate());
+
+            // Save stops config as JSON
+            if (request.getStops() != null && !request.getStops().isEmpty()) {
+                try {
+                    schedule.setPricingConfig(objectMapper.writeValueAsString(request.getStops()));
+                } catch (JsonProcessingException e) {
+                    throw new RuntimeException("Failed to serialize stops config", e);
+                }
+            }
+
+            tripScheduleRepository.save(schedule);
+            trip.setTripSchedule(schedule);
+        }
 
         Trip savedTrip = tripRepository.save(trip);
 
+        // Save Pricings
         if (request.getPricings() != null) {
             List<TripPricing> pricings = request.getPricings().stream().map(p -> {
                 TripPricing pricing = new TripPricing();
@@ -73,22 +120,50 @@ public class TripService {
                 return pricing;
             }).collect(Collectors.toList());
             tripPricingRepository.saveAll(pricings);
-            savedTrip.setTripPricings(pricings);
+            savedTrip.setTripPricings(pricings); // Update managed entity
         }
 
-        // Clone RouteStops to TripStops
-        if (route.getStops() != null && !route.getStops().isEmpty()) {
-            List<com.awad.ticketbooking.modules.trip.entity.TripStop> tripStops = route.getStops().stream().map(rs -> {
-                com.awad.ticketbooking.modules.trip.entity.TripStop ts = new com.awad.ticketbooking.modules.trip.entity.TripStop();
-                ts.setTrip(savedTrip);
-                ts.setStation(rs.getStation());
-                ts.setStopOrder(rs.getStopOrder());
-                ts.setDurationMinutesFromOrigin(rs.getDurationMinutesFromOrigin());
-                ts.setStopType(rs.getStopType());
-                return ts;
-            }).collect(Collectors.toList());
+        // Save Stops (Clone or Custom)
+        if (request.getStops() != null && !request.getStops().isEmpty()) {
+            List<com.awad.ticketbooking.modules.trip.entity.TripStop> tripStops = request.getStops().stream()
+                    .map(dto -> {
+                        com.awad.ticketbooking.modules.trip.entity.TripStop ts = new com.awad.ticketbooking.modules.trip.entity.TripStop();
+                        ts.setTrip(savedTrip);
+
+                        if (dto.getStationId() != null) {
+                            ts.setStation(stationRepository.getReferenceById(dto.getStationId()));
+                        } else {
+                            ts.setCustomName(dto.getCustomName());
+                            ts.setCustomAddress(dto.getCustomAddress());
+                        }
+
+                        ts.setStopOrder(dto.getStopOrder());
+                        ts.setDurationMinutesFromOrigin(dto.getDurationMinutesFromOrigin());
+                        ts.setStopType(dto.getStopType());
+                        ts.setEstimatedArrivalTime(dto.getEstimatedArrivalTime());
+                        ts.setNormalPrice(dto.getNormalPrice());
+                        ts.setVipPrice(dto.getVipPrice());
+
+                        return ts;
+                    }).collect(Collectors.toList());
             savedTrip.getTripStops().addAll(tripStops);
-            tripRepository.save(savedTrip);
+            tripRepository.save(savedTrip); // Update trip with stops
+        } else {
+            // Clone from Route Default
+            if (route.getStops() != null && !route.getStops().isEmpty()) {
+                List<com.awad.ticketbooking.modules.trip.entity.TripStop> tripStops = route.getStops().stream()
+                        .map(rs -> {
+                            com.awad.ticketbooking.modules.trip.entity.TripStop ts = new com.awad.ticketbooking.modules.trip.entity.TripStop();
+                            ts.setTrip(savedTrip);
+                            ts.setStation(rs.getStation());
+                            ts.setStopOrder(rs.getStopOrder());
+                            ts.setDurationMinutesFromOrigin(rs.getDurationMinutesFromOrigin());
+                            ts.setStopType(rs.getStopType());
+                            return ts;
+                        }).collect(Collectors.toList());
+                savedTrip.getTripStops().addAll(tripStops);
+                tripRepository.save(savedTrip);
+            }
         }
 
         return mapToResponse(savedTrip);
@@ -163,7 +238,7 @@ public class TripService {
 
     @Transactional
     public TripResponse updateTripStops(java.util.UUID tripId,
-            com.awad.ticketbooking.modules.trip.dto.UpdateTripStopsRequest request) {
+            UpdateTripStopsRequest request) {
         Trip trip = tripRepository.findById(tripId)
                 .orElseThrow(() -> new RuntimeException("Trip not found"));
 
@@ -172,7 +247,7 @@ public class TripService {
         }
 
         // Validate each stop - must have either stationId or customAddress
-        for (com.awad.ticketbooking.modules.trip.dto.UpdateTripStopsRequest.TripStopDto stopDto : request.getStops()) {
+        for (TripStopDto stopDto : request.getStops()) {
             if (!stopDto.isValid()) {
                 throw new RuntimeException("Each stop must have either a stationId or a customAddress");
             }
@@ -202,6 +277,12 @@ public class TripService {
             ts.setStopOrder(dto.getStopOrder());
             ts.setDurationMinutesFromOrigin(dto.getDurationMinutesFromOrigin());
             ts.setStopType(dto.getStopType());
+
+            // Set new fields for per-stop configuration
+            ts.setEstimatedArrivalTime(dto.getEstimatedArrivalTime());
+            ts.setNormalPrice(dto.getNormalPrice());
+            ts.setVipPrice(dto.getVipPrice());
+
             return ts;
         }).collect(Collectors.toList());
 
@@ -330,16 +411,23 @@ public class TripService {
                                                 .stopOrder(stop.getStopOrder())
                                                 .durationMinutesFromOrigin(stop.getDurationMinutesFromOrigin())
                                                 .stopType(stop.getStopType().name())
+                                                .estimatedArrivalTime(stop.getEstimatedArrivalTime())
+                                                .normalPrice(stop.getNormalPrice())
+                                                .vipPrice(stop.getVipPrice())
                                                 .build())
                                         .collect(Collectors.toList())
                                 : trip.getRoute().getStops().stream()
                                         .map(stop -> TripResponse.RouteStopInfo.builder()
                                                 .id(stop.getId())
-                                                .station(TripResponse.StationInfo.builder()
-                                                        .id(stop.getStation().getId())
-                                                        .name(stop.getStation().getName())
-                                                        .city(stop.getStation().getCity())
-                                                        .build())
+                                                .station(stop.getStation() != null
+                                                        ? TripResponse.StationInfo.builder()
+                                                                .id(stop.getStation().getId())
+                                                                .name(stop.getStation().getName())
+                                                                .city(stop.getStation().getCity())
+                                                                .build()
+                                                        : null)
+                                                .customName(stop.getCustomName())
+                                                .customAddress(stop.getCustomAddress())
                                                 .stopOrder(stop.getStopOrder())
                                                 .durationMinutesFromOrigin(stop.getDurationMinutesFromOrigin())
                                                 .stopType(stop.getStopType().name())
@@ -408,5 +496,64 @@ public class TripService {
 
         trip.setStatus(status);
         return mapToResponse(tripRepository.save(trip));
+    }
+
+    /**
+     * Checks if a trip's recurrence can be updated.
+     * Returns future booking count - if > 0, recurrence changes should be blocked.
+     */
+    @Transactional(readOnly = true)
+    public long countFutureBookingsForTrip(java.util.UUID tripId) {
+        return bookingRepository.countFutureBookingsByTripId(tripId, java.time.Instant.now());
+    }
+
+    /**
+     * DTO for recurrence update eligibility response
+     */
+    public record RecurrenceUpdateCheck(boolean canUpdate, long futureBookingsCount) {
+    }
+
+    /**
+     * Check if recurrence can be updated for a trip
+     */
+    @Transactional(readOnly = true)
+    public RecurrenceUpdateCheck checkCanUpdateRecurrence(java.util.UUID tripId) {
+        if (!tripRepository.existsById(tripId)) {
+            throw new RuntimeException("Trip not found with id: " + tripId);
+        }
+        long count = bookingRepository.countFutureBookingsByTripId(tripId, java.time.Instant.now());
+        return new RecurrenceUpdateCheck(count == 0, count);
+    }
+
+    /**
+     * Validates recurrence date range to prevent server overload.
+     * Throws exception if date range exceeds MAX_RECURRENCE_DAYS.
+     * 
+     * @param startDate Start date of recurrence
+     * @param endDate   End date of recurrence
+     * @return Number of days in the range
+     */
+    public int validateRecurrenceDateRange(java.time.LocalDate startDate, java.time.LocalDate endDate) {
+        if (startDate == null || endDate == null) {
+            return 0;
+        }
+
+        long daysBetween = java.time.temporal.ChronoUnit.DAYS.between(startDate, endDate);
+
+        if (daysBetween > MAX_RECURRENCE_DAYS) {
+            throw new IllegalArgumentException(
+                    "Khoảng thời gian lặp lại tối đa là " + MAX_RECURRENCE_DAYS + " ngày. " +
+                            "Bạn đã chọn " + daysBetween + " ngày.");
+        }
+
+        if (startDate.isBefore(java.time.LocalDate.now())) {
+            throw new IllegalArgumentException("Ngày bắt đầu không được trong quá khứ");
+        }
+
+        if (endDate.isBefore(startDate)) {
+            throw new IllegalArgumentException("Ngày kết thúc phải sau ngày bắt đầu");
+        }
+
+        return (int) daysBetween;
     }
 }

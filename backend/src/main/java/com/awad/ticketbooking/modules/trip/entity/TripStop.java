@@ -8,6 +8,8 @@ import lombok.Setter;
 import org.hibernate.annotations.UuidGenerator;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.UUID;
 
 @Entity
@@ -46,6 +48,15 @@ public class TripStop implements Serializable {
     @Enumerated(EnumType.STRING)
     @Column(name = "stop_type", nullable = false)
     private StopType stopType = StopType.BOTH;
+
+    @Column(name = "estimated_arrival_time")
+    private Instant estimatedArrivalTime;
+
+    @Column(name = "normal_price")
+    private BigDecimal normalPrice;
+
+    @Column(name = "vip_price")
+    private BigDecimal vipPrice;
 
     /**
      * Returns the display name for this stop.

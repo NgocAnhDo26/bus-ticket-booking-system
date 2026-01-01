@@ -7,8 +7,14 @@ import lombok.Data;
 import java.math.BigDecimal;
 import java.util.UUID;
 
+import java.util.List;
+
 @Data
 public class CreateRouteRequest {
+    private String name; // Optional custom name
+
+    // Optional list of stops for unified creation behavior
+    private List<AddRouteStopRequest> stops;
     @NotNull(message = "Origin station ID is required")
     private UUID originStationId;
 

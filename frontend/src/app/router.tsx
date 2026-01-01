@@ -21,8 +21,10 @@ import {
   BusManagementPage,
   OperatorManagementPage,
   RouteManagementPage,
+  RouteFormPage,
   StationManagementPage,
   TripManagementPage,
+  TripFormPage,
 } from '@/features/catalog';
 import { DashboardPage } from '@/features/dashboard';
 import { AdminDashboardPage } from '@/features/dashboard-admin';
@@ -131,8 +133,24 @@ export const router = createBrowserRouter([
             element: <RouteManagementPage />,
           },
           {
+            path: '/admin/catalog/trips/create',
+            element: <TripFormPage />,
+          },
+          {
+            path: '/admin/catalog/trips/edit/:id',
+            element: <TripFormPage />,
+          },
+          {
             path: '/admin/catalog/trips',
             element: <TripManagementPage />,
+          },
+          {
+            path: '/admin/catalog/routes/create',
+            element: <RouteFormPage />,
+          },
+          {
+            path: '/admin/catalog/routes/edit/:id',
+            element: <RouteFormPage />,
           },
           {
             path: '/admin/catalog/layouts',

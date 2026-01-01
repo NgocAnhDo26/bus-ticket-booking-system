@@ -147,7 +147,7 @@ export const PassengerInfoPage = () => {
   };
 
   const handleSubmit = async () => {
-    if (!tripId) return;
+    if (!tripId || !trip) return;
 
     if (finalSeatDetails.length === 0) {
       toast.error('Chưa chọn ghế', {
@@ -200,16 +200,38 @@ export const PassengerInfoPage = () => {
         userId: user?.id, // Optional for guest
         passengerName: contactName.trim(),
         passengerPhone: contactPhone.trim(),
-        passengerIdNumber: contactIdNumber.trim(), // Add contact ID
+        passengerIdNumber: contactIdNumber.trim(),
         passengerEmail: !user ? contactEmail.trim() : undefined,
-        pickupStationId: pickupStationId || undefined,
-        dropoffStationId: dropoffStationId || undefined,
+        
+        // Map pickup/dropoff
+        ...((() => {
+             if (!pickupStationId || pickupStationId === 'ORIGIN') {
+                 return { pickupStationId: trip.route.originStation.id };
+             }
+             if (pickupStationId === 'DESTINATION') {
+                 return { pickupStationId: trip.route.destinationStation.id };
+             }
+             // Otherwise it's a TripStop ID
+             return { pickupTripStopId: pickupStationId };
+        })()),
+
+        ...((() => {
+             if (!dropoffStationId || dropoffStationId === 'DESTINATION') {
+                 return { dropoffStationId: trip.route.destinationStation.id };
+             }
+             if (dropoffStationId === 'ORIGIN') {
+                 return { dropoffStationId: trip.route.originStation.id };
+             }
+             // Otherwise it's a TripStop ID
+             return { dropoffTripStopId: dropoffStationId };
+        })()),
+
         totalPrice: finalTotalPrice,
         tickets: finalSeatDetails.map((d) => ({
           seatCode: d.seatCode,
           passengerName: ticketsDetails[d.seatCode].name.trim(),
           passengerPhone: ticketsDetails[d.seatCode].phone.trim(),
-          passengerIdNumber: ticketsDetails[d.seatCode].idNumber?.trim(), // Add passenger ID
+          passengerIdNumber: ticketsDetails[d.seatCode].idNumber?.trim(),
           price: d.price,
         })),
       });

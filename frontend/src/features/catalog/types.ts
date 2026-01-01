@@ -12,6 +12,14 @@ export type Station = {
   createdAt: string;
 };
 
+export const StopType = {
+  PICKUP: 'PICKUP',
+  DROPOFF: 'DROPOFF',
+  BOTH: 'BOTH',
+} as const;
+
+export type StopType = (typeof StopType)[keyof typeof StopType];
+
 export type Operator = {
   id: string;
   name: string;
@@ -83,31 +91,38 @@ export type TripPoint = {
   pointType: 'PICKUP' | 'DROPOFF' | 'BOTH';
 };
 
-export type Route = {
+export interface Route {
   id: string;
+  name?: string;
   originStation: Station;
   destinationStation: Station;
   durationMinutes: number;
   distanceKm: number;
   isActive: boolean;
   createdAt: string;
-  stops: {
-    id: string;
-    station?: Station;
-    customName?: string;
-    customAddress?: string;
-    stopOrder: number;
-    durationMinutesFromOrigin: number;
-    defaultSurcharge?: number; // Added
-    stopType: 'PICKUP' | 'DROPOFF' | 'BOTH';
-  }[];
-};
+  stops?: RouteStop[];
+}
 
-export type AddRouteStopRequest = {
-  stationId: string;
+export interface RouteStop {
+  id: string;
+  station?: Station;
   stopOrder: number;
   durationMinutesFromOrigin: number;
-  defaultSurcharge?: number;
+  stopType: 'PICKUP' | 'DROPOFF' | 'BOTH';
+  customName?: string;
+  customAddress?: string;
+  // Trip-specific overrides (optional)
+  estimatedArrivalTime?: string;
+  normalPrice?: number;
+  vipPrice?: number;
+}
+
+export interface AddRouteStopRequest {
+  stationId?: string;
+  customName?: string;
+  customAddress?: string;
+  stopOrder: number;
+  durationMinutesFromOrigin: number;
   stopType: 'PICKUP' | 'DROPOFF' | 'BOTH';
 };
 
@@ -163,12 +178,15 @@ export type Trip = {
 };
 
 export type CreateTripRequest = {
-  // Deprecated: kept for source compatibility; prefer the OpenAPI type below.
   routeId: string;
   busId: string;
   departureTime: string;
   arrivalTime: string;
   pricings: PricingRequest[];
+  // New fields for recurrence and stops
+  tripType?: 'SINGLE' | 'RECURRING';
+  recurrence?: RecurrenceConfig;
+  stops?: TripStopDto[];
 };
 
 export type SearchTripRequest = {
@@ -187,6 +205,21 @@ export type SearchTripRequest = {
   size?: number;
 };
 
+// Recurrence types
+export type RecurrenceType = 'NONE' | 'DAILY' | 'WEEKLY';
+
+export type RecurrenceConfig = {
+  recurrenceType: RecurrenceType;
+  weeklyDays?: string[]; // ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN']
+  startDate: string;
+  endDate?: string;
+};
+
+export type RecurrenceUpdateCheck = {
+  canUpdate: boolean;
+  futureBookingsCount: number;
+};
+
 export type TripStopDto = {
   stationId?: string; // Optional - either stationId or customAddress required
   customName?: string; // Used when stationId is null
@@ -194,6 +227,10 @@ export type TripStopDto = {
   stopOrder: number;
   durationMinutesFromOrigin: number;
   stopType: 'PICKUP' | 'DROPOFF' | 'BOTH';
+  // Per-stop configuration
+  estimatedArrivalTime?: string;
+  normalPrice?: number;
+  vipPrice?: number;
 };
 
 export type UpdateTripStopsRequest = {
@@ -211,3 +248,4 @@ export type TripPassenger = {
   pickupStation: string;
   dropoffStation: string;
 };
+

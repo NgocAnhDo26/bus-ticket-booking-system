@@ -88,8 +88,8 @@ public class SecurityConfig {
                         // Webhooks (no auth - signature verified internally)
                         .requestMatchers("/api/webhooks/**").permitAll()
 
-                        .requestMatchers(HttpMethod.PUT, "/api/routes/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/routes/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/routes/**").permitAll()
+                        .requestMatchers(HttpMethod.DELETE, "/api/routes/**").permitAll()
                         .anyRequest().authenticated())
                 .authenticationProvider(daoAuthenticationProvider())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

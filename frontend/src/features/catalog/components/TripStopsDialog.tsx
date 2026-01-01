@@ -76,7 +76,8 @@ const TripStopsDialogContent = ({
     }
 
     // Fallback to route stops (Template mode)
-    return trip.route.stops.map((s) => ({
+    // Fallback to route stops (Template mode)
+    return (trip.route.stops || []).map((s) => ({
       customName: s.customName ?? s.station?.name ?? '',
       customAddress: s.customAddress ?? s.station?.address ?? '',
       stopOrder: s.stopOrder,

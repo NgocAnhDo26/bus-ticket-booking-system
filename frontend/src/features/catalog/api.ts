@@ -97,18 +97,30 @@ const toOperator = (o: ApiOperator | OperatorInfo | undefined): Operator => ({
 
 const toRoute = (r: ApiRoute | RouteResponse | undefined): Route => ({
   id: r?.id ?? '',
+  name: (r as { name?: string })?.name ?? '',
   originStation: toStation(
     (r as ApiRoute | undefined)?.originStation ?? (r as RouteResponse | undefined)?.originStation,
   ),
   destinationStation: toStation(
     (r as ApiRoute | undefined)?.destinationStation ??
-      (r as RouteResponse | undefined)?.destinationStation,
+    (r as RouteResponse | undefined)?.destinationStation,
   ),
   durationMinutes: r?.durationMinutes ?? 0,
   distanceKm: 'distanceKm' in (r ?? {}) ? ((r as ApiRoute).distanceKm ?? 0) : 0,
   isActive: 'isActive' in (r ?? {}) ? Boolean((r as ApiRoute | RouteResponse).isActive) : true,
   createdAt: 'createdAt' in (r ?? {}) ? ((r as ApiRoute).createdAt ?? '') : '',
-  stops: [],
+  stops: ((r as RouteResponse)?.stops ?? []).map((s) => ({
+    id: s.id ?? '',
+    station: s.station ? toStation(s.station) : undefined,
+    customName: (s as unknown as { customName?: string }).customName,
+    customAddress: (s as unknown as { customAddress?: string }).customAddress,
+    stopOrder: s.stopOrder ?? 0,
+    durationMinutesFromOrigin: s.durationMinutesFromOrigin ?? 0,
+    stopType: (s.stopType ?? 'BOTH') as 'PICKUP' | 'DROPOFF' | 'BOTH',
+    estimatedArrivalTime: (s as unknown as { estimatedArrivalTime?: string }).estimatedArrivalTime,
+    normalPrice: (s as unknown as { normalPrice?: number }).normalPrice,
+    vipPrice: (s as unknown as { vipPrice?: number }).vipPrice,
+  })),
 });
 
 const toApiBusLayoutSummary = (bl: ApiBusLayout | undefined): Bus['busLayout'] => ({
@@ -163,6 +175,9 @@ const toTrip = (t: TripResponse | undefined): Trip => ({
         stopOrder: s.stopOrder ?? 0,
         durationMinutesFromOrigin: s.durationMinutesFromOrigin ?? 0,
         stopType: (s.stopType ?? 'BOTH') as 'PICKUP' | 'DROPOFF' | 'BOTH',
+        estimatedArrivalTime: (s as unknown as { estimatedArrivalTime?: string }).estimatedArrivalTime,
+        normalPrice: (s as unknown as { normalPrice?: number }).normalPrice,
+        vipPrice: (s as unknown as { vipPrice?: number }).vipPrice,
       }),
     ),
   },
@@ -261,6 +276,11 @@ export const fetchRoutes = async (): Promise<Route[]> => {
 export const createRoute = async (data: CreateRouteRequest): Promise<Route> => {
   const resp = await orvalCreateRoute(data as unknown as ApiCreateRouteRequest);
   return toRoute(resp);
+};
+
+export const getRouteById = async (id: string): Promise<Route> => {
+  const response = await apiClient.get<RouteResponse>(`/api/routes/${id}`);
+  return toRoute(response.data);
 };
 
 export const updateRoute = async (id: string, data: CreateRouteRequest): Promise<Route> => {
@@ -371,3 +391,14 @@ export const fetchBusLayouts = async (): Promise<BusLayout[]> => {
   const resp = await orvalGetAllLayouts();
   return (resp ?? []).map(toBusLayout); // The controller returns List<BusLayoutResponse>, not Page
 };
+
+// Check if trip recurrence can be updated (validates no future bookings exist)
+export const checkCanUpdateRecurrence = async (
+  tripId: string
+): Promise<{ canUpdate: boolean; futureBookingsCount: number }> => {
+  const response = await apiClient.get<{ canUpdate: boolean; futureBookingsCount: number }>(
+    `/api/trips/${tripId}/can-update-recurrence`
+  );
+  return response.data;
+};
+
