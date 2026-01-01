@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ReviewForm } from '@/features/reviews/components/ReviewForm';
 import { StarRating } from '@/features/reviews/components/StarRating';
@@ -91,13 +92,8 @@ export const BookingConfirmationPage = () => {
     : null;
   const isTripLikelyCompleted = tripDepartureTime ? tripDepartureTime < new Date() : false;
 
-  const shouldShowReviewForm = true;
-  // user &&
-  // booking &&
-  // booking.status === 'CONFIRMED' &&
-  // isTripLikelyCompleted &&
-  // !existingReview &&
-  // !reviewSubmitted;
+  const shouldShowReviewForm =
+    user && booking && booking.status === 'CONFIRMED' && isTripLikelyCompleted && !existingReview;
 
   // Auto-verify payment when returning from PayOS (localhost webhook workaround)
   useEffect(() => {
@@ -236,7 +232,7 @@ export const BookingConfirmationPage = () => {
 
   return (
     <div className="container mx-auto p-4 lg:p-8">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-6xl mx-auto items-start">
+      <div className="grid grid-cols-1 gap-6 max-w-2xl mx-auto items-start">
         {/* Booking Card - Left/Top */}
         <Card className="w-full shadow-lg border-t-4 border-t-primary">
           <CardHeader className="text-center pb-2">
@@ -364,48 +360,53 @@ export const BookingConfirmationPage = () => {
           </CardContent>
         </Card>
 
+        <Separator />
+
         {/* Review Section - Right/Bottom */}
-        {user && booking && booking.status === 'CONFIRMED' && isTripLikelyCompleted && (
-          <div className="w-full">
-            {existingReview ? (
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center gap-2">
-                    <CheckCircle2 className="h-5 w-5 text-green-600" />
-                    <CardTitle>Đánh giá của bạn</CardTitle>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
+        {user &&
+          booking &&
+          booking.status === 'CONFIRMED' &&
+          (existingReview || isTripLikelyCompleted) && (
+            <div className="w-full">
+              {existingReview ? (
+                <Card>
+                  <CardHeader>
                     <div className="flex items-center gap-2">
-                      <StarRating rating={existingReview.rating} size="md" />
-                      <span className="text-sm text-muted-foreground">
-                        {format(new Date(existingReview.createdAt), 'dd/MM/yyyy')}
-                      </span>
+                      <CheckCircle2 className="h-5 w-5 text-green-600" />
+                      <CardTitle>Đánh giá của bạn</CardTitle>
                     </div>
-                    {existingReview.comment && (
-                      <p className="text-sm text-foreground leading-relaxed">
-                        {existingReview.comment}
-                      </p>
-                    )}
-                    <div className="text-xs text-muted-foreground pt-2 border-t">
-                      <span className="font-medium">{existingReview.route.originCity}</span>
-                      <span className="mx-2">→</span>
-                      <span className="font-medium">{existingReview.route.destinationCity}</span>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2">
+                        <StarRating rating={existingReview.rating} size="md" />
+                        <span className="text-sm text-muted-foreground">
+                          {format(new Date(existingReview.createdAt), 'dd/MM/yyyy')}
+                        </span>
+                      </div>
+                      {existingReview.comment && (
+                        <p className="text-sm text-foreground leading-relaxed">
+                          {existingReview.comment}
+                        </p>
+                      )}
+                      <div className="text-xs text-muted-foreground pt-2 border-t">
+                        <span className="font-medium">{existingReview.route.originCity}</span>
+                        <span className="mx-2">→</span>
+                        <span className="font-medium">{existingReview.route.destinationCity}</span>
+                      </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ) : shouldShowReviewForm ? (
-              <ReviewForm
-                bookingId={bookingId!}
-                onSuccess={() => {
-                  queryClient.invalidateQueries({ queryKey: ['review', 'booking', bookingId] });
-                }}
-              />
-            ) : null}
-          </div>
-        )}
+                  </CardContent>
+                </Card>
+              ) : shouldShowReviewForm ? (
+                <ReviewForm
+                  bookingId={bookingId!}
+                  onSuccess={() => {
+                    queryClient.invalidateQueries({ queryKey: ['review', 'booking', bookingId] });
+                  }}
+                />
+              ) : null}
+            </div>
+          )}
       </div>
     </div>
   );
