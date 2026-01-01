@@ -81,6 +81,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/payments").permitAll() // Create payment link
                         .requestMatchers(HttpMethod.GET, "/api/payments/**").permitAll() // Get payment details
 
+                        .requestMatchers(HttpMethod.POST, "/api/bookings/tickets/*/check-in").hasRole("ADMIN") // Check-in
+                                                                                                               // passenger
+
                         // Webhooks (no auth - signature verified internally)
                         .requestMatchers("/api/webhooks/**").permitAll()
 

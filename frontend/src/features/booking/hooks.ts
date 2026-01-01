@@ -83,7 +83,9 @@ export const useCheckInPassenger = () => {
   return useMutation({
     mutationFn: (ticketId: string) => import('./api').then((mod) => mod.checkInPassenger(ticketId)),
     onSuccess: () => {
+      // Invalidate and Refetch to ensure UI updates
       queryClient.invalidateQueries({ queryKey: ['tripPassengers'] });
+      queryClient.refetchQueries({ queryKey: ['tripPassengers'] });
     },
   });
 };

@@ -67,7 +67,8 @@ export function GenericTable<TData>({
   onPageSizeChange,
   onSort,
   getRowId,
-}: GenericTableProps<TData>) {
+  hidePagination = false,
+}: GenericTableProps<TData> & { hidePagination?: boolean }) {
   const skeletonRowCount = 5;
   const skeletonWidths = ['w-24', 'w-32', 'w-40', 'w-28', 'w-36'];
 
@@ -163,6 +164,7 @@ export function GenericTable<TData>({
         </Table>
       </div>
 
+      {!hidePagination && (
       <div className="flex items-center justify-between px-2">
         <div className="flex-1 text-sm text-muted-foreground hidden lg:block">
           <span className="font-medium">Tổng:</span>
@@ -230,6 +232,7 @@ export function GenericTable<TData>({
           </div>
         </div>
       </div>
+      )}
     </div>
   );
 }
