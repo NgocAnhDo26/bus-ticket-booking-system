@@ -73,7 +73,7 @@ class AuthServiceTest {
         User user = User.builder()
                 .email("test@example.com")
                 .passwordHash("encoded-password")
-                .isActivated(true)
+                .enabled(true)
                 .build();
         user.setId(UUID.randomUUID());
 
