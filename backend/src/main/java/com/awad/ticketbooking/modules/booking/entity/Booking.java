@@ -37,6 +37,14 @@ public class Booking extends BaseEntity {
     @JoinColumn(name = "dropoff_station_id")
     private com.awad.ticketbooking.modules.catalog.entity.Station dropoffStation;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "pickup_trip_point_id")
+    private com.awad.ticketbooking.modules.trip.entity.TripPoint pickupTripPoint;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "dropoff_trip_point_id")
+    private com.awad.ticketbooking.modules.trip.entity.TripPoint dropoffTripPoint;
+
     @Column(name = "total_price", nullable = false)
     private BigDecimal totalPrice;
 
@@ -49,6 +57,9 @@ public class Booking extends BaseEntity {
 
     @Column(name = "passenger_phone", nullable = false)
     private String passengerPhone;
+
+    @Column(name = "passenger_id_number")
+    private String passengerIdNumber;
 
     @Column(name = "passenger_email")
     private String passengerEmail;

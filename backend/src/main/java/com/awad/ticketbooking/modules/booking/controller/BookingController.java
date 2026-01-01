@@ -79,4 +79,10 @@ public class BookingController {
     public ResponseEntity<BookingResponse> cancelBooking(@PathVariable UUID id) {
         return ResponseEntity.ok(bookingService.cancelBooking(id));
     }
+
+    @PostMapping("/tickets/{id}/check-in")
+    @Operation(summary = "Check-in passenger", description = "Toggles the boarded status of a passenger ticket.")
+    public ResponseEntity<BookingResponse> checkInPassenger(@PathVariable UUID id) {
+        return ResponseEntity.ok(bookingService.checkInPassenger(id));
+    }
 }

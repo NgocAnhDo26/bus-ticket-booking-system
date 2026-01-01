@@ -5,6 +5,7 @@ import {
   register as orvalRegister,
 } from '@/features/api/authentication/authentication';
 import { me as orvalMe } from '@/features/api/users/users';
+import { apiClient } from '@/lib/api-client';
 import {
   type ApiResponseAuthResponse,
   type ApiResponseUserResponse,
@@ -42,8 +43,9 @@ const unwrapAuth = (resp: ApiResponseAuthResponse): AuthData => {
 };
 
 export const register = async (payload: RegisterRequest) => {
-  const resp = await orvalRegister(payload);
-  return unwrapAuth(resp);
+  await orvalRegister(payload);
+  // No return value logic as backend returns void/message now.
+  // The mutation onSuccess in RegisterPage handles the flow.
 };
 
 export const login = async (payload: LoginRequest) => {
@@ -65,4 +67,21 @@ export const fetchCurrentUser = async () => {
 
 export const logout = async () => {
   await orvalLogout();
+};
+
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
+export interface ResetPasswordRequest {
+  token: string;
+  newPassword: string;
+}
+
+export const forgotPassword = async (data: ForgotPasswordRequest) => {
+  return apiClient.post('/api/auth/forgot-password', data);
+};
+
+export const resetPassword = async (data: ResetPasswordRequest) => {
+  return apiClient.post('/api/auth/reset-password', data);
 };

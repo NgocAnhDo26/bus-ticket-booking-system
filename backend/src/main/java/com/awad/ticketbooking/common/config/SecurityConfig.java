@@ -51,6 +51,7 @@ public class SecurityConfig {
 
                         // Auth and public APIs
                         .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/v1/ai/**").permitAll() // AI Chat endpoint
                         .requestMatchers("/ws/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/health").permitAll()
                         .requestMatchers("/api/trips/**").permitAll()
@@ -79,6 +80,9 @@ public class SecurityConfig {
                         // Payments
                         .requestMatchers(HttpMethod.POST, "/api/payments").permitAll() // Create payment link
                         .requestMatchers(HttpMethod.GET, "/api/payments/**").permitAll() // Get payment details
+
+                        .requestMatchers(HttpMethod.POST, "/api/bookings/tickets/*/check-in").hasRole("ADMIN") // Check-in
+                                                                                                               // passenger
 
                         // Webhooks (no auth - signature verified internally)
                         .requestMatchers("/api/webhooks/**").permitAll()

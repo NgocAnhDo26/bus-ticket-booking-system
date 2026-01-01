@@ -27,14 +27,16 @@ import org.springframework.transaction.annotation.Transactional;
 public class AuthService {
 
     private final UserRepository userRepository;
+    private final com.awad.ticketbooking.modules.auth.repository.PasswordResetTokenRepository passwordResetTokenRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
     private final RefreshTokenService refreshTokenService;
     private final GoogleIdTokenVerifier googleIdTokenVerifier;
+    private final com.awad.ticketbooking.common.service.EmailService emailService;
 
     @Transactional
-    public AuthResult register(RegisterRequest request) {
+    public void register(RegisterRequest request) {
         String email = request.email().trim().toLowerCase();
         userRepository
                 .findByEmail(email)
@@ -42,13 +44,35 @@ public class AuthService {
                     throw new IllegalArgumentException("Email already registered");
                 });
 
+        String token = java.util.UUID.randomUUID().toString();
+
         User user = User.builder()
                 .fullName(request.fullName())
                 .email(email)
                 .passwordHash(passwordEncoder.encode(request.password()))
                 .role(UserRole.PASSENGER)
                 .authProvider(AuthProvider.LOCAL)
+                .enabled(false) // Disable by default
+                .activationToken(token)
+                .activationTokenExpiry(java.time.Instant.now().plusSeconds(24 * 3600)) // 24h
                 .build();
+
+        User saved = userRepository.save(user); // Save first to handle ID if needed, although UUID is generated
+        emailService.sendActivationEmail(saved.getEmail(), saved.getFullName(), token);
+    }
+
+    @Transactional
+    public AuthResult activateAccount(String token) {
+        User user = userRepository.findByActivationToken(token)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid activation token"));
+
+        if (user.getActivationTokenExpiry().isBefore(java.time.Instant.now())) {
+            throw new IllegalArgumentException("Activation token expired");
+        }
+
+        user.setEnabled(true);
+        user.setActivationToken(null);
+        user.setActivationTokenExpiry(null);
 
         User saved = userRepository.save(user);
         return issueTokens(saved);
@@ -56,11 +80,17 @@ public class AuthService {
 
     public AuthResult login(LoginRequest request) {
         String email = request.email().trim().toLowerCase();
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        if (!user.isEnabled()) {
+            throw new IllegalArgumentException("Account not activated. Please check your email.");
+        }
+
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(email, request.password()));
-        User user = userRepository
-                .findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
         return issueTokens(user);
     }
 
@@ -80,6 +110,7 @@ public class AuthService {
                     .avatarUrl((String) payload.get("picture"))
                     .authProvider(AuthProvider.GOOGLE)
                     .role(UserRole.PASSENGER)
+                    .enabled(true) // Google users are auto-verified
                     .build()));
             return issueTokens(user);
         } catch (IllegalArgumentException ex) {
@@ -97,12 +128,52 @@ public class AuthService {
     public AuthResult refresh(String token) {
         RefreshToken refreshToken = refreshTokenService.validateToken(token);
         User user = refreshToken.getUser();
+        if (!user.isEnabled()) {
+            throw new IllegalArgumentException("Account not activated.");
+        }
         return issueTokens(user);
     }
 
     @Transactional
     public void logout(User user) {
         refreshTokenService.revokeAll(user);
+    }
+
+    @Transactional
+    public void initiatePasswordReset(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + email));
+
+        passwordResetTokenRepository.findByUser(user).ifPresent(passwordResetTokenRepository::delete);
+
+        String token = java.util.UUID.randomUUID().toString();
+        com.awad.ticketbooking.modules.auth.entity.PasswordResetToken resetToken = com.awad.ticketbooking.modules.auth.entity.PasswordResetToken
+                .builder()
+                .token(token)
+                .user(user)
+                .expiryDate(java.time.LocalDateTime.now().plusMinutes(15))
+                .build();
+
+        passwordResetTokenRepository.save(resetToken);
+        emailService.sendPasswordResetEmail(user.getEmail(), user.getFullName(), token);
+    }
+
+    @Transactional
+    public void resetPassword(String token, String newPassword) {
+        com.awad.ticketbooking.modules.auth.entity.PasswordResetToken resetToken = passwordResetTokenRepository
+                .findByToken(token)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid or expired password reset token"));
+
+        if (resetToken.isExpired()) {
+            passwordResetTokenRepository.delete(resetToken);
+            throw new IllegalArgumentException("Token expired");
+        }
+
+        User user = resetToken.getUser();
+        user.setPasswordHash(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+
+        passwordResetTokenRepository.delete(resetToken);
     }
 
     private AuthResult issueTokens(User user) {
@@ -114,6 +185,6 @@ public class AuthService {
         return new AuthResult(response, refreshToken.getToken());
     }
 
-    public record AuthResult(AuthResponse payload, String refreshToken) {}
+    public record AuthResult(AuthResponse payload, String refreshToken) {
+    }
 }
-

@@ -17,7 +17,8 @@ public class TicketRequest {
     @NotBlank(message = "Passenger phone is required")
     private String passengerPhone;
 
+    private String passengerIdNumber;
+
     @NotNull(message = "Ticket price is required")
     private BigDecimal price;
 }
-

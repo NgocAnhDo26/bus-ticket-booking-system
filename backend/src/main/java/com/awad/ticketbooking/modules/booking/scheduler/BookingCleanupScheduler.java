@@ -23,7 +23,8 @@ public class BookingCleanupScheduler {
 
     // Run every minute (60 * 1000 ms)
     @Scheduled(fixedRate = 60000)
-    @Transactional
+    // Transactional removed to allow individual booking cancellations to commit
+    // independently
     public void cleanupExpiredBookings() {
         log.debug("Running expired booking cleanup job...");
 

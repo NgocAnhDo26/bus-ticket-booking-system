@@ -262,11 +262,14 @@ export const BookingEditDialog = ({ booking, open, onOpenChange }: BookingEditDi
                             {trip?.route.originStation.name} (Xuất phát)
                           </option>
                           {trip?.route.stops
-                            ?.filter((s) => s.stopType === 'PICKUP' || s.stopType === 'BOTH')
+                            ?.filter(
+                              (s) =>
+                                s.station && (s.stopType === 'PICKUP' || s.stopType === 'BOTH'),
+                            )
                             .sort((a, b) => a.stopOrder - b.stopOrder)
                             .map((stop) => (
-                              <option key={stop.id} value={stop.station.id}>
-                                {stop.station.name} ({stop.durationMinutesFromOrigin}m)
+                              <option key={stop.id} value={stop.station!.id}>
+                                {stop.station!.name} ({stop.durationMinutesFromOrigin}m)
                               </option>
                             ))}
                         </select>
@@ -293,11 +296,14 @@ export const BookingEditDialog = ({ booking, open, onOpenChange }: BookingEditDi
                             {trip?.route.destinationStation.name} (Điểm cuối)
                           </option>
                           {trip?.route.stops
-                            ?.filter((s) => s.stopType === 'DROPOFF' || s.stopType === 'BOTH')
+                            ?.filter(
+                              (s) =>
+                                s.station && (s.stopType === 'DROPOFF' || s.stopType === 'BOTH'),
+                            )
                             .sort((a, b) => a.stopOrder - b.stopOrder)
                             .map((stop) => (
-                              <option key={stop.id} value={stop.station.id}>
-                                {stop.station.name} ({stop.durationMinutesFromOrigin}m)
+                              <option key={stop.id} value={stop.station!.id}>
+                                {stop.station!.name} ({stop.durationMinutesFromOrigin}m)
                               </option>
                             ))}
                         </select>

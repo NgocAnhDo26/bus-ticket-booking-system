@@ -19,13 +19,17 @@ import {
   fetchStations,
   fetchTrips,
   getTripById,
+  searchRoutes,
+  searchStations,
   searchTrips,
   updateBus,
   updateOperator,
   updateRoute,
   updateStation,
   updateTrip,
+  updateTripStops,
 } from './api';
+import { fetchBusLayouts } from './api';
 import type {
   AddRouteStopRequest,
   CreateBusRequest,
@@ -34,6 +38,7 @@ import type {
   CreateStationRequest,
   CreateTripRequest,
   SearchTripRequest,
+  UpdateTripStopsRequest,
 } from './types';
 
 // Stations
@@ -41,6 +46,14 @@ export const useStations = () => {
   return useQuery({
     queryKey: ['stations'],
     queryFn: fetchStations,
+  });
+};
+
+export const useSearchStations = (query: string) => {
+  return useQuery({
+    queryKey: ['stations', 'search', query],
+    queryFn: () => searchStations(query),
+    enabled: !!query,
   });
 };
 
@@ -160,6 +173,14 @@ export const useRoutes = () => {
   });
 };
 
+export const useSearchRoutes = (query: string) => {
+  return useQuery({
+    queryKey: ['routes', 'search', query],
+    queryFn: () => searchRoutes(query),
+    enabled: !!query,
+  });
+};
+
 export const useCreateRoute = () => {
   const queryClient = useQueryClient();
   return useMutation({
@@ -258,10 +279,48 @@ export const useDeleteTrip = () => {
   });
 };
 
+export const useUpdateTripStops = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: UpdateTripStopsRequest }) =>
+      updateTripStops(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['trips'] });
+    },
+  });
+};
+
 export const useSearchTrips = (params: SearchTripRequest) => {
   return useQuery({
     queryKey: ['trips', 'search', params],
     queryFn: () => searchTrips(params),
     enabled: !!params.origin && !!params.destination && !!params.date,
+  });
+};
+
+export const useBusLayouts = () => {
+  return useQuery({
+    queryKey: ['busLayouts'],
+    queryFn: fetchBusLayouts,
+  });
+};
+
+export const useTripPassengers = (tripId: string | undefined) => {
+  return useQuery({
+    queryKey: ['tripPassengers', tripId],
+    queryFn: () => import('./api').then((mod) => mod.getTripPassengers(tripId!)),
+    enabled: !!tripId,
+  });
+};
+
+export const useUpdateTripStatus = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, status }: { id: string; status: string }) =>
+      import('./api').then((mod) => mod.updateTripStatus(id, status)),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['trips'] });
+      queryClient.invalidateQueries({ queryKey: ['trip', data.id] });
+    },
   });
 };

@@ -67,7 +67,8 @@ export function GenericTable<TData>({
   onPageSizeChange,
   onSort,
   getRowId,
-}: GenericTableProps<TData>) {
+  hidePagination = false,
+}: GenericTableProps<TData> & { hidePagination?: boolean }) {
   const skeletonRowCount = 5;
   const skeletonWidths = ['w-24', 'w-32', 'w-40', 'w-28', 'w-36'];
 
@@ -163,73 +164,75 @@ export function GenericTable<TData>({
         </Table>
       </div>
 
-      <div className="flex items-center justify-between px-2">
-        <div className="flex-1 text-sm text-muted-foreground hidden lg:block">
-          <span className="font-medium">Tổng:</span>
-          <span> {meta.total} dữ liệu</span>
-        </div>
-        <div className="flex flex-1 items-center justify-between space-x-6 lg:space-x-8">
-          <div className="flex items-center space-x-2">
-            <p className="text-sm font-medium">Số dòng trên trang</p>
-            <div className="w-[70px]">
-              <Select
-                value={String(pageSize)}
-                onValueChange={(val) => onPageSizeChange(Number(val))}
-              >
-                <SelectTrigger className="h-8 w-full">
-                  <SelectValue placeholder={String(pageSize)} />
-                </SelectTrigger>
-                <SelectContent side="top">
-                  {[5, 10, 20, 50].map((size) => (
-                    <SelectItem key={size} value={String(size)}>
-                      {size}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+      {!hidePagination && (
+        <div className="flex items-center justify-between px-2">
+          <div className="flex-1 text-sm text-muted-foreground hidden lg:block">
+            <span className="font-medium">Tổng:</span>
+            <span> {meta.total} dữ liệu</span>
           </div>
-          <div className="flex items-center space-x-2 ml-auto">
-            <div className="flex w-[100px] items-center justify-center text-sm font-medium">
-              Trang {meta.page} / {meta.totalPages}
-            </div>
+          <div className="flex flex-1 items-center justify-between space-x-6 lg:space-x-8">
             <div className="flex items-center space-x-2">
-              <Button
-                variant="outline"
-                className="hidden h-8 w-8 p-0 lg:flex"
-                onClick={() => onPageChange(1)}
-                disabled={pageIndex === 1 || isLoading}
-              >
-                <ChevronsLeft className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="outline"
-                className="h-8 w-8 p-0"
-                onClick={() => onPageChange(pageIndex - 1)}
-                disabled={pageIndex === 1 || isLoading}
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="outline"
-                className="h-8 w-8 p-0"
-                onClick={() => onPageChange(pageIndex + 1)}
-                disabled={pageIndex >= meta.totalPages || isLoading}
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="outline"
-                className="hidden h-8 w-8 p-0 lg:flex"
-                onClick={() => onPageChange(meta.totalPages)}
-                disabled={pageIndex >= meta.totalPages || isLoading}
-              >
-                <ChevronsRight className="h-4 w-4" />
-              </Button>
+              <p className="text-sm font-medium">Số dòng trên trang</p>
+              <div className="w-[70px]">
+                <Select
+                  value={String(pageSize)}
+                  onValueChange={(val) => onPageSizeChange(Number(val))}
+                >
+                  <SelectTrigger className="h-8 w-full">
+                    <SelectValue placeholder={String(pageSize)} />
+                  </SelectTrigger>
+                  <SelectContent side="top">
+                    {[5, 10, 20, 50].map((size) => (
+                      <SelectItem key={size} value={String(size)}>
+                        {size}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="flex items-center space-x-2 ml-auto">
+              <div className="flex w-[100px] items-center justify-center text-sm font-medium">
+                Trang {meta.page} / {meta.totalPages}
+              </div>
+              <div className="flex items-center space-x-2">
+                <Button
+                  variant="outline"
+                  className="hidden h-8 w-8 p-0 lg:flex"
+                  onClick={() => onPageChange(1)}
+                  disabled={pageIndex === 1 || isLoading}
+                >
+                  <ChevronsLeft className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  className="h-8 w-8 p-0"
+                  onClick={() => onPageChange(pageIndex - 1)}
+                  disabled={pageIndex === 1 || isLoading}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  className="h-8 w-8 p-0"
+                  onClick={() => onPageChange(pageIndex + 1)}
+                  disabled={pageIndex >= meta.totalPages || isLoading}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  className="hidden h-8 w-8 p-0 lg:flex"
+                  onClick={() => onPageChange(meta.totalPages)}
+                  disabled={pageIndex >= meta.totalPages || isLoading}
+                >
+                  <ChevronsRight className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
