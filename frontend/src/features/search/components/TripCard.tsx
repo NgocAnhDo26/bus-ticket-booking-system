@@ -1,5 +1,7 @@
+import { Link } from 'react-router-dom';
+
 import { differenceInMinutes, format } from 'date-fns';
-import { Bus, Coffee, MapPin, Wifi, Wind } from 'lucide-react';
+import { Bus, Coffee, MapPin, StarIcon, Wifi, Wind } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -21,46 +23,57 @@ export const TripCard = ({ trip, onSelect }: TripCardProps) => {
   const minPrice = Math.min(...trip.tripPricings.map((p) => p.price));
 
   return (
-    <Card className="hover:shadow-md transition-shadow">
-      <CardContent className="p-6">
-        <div className="flex flex-col md:flex-row gap-6">
+    <Card className="hover:shadow-md transition-shadow py-4">
+      <CardContent className="flex px-6 py-2">
+        <img
+          className="aspect-square object-cover rounded-lg object-center shadow-sm mr-4"
+          alt="Cover image"
+        />
+        <div className="flex flex-col md:flex-row gap-6 flex-1">
           {/* Left: Time & Route */}
-          <div className="flex-1 space-y-4">
-            <div className="flex items-center justify-between">
+          <div className="flex-1 flex flex-col gap-6">
+            <div className="flex items-center">
               <div className="flex items-center gap-2">
-                <h3 className="text-xl font-bold text-primary">{format(departure, 'HH:mm')}</h3>
-                <div className="flex flex-col items-center px-2">
-                  <span className="text-xs text-muted-foreground">
-                    {hours}h{minutes}m
-                  </span>
-                  <div className="w-20 h-0.5 bg-border relative">
-                    <div className="absolute -top-1 left-0 w-2 h-2 rounded-full bg-primary" />
-                    <div className="absolute -top-1 right-0 w-2 h-2 rounded-full bg-primary" />
+                <Bus className="text-primary" />
+                <span className="text-lg font-medium">{trip.bus.operator.name}</span>
+              </div>
+              <Badge className="text-xs ml-4">{trip.bus.totalSeats} chỗ</Badge>
+              <Badge className="text-xs bg-yellow-500 text-white ml-2">
+                <StarIcon />
+                <span className="font-semibold">5.0</span>
+                <span>(52)</span>
+              </Badge>
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-start gap-2 flex-1">
+                  <h3 className="text-xl font-bold text-primary">{format(departure, 'HH:mm')}</h3>
+                  <div className="flex flex-col items-center px-2 flex-1">
+                    <span className="text-xs text-muted-foreground">
+                      {hours}h{minutes}m
+                    </span>
+                    <div className="w-full h-0.25 bg-border relative">
+                      <div className="absolute -top-1 left-0 w-2 h-2 rounded-full bg-primary" />
+                      <div className="absolute -top-1 right-0 w-2 h-2 rounded-full bg-primary" />
+                    </div>
                   </div>
+                  <h3 className="text-xl font-bold text-muted-foreground">
+                    {format(arrival, 'HH:mm')}
+                  </h3>
                 </div>
-                <h3 className="text-xl font-bold text-muted-foreground">
-                  {format(arrival, 'HH:mm')}
-                </h3>
               </div>
-            </div>
 
-            <div className="flex justify-between text-sm">
-              <div className="flex items-center gap-1">
-                <MapPin className="w-4 h-4 text-muted-foreground" />
-                <span className="font-medium">{trip.route.originStation.name}</span>
+              <div className="flex justify-between text-sm">
+                <div className="flex items-center gap-1">
+                  <MapPin className="w-4 h-4 text-muted-foreground" />
+                  <span className="font-medium">{trip.route.originStation.name}</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <MapPin className="w-4 h-4 text-muted-foreground" />
+                  <span className="font-medium">{trip.route.destinationStation.name}</span>
+                </div>
               </div>
-              <div className="flex items-center gap-1">
-                <MapPin className="w-4 h-4 text-muted-foreground" />
-                <span className="font-medium">{trip.route.destinationStation.name}</span>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-4 pt-2">
-              <div className="flex items-center gap-2">
-                <Bus className="w-4 h-4 text-primary" />
-                <span className="text-sm font-medium">{trip.bus.operator.name}</span>
-              </div>
-              <Badge className="text-xs">{trip.bus.totalSeats} chỗ</Badge>
             </div>
           </div>
 
@@ -88,9 +101,14 @@ export const TripCard = ({ trip, onSelect }: TripCardProps) => {
               )}
             </div>
 
-            <Button onClick={() => onSelect(trip)} className="w-full">
-              Chọn chuyến
-            </Button>
+            <div className="flex gap-2 w-full">
+              <Button variant="outline" asChild className="flex-1">
+                <Link to={`/trips/${trip.id}`}>Xem chi tiết</Link>
+              </Button>
+              <Button onClick={() => onSelect(trip)} className="flex-1">
+                Chọn chuyến
+              </Button>
+            </div>
           </div>
         </div>
       </CardContent>

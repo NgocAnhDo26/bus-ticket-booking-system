@@ -299,7 +299,17 @@ export const getTripById = async (id: string): Promise<Trip> => {
   return toTrip(resp);
 };
 
-export const searchTrips = async (params: SearchTripRequest): Promise<Trip[]> => {
+export const searchTrips = async (
+  params: SearchTripRequest,
+): Promise<{
+  trips: Trip[];
+  pagination: {
+    page: number;
+    size: number;
+    totalElements: number;
+    totalPages: number;
+  };
+}> => {
   // OpenAPI currently models `/trips/search` params as `{ request: SearchTripRequest }`.
   // If the backend supports extra fields (e.g. `seatType`) that aren't in the spec yet,
   // we still pass them through to preserve existing UI behavior.
@@ -321,7 +331,18 @@ export const searchTrips = async (params: SearchTripRequest): Promise<Trip[]> =>
 
   const orvalParams: SearchTripsParams = { request };
   const resp = await orvalSearchTrips(orvalParams);
-  return (resp.content ?? []).map(toTrip);
+  const trips = (resp.content ?? []).map(toTrip);
+  const pageMetadata = resp.page ?? {};
+
+  return {
+    trips,
+    pagination: {
+      page: (pageMetadata.number ?? 0) + 1, // Convert 0-based to 1-based
+      size: pageMetadata.size ?? 10,
+      totalElements: pageMetadata.totalElements ?? trips.length,
+      totalPages: pageMetadata.totalPages ?? 1,
+    },
+  };
 };
 
 export const createTrip = async (data: CreateTripRequest): Promise<Trip> => {

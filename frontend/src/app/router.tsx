@@ -28,6 +28,7 @@ import { DashboardPage } from '@/features/dashboard';
 import { AdminDashboardPage } from '@/features/dashboard-admin';
 import { HomePage } from '@/features/home/pages/HomePage';
 import { SearchResultsPage } from '@/features/search/pages/SearchResultsPage';
+import { TripDetailsPage } from '@/features/search/pages/TripDetailsPage';
 import { getDashboardPath } from '@/lib/navigation';
 import { useAuthStore } from '@/store/auth-store';
 
@@ -69,6 +70,10 @@ export const router = createBrowserRouter([
       {
         path: '/search',
         element: <SearchResultsPage />,
+      },
+      {
+        path: '/trips/:tripId',
+        element: <TripDetailsPage />,
       },
       {
         path: '/booking/:tripId',
