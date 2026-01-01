@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 
 import { Alert, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { Field, FieldError, FieldLabel } from '@/components/ui/field';
+import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
 import { type RegisterFormValues } from '@/features/auth/schema';
 import { cn } from '@/lib/utils';
@@ -33,9 +33,9 @@ export function RegisterForm({
   return (
     <form className={cn('space-y-6', className)} onSubmit={handleSubmit(onSubmit)} {...props}>
       <div className="flex flex-col items-center gap-2 text-center">
-        <h1 className="text-2xl font-bold">Tạo tài khoản</h1>
+        <h1 className="text-2xl font-bold">Create an account</h1>
         <p className="text-balance text-sm text-muted-foreground">
-          Nhập thông tin bên dưới để bắt đầu
+          Enter your details below to get started
         </p>
       </div>
 
@@ -45,49 +45,41 @@ export function RegisterForm({
         </Alert>
       )}
 
-      <Field data-invalid={!!errors.fullName}>
-        <FieldLabel>Họ và tên</FieldLabel>
+      <FormField label="Full name" error={errors.fullName?.message}>
         <Input placeholder="Jane Doe" {...register('fullName')} />
-        <FieldError>{errors.fullName?.message}</FieldError>
-      </Field>
-      <Field data-invalid={!!errors.email}>
-        <FieldLabel>Email</FieldLabel>
+      </FormField>
+      <FormField label="Email address" error={errors.email?.message}>
         <Input
           type="email"
           placeholder="you@example.com"
           autoComplete="email"
           {...register('email')}
         />
-        <FieldError>{errors.email?.message}</FieldError>
-      </Field>
-      <Field data-invalid={!!errors.password}>
-        <FieldLabel>Mật khẩu</FieldLabel>
+      </FormField>
+      <FormField label="Password" error={errors.password?.message}>
         <Input
           type="password"
           placeholder="••••••••"
           autoComplete="new-password"
           {...register('password')}
         />
-        <FieldError>{errors.password?.message}</FieldError>
-      </Field>
-      <Field data-invalid={!!errors.confirmPassword}>
-        <FieldLabel>Xác nhận mật khẩu</FieldLabel>
+      </FormField>
+      <FormField label="Confirm password" error={errors.confirmPassword?.message}>
         <Input
           type="password"
           placeholder="••••••••"
           autoComplete="new-password"
           {...register('confirmPassword')}
         />
-        <FieldError>{errors.confirmPassword?.message}</FieldError>
-      </Field>
+      </FormField>
       <Button type="submit" className="w-full" disabled={isSubmitting}>
-        {isSubmitting ? 'Đang tạo tài khoản…' : 'Đăng ký'}
+        {isSubmitting ? 'Creating account…' : 'Sign up'}
       </Button>
 
       <p className="text-center text-sm text-muted-foreground">
-        Đã có tài khoản?{' '}
+        Already have an account?{' '}
         <Link to="/login" className="font-medium text-primary hover:underline">
-          Đăng nhập
+          Sign in
         </Link>
       </p>
     </form>

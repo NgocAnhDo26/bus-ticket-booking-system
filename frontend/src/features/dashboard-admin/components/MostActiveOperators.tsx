@@ -36,13 +36,13 @@ export const MostActiveOperators = ({ operators = [], isLoading }: MostActiveOpe
             <Skeleton className="h-8 w-full" />
           </div>
         ) : (
-          <div className="rounded-md border bg-card overflow-x-auto">
+          <div className="rounded-md border">
             <Table>
-              <TableHeader className="bg-muted/50">
+              <TableHeader>
                 <TableRow>
-                  <TableHead className="text-muted-foreground">Nhà xe</TableHead>
-                  <TableHead className="text-right text-muted-foreground">Vé đã bán</TableHead>
-                  <TableHead className="text-right text-muted-foreground">Doanh thu</TableHead>
+                  <TableHead>Nhà xe</TableHead>
+                  <TableHead className="text-right">Vé đã bán</TableHead>
+                  <TableHead className="text-right">Doanh thu</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -58,7 +58,7 @@ export const MostActiveOperators = ({ operators = [], isLoading }: MostActiveOpe
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={3} className="text-center h-24 text-muted-foreground">
+                    <TableCell colSpan={3} className="text-center h-24">
                       Không có dữ liệu
                     </TableCell>
                   </TableRow>

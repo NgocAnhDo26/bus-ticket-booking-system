@@ -1,15 +1,11 @@
 package com.awad.ticketbooking.modules.dashboard.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 @Data
 @Builder
-@NoArgsConstructor
-@AllArgsConstructor
 @Schema(description = "Booking conversion metrics for a given time range.")
 public class BookingConversionResponse {
 

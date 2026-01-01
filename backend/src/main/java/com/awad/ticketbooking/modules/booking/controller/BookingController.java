@@ -12,11 +12,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import com.awad.ticketbooking.common.enums.BookingStatus;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.security.access.prepost.PreAuthorize;
 
-import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -81,30 +78,5 @@ public class BookingController {
     @Operation(summary = "Cancel booking", description = "Cancels an existing booking and releases seats.")
     public ResponseEntity<BookingResponse> cancelBooking(@PathVariable UUID id) {
         return ResponseEntity.ok(bookingService.cancelBooking(id));
-    }
-
-    @PostMapping("/tickets/{id}/check-in")
-    @Operation(summary = "Check-in passenger", description = "Toggles the boarded status of a passenger ticket.")
-    public ResponseEntity<BookingResponse> checkInPassenger(@PathVariable UUID id) {
-        return ResponseEntity.ok(bookingService.checkInPassenger(id));
-    }
-
-    @GetMapping("/admin")
-    @PreAuthorize("hasRole('ADMIN')")
-    @Operation(summary = "Get admin bookings", description = "Returns a paginated list of bookings with filtering options (Admin only).")
-    public ResponseEntity<Page<BookingResponse>> getAdminBookings(
-            @RequestParam(required = false) String search,
-            @RequestParam(required = false) List<BookingStatus> statuses,
-            @RequestParam(required = false) Instant startDate,
-            @RequestParam(required = false) Instant endDate,
-            Pageable pageable) {
-        return ResponseEntity.ok(bookingService.getAdminBookings(search, statuses, startDate, endDate, pageable));
-    }
-
-    @PostMapping("/{id}/refund")
-    @PreAuthorize("hasRole('ADMIN')")
-    @Operation(summary = "Refund booking", description = "Refunds a confirmed booking and releases seats (Admin only).")
-    public ResponseEntity<BookingResponse> refundBooking(@PathVariable UUID id) {
-        return ResponseEntity.ok(bookingService.refundBooking(id));
     }
 }

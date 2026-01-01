@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,7 +28,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Field, FieldError, FieldLabel } from '@/components/ui/field';
+import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
 import {
   Sheet,
@@ -228,7 +229,7 @@ export const RouteManagementPage = () => {
         header: 'Trạng thái',
         sortable: true,
         cell: (route) => (
-          <Badge variant={route.isActive ? 'default' : 'secondary'}>
+          <Badge variant={route.isActive ? 'success' : 'default'}>
             {route.isActive ? 'Hoạt động' : 'Ngừng hoạt động'}
           </Badge>
         ),
@@ -270,12 +271,7 @@ export const RouteManagementPage = () => {
   return (
     <div className="flex flex-col gap-8 p-4">
       <div className="flex items-center justify-between">
-        <div className="space-y-1">
-          <h1 className="text-2xl font-bold tracking-tight">Quản lý Tuyến đường</h1>
-          <p className="text-sm text-muted-foreground">
-            Danh sách các tuyến đường được cấu hình trong hệ thống.
-          </p>
-        </div>
+        <h1 className="text-2xl font-bold tracking-tight">Quản lý Tuyến đường</h1>
         <Sheet
           open={isOpen}
           onOpenChange={(open) => {
@@ -305,8 +301,7 @@ export const RouteManagementPage = () => {
             </SheetHeader>
             <div className="py-4">
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                <Field data-invalid={!!errors.originStationId}>
-                  <FieldLabel>Điểm đi</FieldLabel>
+                <FormField label="Điểm đi" error={errors.originStationId?.message}>
                   <select
                     className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                     {...register('originStationId')}
@@ -318,10 +313,8 @@ export const RouteManagementPage = () => {
                       </option>
                     ))}
                   </select>
-                  <FieldError>{errors.originStationId?.message}</FieldError>
-                </Field>
-                <Field data-invalid={!!errors.destinationStationId}>
-                  <FieldLabel>Điểm đến</FieldLabel>
+                </FormField>
+                <FormField label="Điểm đến" error={errors.destinationStationId?.message}>
                   <select
                     className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                     {...register('destinationStationId')}
@@ -333,22 +326,20 @@ export const RouteManagementPage = () => {
                       </option>
                     ))}
                   </select>
-                  <FieldError>{errors.destinationStationId?.message}</FieldError>
-                </Field>
-                <Field data-invalid={!!errors.durationMinutes}>
-                  <FieldLabel>Thời gian di chuyển (phút)</FieldLabel>
+                </FormField>
+                <FormField
+                  label="Thời gian di chuyển (phút)"
+                  error={errors.durationMinutes?.message}
+                >
                   <Input type="number" {...register('durationMinutes', { valueAsNumber: true })} />
-                  <FieldError>{errors.durationMinutes?.message}</FieldError>
-                </Field>
-                <Field data-invalid={!!errors.distanceKm}>
-                  <FieldLabel>Khoảng cách (km)</FieldLabel>
+                </FormField>
+                <FormField label="Khoảng cách (km)" error={errors.distanceKm?.message}>
                   <Input
                     type="number"
                     step="0.1"
                     {...register('distanceKm', { valueAsNumber: true })}
                   />
-                  <FieldError>{errors.distanceKm?.message}</FieldError>
-                </Field>
+                </FormField>
                 <Button
                   type="submit"
                   className="w-full"
@@ -366,31 +357,38 @@ export const RouteManagementPage = () => {
         </Sheet>
       </div>
 
-      <GenericTable<Route>
-        data={sortedPaged.data}
-        columns={columns}
-        isLoading={isLoadingRoutes}
-        meta={meta}
-        pageIndex={meta.page}
-        pageSize={pageSize}
-        sorting={sorting}
-        onPageChange={setPageIndex}
-        onPageSizeChange={(size) => {
-          setPageSize(size);
-          setPageIndex(1);
-        }}
-        onSort={(key) =>
-          setSorting((prev) =>
-            prev.key === key
-              ? {
-                  key,
-                  direction: prev.direction === 'asc' ? 'desc' : 'asc',
-                }
-              : { key, direction: 'asc' },
-          )
-        }
-        getRowId={(route) => route.id}
-      />
+      <Card>
+        <CardHeader>
+          <CardTitle>Danh sách Tuyến đường</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <GenericTable<Route>
+            data={sortedPaged.data}
+            columns={columns}
+            isLoading={isLoadingRoutes}
+            meta={meta}
+            pageIndex={meta.page}
+            pageSize={pageSize}
+            sorting={sorting}
+            onPageChange={setPageIndex}
+            onPageSizeChange={(size) => {
+              setPageSize(size);
+              setPageIndex(1);
+            }}
+            onSort={(key) =>
+              setSorting((prev) =>
+                prev.key === key
+                  ? {
+                      key,
+                      direction: prev.direction === 'asc' ? 'desc' : 'asc',
+                    }
+                  : { key, direction: 'asc' },
+              )
+            }
+            getRowId={(route) => route.id}
+          />
+        </CardContent>
+      </Card>
 
       <AlertDialog open={!!deletingRoute} onOpenChange={(open) => !open && setDeletingRoute(null)}>
         <AlertDialogContent>

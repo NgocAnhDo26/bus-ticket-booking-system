@@ -23,19 +23,4 @@ public class GlobalExceptionHandler {
         logger.warn("Bad request: {}", e.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
     }
-
-    @ExceptionHandler(org.springframework.security.authorization.AuthorizationDeniedException.class)
-    public ResponseEntity<String> handleAuthorizationDenied(
-            org.springframework.security.authorization.AuthorizationDeniedException e) {
-        logger.warn("Access denied: {}", e.getMessage());
-        return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                .body("Access Denied: You do not have permission to access this resource.");
-    }
-
-    @ExceptionHandler(org.springframework.security.access.AccessDeniedException.class)
-    public ResponseEntity<String> handleAccessDenied(org.springframework.security.access.AccessDeniedException e) {
-        logger.warn("Access denied: {}", e.getMessage());
-        return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                .body("Access Denied: You do not have permission to access this resource.");
-    }
 }

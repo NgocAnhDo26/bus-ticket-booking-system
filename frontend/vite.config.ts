@@ -1,5 +1,4 @@
 // Force restart
-import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import path from 'node:path';
 import { defineConfig, loadEnv } from 'vite';
@@ -12,7 +11,7 @@ export default defineConfig(({ mode }) => {
   const apiBaseUrl = env.VITE_API_URL ?? 'http://localhost:8080';
 
   return {
-    plugins: [react(), tailwindcss()],
+    plugins: [react()],
     server: {
       host: '0.0.0.0',
       port: 5173,

@@ -18,7 +18,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Skeleton } from '@/components/ui/skeleton';
 import {
   Table,
   TableBody,
@@ -67,42 +66,40 @@ export function GenericTable<TData>({
   onPageSizeChange,
   onSort,
   getRowId,
-  hidePagination = false,
-}: GenericTableProps<TData> & { hidePagination?: boolean }) {
-  const skeletonRowCount = 5;
-  const skeletonWidths = ['w-24', 'w-32', 'w-40', 'w-28', 'w-36'];
+}: GenericTableProps<TData>) {
+  if (isLoading && data.length === 0) {
+    return <div className="p-8 text-center text-slate-500">Loading data...</div>;
+  }
 
   return (
     <div className="space-y-4">
-      <div className="rounded-md border bg-card overflow-x-auto">
+      <div className="rounded-md border border-slate-200 bg-white overflow-x-auto">
         <Table className="text-left">
-          <TableHeader className="bg-muted/50">
+          <TableHeader className="bg-slate-50">
             <TableRow>
               {columns.map((col) => (
                 <TableHead
                   key={col.key as string}
-                  className={`h-12 pr-4 text-left text-md align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0 ${
+                  className={`h-12 pr-4 text-left text-md align-middle font-medium text-slate-500 [&:has([role=checkbox])]:pr-0 ${
                     col.className || ''
                   }`}
                 >
                   {col.sortable ? (
-                    <div className="flex items-center gap-1">
-                      <span>{col.header}</span>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-6 w-6 p-0 cursor-pointer"
-                        onClick={() => onSort(col.key as string)}
-                      >
-                        {sorting.key !== col.key ? (
-                          <ArrowUpDown className="h-4 w-4" />
-                        ) : sorting.direction === 'asc' ? (
-                          <ArrowUp className="h-4 w-4" />
-                        ) : (
-                          <ArrowDown className="h-4 w-4" />
-                        )}
-                      </Button>
-                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="-ml-3 h-8 data-[state=open]:bg-accent font-medium text-md"
+                      onClick={() => onSort(col.key as string)}
+                    >
+                      {col.header}
+                      {sorting.key !== col.key ? (
+                        <ArrowUpDown />
+                      ) : sorting.direction === 'asc' ? (
+                        <ArrowUp />
+                      ) : (
+                        <ArrowDown />
+                      )}
+                    </Button>
                   ) : (
                     col.header
                   )}
@@ -112,24 +109,11 @@ export function GenericTable<TData>({
           </TableHeader>
           <TableBody>
             {isLoading ? (
-              Array.from({ length: skeletonRowCount }).map((_, rowIdx) => (
-                <TableRow key={`skeleton-${rowIdx}`} className="hover:bg-transparent">
-                  {columns.map((col, colIdx) => (
-                    <TableCell
-                      key={`skeleton-${rowIdx}-${String(col.key)}`}
-                      className="[&:has([role=checkbox])]:pr-0"
-                    >
-                      <Skeleton
-                        className={`h-4 ${
-                          col.key === 'actions'
-                            ? 'w-16'
-                            : skeletonWidths[(rowIdx + colIdx) % skeletonWidths.length]
-                        }`}
-                      />
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))
+              <TableRow>
+                <TableCell colSpan={columns.length} className="p-4 text-center h-24 text-slate-500">
+                  Đang tải dữ liệu...
+                </TableCell>
+              </TableRow>
             ) : data.length > 0 ? (
               data.map((row) => {
                 const rowId = getRowId(row);
@@ -154,7 +138,7 @@ export function GenericTable<TData>({
               <TableRow>
                 <TableCell
                   colSpan={columns.length}
-                  className="h-24 text-center align-middle text-muted-foreground"
+                  className="h-24 text-center align-middle text-slate-500"
                 >
                   Không có kết quả.
                 </TableCell>
@@ -164,75 +148,71 @@ export function GenericTable<TData>({
         </Table>
       </div>
 
-      {!hidePagination && (
-        <div className="flex items-center justify-between px-2">
-          <div className="flex-1 text-sm text-muted-foreground hidden lg:block">
-            <span className="font-medium">Tổng:</span>
-            <span> {meta.total} dữ liệu</span>
+      <div className="flex items-center justify-between px-2">
+        <div className="flex-1 text-sm text-slate-500 hidden md:block">
+          Đang xem {(meta.page - 1) * meta.pageSize + 1} -{' '}
+          {Math.min(meta.page * meta.pageSize, meta.total)} trong tổng {meta.total} dữ liệu
+        </div>
+        <div className="flex items-center space-x-6 lg:space-x-8">
+          <div className="flex items-center space-x-2">
+            <p className="text-sm font-medium">Số dòng trên trang</p>
+            <div className="w-[70px]">
+              <Select
+                value={String(pageSize)}
+                onValueChange={(val) => onPageSizeChange(Number(val))}
+              >
+                <SelectTrigger className="h-8 w-full">
+                  <SelectValue placeholder={String(pageSize)} />
+                </SelectTrigger>
+                <SelectContent side="top">
+                  {[5, 10, 20, 50].map((size) => (
+                    <SelectItem key={size} value={String(size)}>
+                      {size}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
-          <div className="flex flex-1 items-center justify-between space-x-6 lg:space-x-8">
-            <div className="flex items-center space-x-2">
-              <p className="text-sm font-medium">Số dòng trên trang</p>
-              <div className="w-[70px]">
-                <Select
-                  value={String(pageSize)}
-                  onValueChange={(val) => onPageSizeChange(Number(val))}
-                >
-                  <SelectTrigger className="h-8 w-full">
-                    <SelectValue placeholder={String(pageSize)} />
-                  </SelectTrigger>
-                  <SelectContent side="top">
-                    {[5, 10, 20, 50].map((size) => (
-                      <SelectItem key={size} value={String(size)}>
-                        {size}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <div className="flex items-center space-x-2 ml-auto">
-              <div className="flex w-[100px] items-center justify-center text-sm font-medium">
-                Trang {meta.page} / {meta.totalPages}
-              </div>
-              <div className="flex items-center space-x-2">
-                <Button
-                  variant="outline"
-                  className="hidden h-8 w-8 p-0 lg:flex"
-                  onClick={() => onPageChange(1)}
-                  disabled={pageIndex === 1 || isLoading}
-                >
-                  <ChevronsLeft className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="outline"
-                  className="h-8 w-8 p-0"
-                  onClick={() => onPageChange(pageIndex - 1)}
-                  disabled={pageIndex === 1 || isLoading}
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="outline"
-                  className="h-8 w-8 p-0"
-                  onClick={() => onPageChange(pageIndex + 1)}
-                  disabled={pageIndex >= meta.totalPages || isLoading}
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="outline"
-                  className="hidden h-8 w-8 p-0 lg:flex"
-                  onClick={() => onPageChange(meta.totalPages)}
-                  disabled={pageIndex >= meta.totalPages || isLoading}
-                >
-                  <ChevronsRight className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
+          <div className="flex w-[100px] items-center justify-center text-sm font-medium">
+            Trang {meta.page} / {meta.totalPages}
+          </div>
+          <div className="flex items-center space-x-2">
+            <Button
+              variant="outline"
+              className="hidden h-8 w-8 p-0 lg:flex"
+              onClick={() => onPageChange(1)}
+              disabled={pageIndex === 1 || isLoading}
+            >
+              <ChevronsLeft className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              className="h-8 w-8 p-0"
+              onClick={() => onPageChange(pageIndex - 1)}
+              disabled={pageIndex === 1 || isLoading}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              className="h-8 w-8 p-0"
+              onClick={() => onPageChange(pageIndex + 1)}
+              disabled={pageIndex >= meta.totalPages || isLoading}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              className="hidden h-8 w-8 p-0 lg:flex"
+              onClick={() => onPageChange(meta.totalPages)}
+              disabled={pageIndex >= meta.totalPages || isLoading}
+            >
+              <ChevronsRight className="h-4 w-4" />
+            </Button>
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }

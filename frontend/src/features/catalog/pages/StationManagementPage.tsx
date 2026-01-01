@@ -19,6 +19,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,7 +27,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Field, FieldError, FieldLabel } from '@/components/ui/field';
+import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
 import {
   Sheet,
@@ -247,12 +248,7 @@ export const StationManagementPage = () => {
   return (
     <div className="flex flex-col gap-8 p-4">
       <div className="flex items-center justify-between">
-        <div className="space-y-1">
-          <h1 className="text-2xl font-bold tracking-tight">Quản lý Bến xe</h1>
-          <p className="text-sm text-muted-foreground">
-            Danh sách các bến xe được cấu hình trong hệ thống.
-          </p>
-        </div>
+        <h1 className="text-2xl font-bold tracking-tight">Quản lý Bến xe</h1>
         <Sheet
           open={isOpen}
           onOpenChange={(open) => {
@@ -279,26 +275,20 @@ export const StationManagementPage = () => {
             </SheetHeader>
             <div className="py-4">
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                <Field data-invalid={!!errors.name}>
-                  <FieldLabel>Tên bến xe</FieldLabel>
+                <FormField label="Tên bến xe" error={errors.name?.message}>
                   <Input placeholder="Bến xe Miền Đông" {...register('name')} />
-                  <FieldError>{errors.name?.message}</FieldError>
-                </Field>
-                <Field data-invalid={!!errors.city}>
-                  <FieldLabel>Thành phố</FieldLabel>
+                </FormField>
+                <FormField label="Thành phố" error={errors.city?.message}>
                   <Input list="cities" placeholder="Hồ Chí Minh" {...register('city')} />
                   <datalist id="cities">
                     {Array.from(new Set(stations?.map((s) => s.city))).map((city) => (
                       <option key={city} value={city} />
                     ))}
                   </datalist>
-                  <FieldError>{errors.city?.message}</FieldError>
-                </Field>
-                <Field data-invalid={!!errors.address}>
-                  <FieldLabel>Địa chỉ</FieldLabel>
+                </FormField>
+                <FormField label="Địa chỉ" error={errors.address?.message}>
                   <Input placeholder="292 Đinh Bộ Lĩnh..." {...register('address')} />
-                  <FieldError>{errors.address?.message}</FieldError>
-                </Field>
+                </FormField>
                 <Button
                   type="submit"
                   className="w-full"
@@ -316,31 +306,38 @@ export const StationManagementPage = () => {
         </Sheet>
       </div>
 
-      <GenericTable<Station>
-        data={sortedPaged.data}
-        columns={columns}
-        isLoading={isLoading}
-        meta={meta}
-        pageIndex={meta.page}
-        pageSize={pageSize}
-        sorting={sorting}
-        onPageChange={setPageIndex}
-        onPageSizeChange={(size) => {
-          setPageSize(size);
-          setPageIndex(1);
-        }}
-        onSort={(key) =>
-          setSorting((prev) =>
-            prev.key === key
-              ? {
-                  key,
-                  direction: prev.direction === 'asc' ? 'desc' : 'asc',
-                }
-              : { key, direction: 'asc' },
-          )
-        }
-        getRowId={(station) => station.id}
-      />
+      <Card>
+        <CardHeader>
+          <CardTitle>Danh sách Bến xe</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <GenericTable<Station>
+            data={sortedPaged.data}
+            columns={columns}
+            isLoading={isLoading}
+            meta={meta}
+            pageIndex={meta.page}
+            pageSize={pageSize}
+            sorting={sorting}
+            onPageChange={setPageIndex}
+            onPageSizeChange={(size) => {
+              setPageSize(size);
+              setPageIndex(1);
+            }}
+            onSort={(key) =>
+              setSorting((prev) =>
+                prev.key === key
+                  ? {
+                      key,
+                      direction: prev.direction === 'asc' ? 'desc' : 'asc',
+                    }
+                  : { key, direction: 'asc' },
+              )
+            }
+            getRowId={(station) => station.id}
+          />
+        </CardContent>
+      </Card>
 
       <AlertDialog
         open={!!deletingStation}

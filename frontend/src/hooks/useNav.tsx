@@ -43,6 +43,7 @@ const allAdminNavItems: AdminNavItem[] = [
     title: 'Tổng quan',
     url: '/admin/dashboard',
     icon: LayoutDashboard,
+    isActive: true,
     isCollapsible: false,
     // Both ADMIN and STAFF can see dashboard
   },
@@ -87,7 +88,7 @@ const allAdminNavItems: AdminNavItem[] = [
     items: [
       {
         title: 'Danh sách đặt chỗ',
-        url: '/admin/bookings',
+        url: '/admin/bookings/list',
       },
       {
         title: 'Giao dịch thanh toán',

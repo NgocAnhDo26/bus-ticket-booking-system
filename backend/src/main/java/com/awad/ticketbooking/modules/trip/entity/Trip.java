@@ -30,10 +30,6 @@ public class Trip {
     @JoinColumn(name = "bus_id", nullable = false)
     private Bus bus;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "trip_schedule_id")
-    private TripSchedule tripSchedule;
-
     @Column(name = "departure_time", nullable = false)
     private Instant departureTime;
 
@@ -46,10 +42,6 @@ public class Trip {
 
     @OneToMany(mappedBy = "trip", cascade = CascadeType.ALL, orphanRemoval = true)
     private java.util.List<TripPricing> tripPricings = new java.util.ArrayList<>();
-
-    @OneToMany(mappedBy = "trip", cascade = CascadeType.ALL, orphanRemoval = true)
-    @OrderBy("stopOrder ASC")
-    private java.util.List<TripStop> tripStops = new java.util.ArrayList<>();
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;

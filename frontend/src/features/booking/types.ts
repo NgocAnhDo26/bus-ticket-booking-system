@@ -57,20 +57,6 @@ export type BookingResponse = {
   tickets: TicketInfo[];
   pickupStation?: StationInfo;
   dropoffStation?: StationInfo;
-  pickupTripPoint?: {
-    // Added
-    id: string;
-    scheduledTime: string;
-    actualTime?: string;
-    surcharge: number;
-  };
-  dropoffTripPoint?: {
-    // Added
-    id: string;
-    scheduledTime: string;
-    actualTime?: string;
-    surcharge: number;
-  };
 };
 
 // Prefer OpenAPI/Orval request models as the source of truth.
@@ -81,20 +67,18 @@ export type CreateBookingRequest = {
   userId?: string; // Optional for guests
   passengerName: string;
   passengerPhone: string;
-  passengerIdNumber?: string;
   passengerEmail?: string; // For guests to receive tickets
   pickupStationId?: string;
   dropoffStationId?: string;
   totalPrice: number;
-  tickets: (TicketRequest & { passengerIdNumber?: string })[];
+  tickets: TicketRequest[];
 };
 
 export type UpdateBookingRequest = {
   passengerName: string;
   passengerPhone: string;
-  passengerIdNumber?: string;
   passengerEmail?: string;
-  tickets?: (TicketRequest & { passengerIdNumber?: string })[];
+  tickets?: TicketRequest[];
 };
 
 export type PassengerInfo = {

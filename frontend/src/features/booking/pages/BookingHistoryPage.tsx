@@ -2,11 +2,11 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import { ChevronLeft, ChevronRight, Ticket } from 'lucide-react';
-import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { toast } from '@/hooks/use-toast';
 
 import { BookingCard } from '../components/BookingCard';
 import { useCancelBooking, useUserBookings } from '../hooks';
@@ -21,12 +21,15 @@ export const BookingHistoryPage = () => {
   const handleCancel = async (id: string) => {
     try {
       await cancelMutation.mutateAsync(id);
-      toast.success('Hủy vé thành công', {
+      toast({
+        title: 'Hủy vé thành công',
         description: 'Đặt vé của bạn đã được hủy.',
       });
     } catch {
-      toast.error('Hủy vé thất bại', {
+      toast({
+        title: 'Hủy vé thất bại',
         description: 'Có lỗi xảy ra, vui lòng thử lại.',
+        variant: 'destructive',
       });
     }
   };

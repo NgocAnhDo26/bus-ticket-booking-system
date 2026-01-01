@@ -38,10 +38,12 @@ export const SearchResultsPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background pb-12">
+    <div className="min-h-screen bg-gray-50 pb-12">
       {/* Header Search Bar */}
-      <div className="bg-card shadow-sm sticky top-0 z-30 py-4 border-b">
-        <SearchForm />
+      <div className="bg-white shadow-sm sticky top-0 z-30 py-4">
+        <div className="container mx-auto px-4">
+          <SearchForm />
+        </div>
       </div>
 
       <div className="container mx-auto px-4 py-8">
@@ -52,10 +54,12 @@ export const SearchResultsPage = () => {
           {/* Results List */}
           <div className="flex-1 space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-bold text-foreground">
+              <h2 className="text-xl font-bold">
                 Kết quả tìm kiếm: {origin} - {destination}
               </h2>
-              <span className="text-muted-foreground">Tìm thấy {trips?.length || 0} chuyến xe</span>
+              <span className="text-muted-foreground">
+                {trips?.length || 0} chuyến xe được tìm thấy
+              </span>
             </div>
 
             {isLoading ? (
@@ -65,11 +69,9 @@ export const SearchResultsPage = () => {
                 ))}
               </div>
             ) : trips?.length === 0 ? (
-              <div className="text-center py-12 bg-card rounded-lg border">
-                <h3 className="text-lg font-medium text-foreground">
-                  Không tìm thấy chuyến xe nào
-                </h3>
-                <p className="text-muted-foreground">
+              <div className="text-center py-12 bg-white rounded-lg border">
+                <h3 className="text-lg font-medium text-gray-900">Không tìm thấy chuyến xe nào</h3>
+                <p className="text-gray-500">
                   Vui lòng thử lại với ngày khác hoặc tuyến đường khác.
                 </p>
               </div>

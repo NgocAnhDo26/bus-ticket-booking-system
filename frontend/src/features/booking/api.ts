@@ -77,13 +77,6 @@ export const lookupBooking = async (code: string, email: string): Promise<Bookin
   return resp as unknown as BookingResponse;
 };
 
-export const checkInPassenger = async (ticketId: string): Promise<BookingResponse> => {
-  const response = await apiClient.post<BookingResponse>(
-    `/api/bookings/tickets/${ticketId}/check-in`,
-  );
-  return response.data;
-};
-
 // Payment API
 export interface CreatePaymentRequest {
   bookingId: string;
