@@ -30,7 +30,10 @@ import type {
   GetAllTripsParams,
   PagedModelTripResponse,
   SearchTripsParams,
-  TripResponse
+  TripPassengerResponse,
+  TripResponse,
+  UpdateTripStatusParams,
+  UpdateTripStopsRequest
 } from '../../../model';
 
 import { customInstance } from '../../../lib/api-client';
@@ -263,6 +266,71 @@ export const useDeleteTrip = <TError = unknown,
       return useMutation(mutationOptions, queryClient);
     }
     /**
+ * Updates the specific stops for a trip.
+ * @summary Update trip stops
+ */
+export const updateTripStops = (
+    id: string,
+    updateTripStopsRequest: UpdateTripStopsRequest,
+ options?: SecondParameter<typeof customInstance>,) => {
+      
+      
+      return customInstance<TripResponse>(
+      {url: `/api/trips/${id}/stops`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: updateTripStopsRequest
+    },
+      options);
+    }
+  
+
+
+export const getUpdateTripStopsMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateTripStops>>, TError,{id: string;data: UpdateTripStopsRequest}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateTripStops>>, TError,{id: string;data: UpdateTripStopsRequest}, TContext> => {
+
+const mutationKey = ['updateTripStops'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateTripStops>>, {id: string;data: UpdateTripStopsRequest}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateTripStops(id,data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateTripStopsMutationResult = NonNullable<Awaited<ReturnType<typeof updateTripStops>>>
+    export type UpdateTripStopsMutationBody = UpdateTripStopsRequest
+    export type UpdateTripStopsMutationError = unknown
+
+    /**
+ * @summary Update trip stops
+ */
+export const useUpdateTripStops = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateTripStops>>, TError,{id: string;data: UpdateTripStopsRequest}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateTripStops>>,
+        TError,
+        {id: string;data: UpdateTripStopsRequest},
+        TContext
+      > => {
+
+      const mutationOptions = getUpdateTripStopsMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
  * Returns a paginated list of trips.
  * @summary List trips
  */
@@ -422,6 +490,163 @@ export const useCreateTrip = <TError = unknown,
       return useMutation(mutationOptions, queryClient);
     }
     /**
+ * Updates the status of a trip.
+ * @summary Update trip status
+ */
+export const updateTripStatus = (
+    id: string,
+    params: UpdateTripStatusParams,
+ options?: SecondParameter<typeof customInstance>,) => {
+      
+      
+      return customInstance<TripResponse>(
+      {url: `/api/trips/${id}/status`, method: 'PATCH',
+        params
+    },
+      options);
+    }
+  
+
+
+export const getUpdateTripStatusMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateTripStatus>>, TError,{id: string;params: UpdateTripStatusParams}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateTripStatus>>, TError,{id: string;params: UpdateTripStatusParams}, TContext> => {
+
+const mutationKey = ['updateTripStatus'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateTripStatus>>, {id: string;params: UpdateTripStatusParams}> = (props) => {
+          const {id,params} = props ?? {};
+
+          return  updateTripStatus(id,params,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateTripStatusMutationResult = NonNullable<Awaited<ReturnType<typeof updateTripStatus>>>
+    
+    export type UpdateTripStatusMutationError = unknown
+
+    /**
+ * @summary Update trip status
+ */
+export const useUpdateTripStatus = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateTripStatus>>, TError,{id: string;params: UpdateTripStatusParams}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateTripStatus>>,
+        TError,
+        {id: string;params: UpdateTripStatusParams},
+        TContext
+      > => {
+
+      const mutationOptions = getUpdateTripStatusMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * Returns a list of passengers for a specific trip.
+ * @summary Get trip passengers
+ */
+export const getTripPassengers = (
+    id: string,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<TripPassengerResponse[]>(
+      {url: `/api/trips/${id}/passengers`, method: 'GET', signal
+    },
+      options);
+    }
+  
+
+
+
+export const getGetTripPassengersQueryKey = (id?: string,) => {
+    return [
+    `/api/trips/${id}/passengers`
+    ] as const;
+    }
+
+    
+export const getGetTripPassengersQueryOptions = <TData = Awaited<ReturnType<typeof getTripPassengers>>, TError = unknown>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTripPassengers>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetTripPassengersQueryKey(id);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getTripPassengers>>> = ({ signal }) => getTripPassengers(id, requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getTripPassengers>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetTripPassengersQueryResult = NonNullable<Awaited<ReturnType<typeof getTripPassengers>>>
+export type GetTripPassengersQueryError = unknown
+
+
+export function useGetTripPassengers<TData = Awaited<ReturnType<typeof getTripPassengers>>, TError = unknown>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTripPassengers>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getTripPassengers>>,
+          TError,
+          Awaited<ReturnType<typeof getTripPassengers>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetTripPassengers<TData = Awaited<ReturnType<typeof getTripPassengers>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTripPassengers>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getTripPassengers>>,
+          TError,
+          Awaited<ReturnType<typeof getTripPassengers>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetTripPassengers<TData = Awaited<ReturnType<typeof getTripPassengers>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTripPassengers>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get trip passengers
+ */
+
+export function useGetTripPassengers<TData = Awaited<ReturnType<typeof getTripPassengers>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTripPassengers>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetTripPassengersQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
  * Searches for available trips based on origin, destination and date filters.
  * @summary Search trips
  */

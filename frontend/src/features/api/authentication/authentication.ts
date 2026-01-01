@@ -16,11 +16,14 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  ActivateParams,
   ApiResponseAuthResponse,
   ApiResponseVoid,
+  ForgotPasswordRequest,
   GoogleLoginRequest,
   LoginRequest,
-  RegisterRequest
+  RegisterRequest,
+  ResetPasswordRequest
 } from '../../../model';
 
 import { customInstance } from '../../../lib/api-client';
@@ -31,7 +34,72 @@ type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
 /**
- * Creates a new user account and returns access/refresh tokens.
+ * Resets user password using the token.
+ * @summary Reset password
+ */
+export const resetPassword = (
+    resetPasswordRequest: ResetPasswordRequest,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<ApiResponseVoid>(
+      {url: `/api/auth/reset-password`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: resetPasswordRequest, signal
+    },
+      options);
+    }
+  
+
+
+export const getResetPasswordMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof resetPassword>>, TError,{data: ResetPasswordRequest}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof resetPassword>>, TError,{data: ResetPasswordRequest}, TContext> => {
+
+const mutationKey = ['resetPassword'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof resetPassword>>, {data: ResetPasswordRequest}> = (props) => {
+          const {data} = props ?? {};
+
+          return  resetPassword(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ResetPasswordMutationResult = NonNullable<Awaited<ReturnType<typeof resetPassword>>>
+    export type ResetPasswordMutationBody = ResetPasswordRequest
+    export type ResetPasswordMutationError = unknown
+
+    /**
+ * @summary Reset password
+ */
+export const useResetPassword = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof resetPassword>>, TError,{data: ResetPasswordRequest}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof resetPassword>>,
+        TError,
+        {data: ResetPasswordRequest},
+        TContext
+      > => {
+
+      const mutationOptions = getResetPasswordMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * Creates a new user account. Returns message to check email for activation.
  * @summary Register new user
  */
 export const register = (
@@ -40,7 +108,7 @@ export const register = (
 ) => {
       
       
-      return customInstance<ApiResponseAuthResponse>(
+      return customInstance<ApiResponseVoid>(
       {url: `/api/auth/register`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: registerRequest, signal
@@ -348,6 +416,135 @@ export const useLoginWithGoogle = <TError = unknown,
       > => {
 
       const mutationOptions = getLoginWithGoogleMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * Sends a password reset link to the registered email.
+ * @summary Request password reset
+ */
+export const forgotPassword = (
+    forgotPasswordRequest: ForgotPasswordRequest,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<ApiResponseVoid>(
+      {url: `/api/auth/forgot-password`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: forgotPasswordRequest, signal
+    },
+      options);
+    }
+  
+
+
+export const getForgotPasswordMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof forgotPassword>>, TError,{data: ForgotPasswordRequest}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof forgotPassword>>, TError,{data: ForgotPasswordRequest}, TContext> => {
+
+const mutationKey = ['forgotPassword'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof forgotPassword>>, {data: ForgotPasswordRequest}> = (props) => {
+          const {data} = props ?? {};
+
+          return  forgotPassword(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ForgotPasswordMutationResult = NonNullable<Awaited<ReturnType<typeof forgotPassword>>>
+    export type ForgotPasswordMutationBody = ForgotPasswordRequest
+    export type ForgotPasswordMutationError = unknown
+
+    /**
+ * @summary Request password reset
+ */
+export const useForgotPassword = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof forgotPassword>>, TError,{data: ForgotPasswordRequest}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof forgotPassword>>,
+        TError,
+        {data: ForgotPasswordRequest},
+        TContext
+      > => {
+
+      const mutationOptions = getForgotPasswordMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * Activates user account using the token from email.
+ * @summary Activate account
+ */
+export const activate = (
+    params: ActivateParams,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<ApiResponseAuthResponse>(
+      {url: `/api/auth/activate`, method: 'POST',
+        params, signal
+    },
+      options);
+    }
+  
+
+
+export const getActivateMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof activate>>, TError,{params: ActivateParams}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof activate>>, TError,{params: ActivateParams}, TContext> => {
+
+const mutationKey = ['activate'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof activate>>, {params: ActivateParams}> = (props) => {
+          const {params} = props ?? {};
+
+          return  activate(params,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ActivateMutationResult = NonNullable<Awaited<ReturnType<typeof activate>>>
+    
+    export type ActivateMutationError = unknown
+
+    /**
+ * @summary Activate account
+ */
+export const useActivate = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof activate>>, TError,{params: ActivateParams}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof activate>>,
+        TError,
+        {params: ActivateParams},
+        TContext
+      > => {
+
+      const mutationOptions = getActivateMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }

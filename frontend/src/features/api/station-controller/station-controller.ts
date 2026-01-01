@@ -29,6 +29,7 @@ import type {
   DeleteStationParams,
   GetAllStationsParams,
   PagedModelStation,
+  SearchStationsParams,
   Station
 } from '../../../model';
 
@@ -299,4 +300,90 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
       return useMutation(mutationOptions, queryClient);
     }
+    export const searchStations = (
+    params: SearchStationsParams,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<PagedModelStation>(
+      {url: `/api/stations/search`, method: 'GET',
+        params, signal
+    },
+      options);
+    }
+  
+
+
+
+export const getSearchStationsQueryKey = (params?: SearchStationsParams,) => {
+    return [
+    `/api/stations/search`, ...(params ? [params]: [])
+    ] as const;
+    }
+
     
+export const getSearchStationsQueryOptions = <TData = Awaited<ReturnType<typeof searchStations>>, TError = unknown>(params: SearchStationsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchStations>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSearchStationsQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof searchStations>>> = ({ signal }) => searchStations(params, requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof searchStations>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SearchStationsQueryResult = NonNullable<Awaited<ReturnType<typeof searchStations>>>
+export type SearchStationsQueryError = unknown
+
+
+export function useSearchStations<TData = Awaited<ReturnType<typeof searchStations>>, TError = unknown>(
+ params: SearchStationsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchStations>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof searchStations>>,
+          TError,
+          Awaited<ReturnType<typeof searchStations>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSearchStations<TData = Awaited<ReturnType<typeof searchStations>>, TError = unknown>(
+ params: SearchStationsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchStations>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof searchStations>>,
+          TError,
+          Awaited<ReturnType<typeof searchStations>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSearchStations<TData = Awaited<ReturnType<typeof searchStations>>, TError = unknown>(
+ params: SearchStationsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchStations>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useSearchStations<TData = Awaited<ReturnType<typeof searchStations>>, TError = unknown>(
+ params: SearchStationsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchStations>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSearchStationsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+

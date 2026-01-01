@@ -7,13 +7,18 @@
  */
 
 export interface RegisterRequest {
-  /** @minLength 1 */
+  /**
+   * @minLength 2
+   * @maxLength 50
+   * @pattern ^[\p{L} ]+$
+   */
   fullName: string;
   /** @minLength 1 */
   email: string;
   /**
-   * @minLength 6
+   * @minLength 8
    * @maxLength 2147483647
+   * @pattern ^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=!]).*$
    */
   password?: string;
 }

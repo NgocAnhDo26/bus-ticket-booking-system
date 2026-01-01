@@ -28,6 +28,7 @@ import type {
   BookingLookupRequest,
   BookingResponse,
   CreateBookingRequest,
+  GetAdminBookingsParams,
   GetUserBookingsParams,
   PagedModelBookingResponse,
   UpdateBookingRequest
@@ -381,6 +382,132 @@ export const useCreateBooking = <TError = unknown,
       return useMutation(mutationOptions, queryClient);
     }
     /**
+ * Refunds a confirmed booking and releases seats (Admin only).
+ * @summary Refund booking
+ */
+export const refundBooking = (
+    id: string,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<BookingResponse>(
+      {url: `/api/bookings/${id}/refund`, method: 'POST', signal
+    },
+      options);
+    }
+  
+
+
+export const getRefundBookingMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof refundBooking>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof refundBooking>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['refundBooking'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof refundBooking>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  refundBooking(id,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RefundBookingMutationResult = NonNullable<Awaited<ReturnType<typeof refundBooking>>>
+    
+    export type RefundBookingMutationError = unknown
+
+    /**
+ * @summary Refund booking
+ */
+export const useRefundBooking = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof refundBooking>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof refundBooking>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+
+      const mutationOptions = getRefundBookingMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * Toggles the boarded status of a passenger ticket.
+ * @summary Check-in passenger
+ */
+export const checkInPassenger = (
+    id: string,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<BookingResponse>(
+      {url: `/api/bookings/tickets/${id}/check-in`, method: 'POST', signal
+    },
+      options);
+    }
+  
+
+
+export const getCheckInPassengerMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof checkInPassenger>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof checkInPassenger>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['checkInPassenger'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof checkInPassenger>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  checkInPassenger(id,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CheckInPassengerMutationResult = NonNullable<Awaited<ReturnType<typeof checkInPassenger>>>
+    
+    export type CheckInPassengerMutationError = unknown
+
+    /**
+ * @summary Check-in passenger
+ */
+export const useCheckInPassenger = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof checkInPassenger>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof checkInPassenger>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+
+      const mutationOptions = getCheckInPassengerMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
  * Returns booking details given booking code and passenger email.
  * @summary Lookup booking by code and email
  */
@@ -621,6 +748,100 @@ export function useGetBookedSeatsForTrip<TData = Awaited<ReturnType<typeof getBo
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetBookedSeatsForTripQueryOptions(tripId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * Returns a paginated list of bookings with filtering options (Admin only).
+ * @summary Get admin bookings
+ */
+export const getAdminBookings = (
+    params: GetAdminBookingsParams,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<PagedModelBookingResponse>(
+      {url: `/api/bookings/admin`, method: 'GET',
+        params, signal
+    },
+      options);
+    }
+  
+
+
+
+export const getGetAdminBookingsQueryKey = (params?: GetAdminBookingsParams,) => {
+    return [
+    `/api/bookings/admin`, ...(params ? [params]: [])
+    ] as const;
+    }
+
+    
+export const getGetAdminBookingsQueryOptions = <TData = Awaited<ReturnType<typeof getAdminBookings>>, TError = unknown>(params: GetAdminBookingsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAdminBookings>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAdminBookingsQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAdminBookings>>> = ({ signal }) => getAdminBookings(params, requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAdminBookings>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetAdminBookingsQueryResult = NonNullable<Awaited<ReturnType<typeof getAdminBookings>>>
+export type GetAdminBookingsQueryError = unknown
+
+
+export function useGetAdminBookings<TData = Awaited<ReturnType<typeof getAdminBookings>>, TError = unknown>(
+ params: GetAdminBookingsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAdminBookings>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAdminBookings>>,
+          TError,
+          Awaited<ReturnType<typeof getAdminBookings>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetAdminBookings<TData = Awaited<ReturnType<typeof getAdminBookings>>, TError = unknown>(
+ params: GetAdminBookingsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAdminBookings>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAdminBookings>>,
+          TError,
+          Awaited<ReturnType<typeof getAdminBookings>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetAdminBookings<TData = Awaited<ReturnType<typeof getAdminBookings>>, TError = unknown>(
+ params: GetAdminBookingsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAdminBookings>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get admin bookings
+ */
+
+export function useGetAdminBookings<TData = Awaited<ReturnType<typeof getAdminBookings>>, TError = unknown>(
+ params: GetAdminBookingsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAdminBookings>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetAdminBookingsQueryOptions(params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

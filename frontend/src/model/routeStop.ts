@@ -15,5 +15,6 @@ export interface RouteStop {
   station?: Station;
   stopOrder?: number;
   durationMinutesFromOrigin?: number;
+  defaultSurcharge?: number;
   stopType?: RouteStopStopType;
 }
