@@ -4,6 +4,8 @@ import {
   getAllBuses as orvalGetAllBuses,
   updateBus as orvalUpdateBus,
 } from '@/features/api/bus-controller/bus-controller';
+// Bus Layouts
+import { getAllLayouts as orvalGetAllLayouts } from '@/features/api/bus-layout-controller/bus-layout-controller';
 import {
   createOperator as orvalCreateOperator,
   deleteOperator as orvalDeleteOperator,
@@ -44,6 +46,8 @@ import type {
   SearchTripRequest as ApiSearchTripRequest,
   Station as ApiStation,
   OperatorInfo,
+  PagedModelRouteResponse,
+  PagedModelStation,
   RouteResponse,
   SearchTripsParams,
   StationInfo,
@@ -66,7 +70,9 @@ import {
   type SearchTripRequest,
   type Station,
   type Trip,
+  type UpdateTripStopsRequest,
 } from './types';
+import type { BusLayout } from './types';
 
 const DEFAULT_PAGEABLE = { page: 0, size: 1000 };
 
@@ -140,7 +146,25 @@ const toTrip = (t: TripResponse | undefined): Trip => ({
     distanceKm: 0,
     isActive: true,
     createdAt: '',
-    stops: [],
+    stops: (t?.route?.stops ?? []).map(
+      (s: {
+        id?: string;
+        station?: unknown;
+        customName?: string;
+        customAddress?: string;
+        stopOrder?: number;
+        durationMinutesFromOrigin?: number;
+        stopType?: string;
+      }) => ({
+        id: s.id ?? '',
+        station: s.station ? toStation(s.station) : undefined,
+        customName: s.customName,
+        customAddress: s.customAddress,
+        stopOrder: s.stopOrder ?? 0,
+        durationMinutesFromOrigin: s.durationMinutesFromOrigin ?? 0,
+        stopType: (s.stopType ?? 'BOTH') as 'PICKUP' | 'DROPOFF' | 'BOTH',
+      }),
+    ),
   },
   bus: {
     id: t?.bus?.id ?? '',
@@ -154,6 +178,7 @@ const toTrip = (t: TripResponse | undefined): Trip => ({
   arrivalTime: t?.arrivalTime ?? '',
   status: (t?.status as unknown as TripResponseStatus) ?? 'ACTIVE',
   tripPricings: (t?.tripPricings ?? []).map(toTripPricing),
+  tripPoints: [],
   createdAt: '',
 });
 
@@ -175,6 +200,13 @@ export const updateStation = async (id: string, data: CreateStationRequest): Pro
 
 export const deleteStation = async (id: string, force?: boolean): Promise<void> => {
   await orvalDeleteStation(id, force ? { force } : undefined);
+};
+
+export const searchStations = async (query: string): Promise<Station[]> => {
+  const response = await apiClient.get<PagedModelStation>(`/api/stations/search`, {
+    params: { query, page: 0, size: 20 },
+  });
+  return (response.data.content ?? []).map(toStation);
 };
 
 // Operators
@@ -245,6 +277,13 @@ export const addRouteStop = async (routeId: string, data: AddRouteStopRequest): 
   return response.data;
 };
 
+export const searchRoutes = async (query: string): Promise<Route[]> => {
+  const response = await apiClient.get<PagedModelRouteResponse>(`/api/routes/search`, {
+    params: { query, page: 0, size: 20 },
+  });
+  return (response.data.content ?? []).map(toRoute);
+};
+
 export const deleteRouteStop = async (routeId: string, stopId: string): Promise<void> => {
   await apiClient.delete(`/api/routes/${routeId}/stops/${stopId}`);
 };
@@ -295,6 +334,40 @@ export const updateTrip = async (id: string, data: CreateTripRequest): Promise<T
   return toTrip(resp);
 };
 
+export const updateTripStops = async (id: string, data: UpdateTripStopsRequest): Promise<Trip> => {
+  const response = await apiClient.put<TripResponse>(`/api/trips/${id}/stops`, data);
+  return toTrip(response.data);
+};
+
+export const getTripPassengers = async (id: string): Promise<import('./types').TripPassenger[]> => {
+  const response = await apiClient.get<import('./types').TripPassenger[]>(
+    `/api/trips/${id}/passengers`,
+  );
+  return response.data;
+};
+
+export const updateTripStatus = async (id: string, status: string): Promise<Trip> => {
+  const response = await apiClient.patch<TripResponse>(`/api/trips/${id}/status`, undefined, {
+    params: { status },
+  });
+  return toTrip(response.data);
+};
+
 export const deleteTrip = async (id: string, force?: boolean): Promise<void> => {
   await orvalDeleteTrip(id, force ? { force } : undefined);
+};
+
+const toBusLayout = (bl: ApiBusLayout | undefined): BusLayout => ({
+  id: bl?.id ?? '',
+  name: bl?.name ?? '',
+  busType: bl?.busType ?? '',
+  totalSeats: bl?.totalSeats ?? 0,
+  totalFloors: bl?.totalFloors ?? 1,
+  description: bl?.description,
+  layoutMatrix: { rows: [], totalRows: 0, totalCols: 0 }, // Simplified for dropdown
+});
+
+export const fetchBusLayouts = async (): Promise<BusLayout[]> => {
+  const resp = await orvalGetAllLayouts();
+  return (resp ?? []).map(toBusLayout); // The controller returns List<BusLayoutResponse>, not Page
 };

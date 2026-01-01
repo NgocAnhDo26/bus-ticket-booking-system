@@ -65,7 +65,7 @@ export const TripCard = ({ trip, onSelect }: TripCardProps) => {
           </div>
 
           {/* Right: Price & Action */}
-          <div className="flex flex-col justify-between items-end border-l pl-6 gap-4 min-w-[200px]">
+          <div className="flex flex-col justify-between items-end border-l border-border pl-6 gap-4 min-w-[200px]">
             <div className="text-right">
               <p className="text-sm text-muted-foreground">Giá từ</p>
               <p className="text-2xl font-bold text-primary">

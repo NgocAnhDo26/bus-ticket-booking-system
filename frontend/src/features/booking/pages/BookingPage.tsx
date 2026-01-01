@@ -4,13 +4,13 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { ArrowLeft, Clock, Loader2, MapPin } from 'lucide-react';
+import { toast } from 'sonner';
 import { useShallow } from 'zustand/react/shallow';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { getBusLayout } from '@/features/bus-layout/api';
-import { toast } from '@/hooks/use-toast';
 
 import { bookingApi, getBookingById } from '../api';
 import { BookingSeatMap } from '../components/BookingSeatMap';
@@ -88,8 +88,7 @@ export const BookingPage = () => {
               // Yes, directly updating state is cleaner for hydration.
               useBookingStore.setState({ selectedSeats: bookedSeats });
 
-              toast({
-                title: 'Khôi phục phiên đặt vé',
+              toast.success('Khôi phục phiên đặt vé', {
                 description: 'Bạn đang tiếp tục chỉnh sửa đơn đặt vé trước đó.',
               });
             } else {
@@ -144,10 +143,8 @@ export const BookingPage = () => {
     if (!tripId) return;
 
     if (mySelectedSeats.length === 0) {
-      toast({
-        title: 'Chưa chọn ghế',
+      toast.error('Chưa chọn ghế', {
         description: 'Vui lòng chọn ít nhất 1 ghế để tiếp tục.',
-        variant: 'destructive',
       });
       return;
     }
@@ -263,11 +260,11 @@ export const BookingPage = () => {
                     {trip.route.originStation.name} (00:00)
                   </option>
                   {trip.route.stops
-                    ?.filter((s) => s.stopType === 'PICKUP' || s.stopType === 'BOTH')
+                    ?.filter((s) => s.station && (s.stopType === 'PICKUP' || s.stopType === 'BOTH'))
                     .sort((a, b) => a.stopOrder - b.stopOrder)
                     .map((s) => (
-                      <option key={s.id} value={s.station.id}>
-                        {s.station.name} (+{s.durationMinutesFromOrigin}m)
+                      <option key={s.id} value={s.station!.id}>
+                        {s.station!.name} (+{s.durationMinutesFromOrigin}m)
                       </option>
                     ))}
                 </select>
@@ -284,7 +281,7 @@ export const BookingPage = () => {
                 >
                   <option value="">Chọn điểm trả...</option>
                   {trip.route.stops
-                    ?.filter((s) => s.stopType === 'DROPOFF' || s.stopType === 'BOTH')
+                    .filter((s) => s.station && (s.stopType === 'DROPOFF' || s.stopType === 'BOTH'))
                     .filter((s) => {
                       // Filter based on pickup order
                       if (!pickupStationId) return true;
@@ -292,7 +289,7 @@ export const BookingPage = () => {
                       if (pickupStationId === trip.route.originStation.id) pickupOrder = 0;
                       else {
                         const pStop = trip.route.stops.find(
-                          (st) => st.station.id === pickupStationId,
+                          (st) => st.station?.id === pickupStationId,
                         );
                         if (pStop) pickupOrder = pStop.stopOrder;
                       }
@@ -300,8 +297,8 @@ export const BookingPage = () => {
                     })
                     .sort((a, b) => a.stopOrder - b.stopOrder)
                     .map((s) => (
-                      <option key={s.id} value={s.station.id}>
-                        {s.station.name} (+{s.durationMinutesFromOrigin}m)
+                      <option key={s.id} value={s.station!.id}>
+                        {s.station!.name} (+{s.durationMinutesFromOrigin}m)
                       </option>
                     ))}
                   <option value={trip.route.destinationStation.id}>

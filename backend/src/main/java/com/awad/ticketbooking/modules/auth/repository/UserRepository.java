@@ -9,5 +9,7 @@ public interface UserRepository extends JpaRepository<User, UUID> {
 
     Optional<User> findByEmail(String email);
 
+    Optional<User> findByActivationToken(String activationToken);
+
     long countByCreatedAtBetween(java.time.Instant start, java.time.Instant end);
 }

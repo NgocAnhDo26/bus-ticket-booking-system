@@ -1,22 +1,20 @@
-import { type ReactNode } from 'react';
+import * as React from 'react';
 
+import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 
-type FormFieldProps = {
+interface FormFieldProps extends React.HTMLAttributes<HTMLDivElement> {
   label: string;
   error?: string;
-  hint?: string;
-  children: ReactNode;
-  className?: string;
-};
+  children: React.ReactNode;
+}
 
-export const FormField = ({ label, error, hint, children, className }: FormFieldProps) => (
-  <div className={cn('space-y-2', className)}>
-    <div className="space-y-1">
-      <label className="text-sm font-medium text-text-base">{label}</label>
-      {hint ? <p className="text-xs text-text-muted">{hint}</p> : null}
+export function FormField({ label, error, children, className, ...props }: FormFieldProps) {
+  return (
+    <div className={cn('space-y-2', className)} {...props}>
+      <Label>{label}</Label>
+      {children}
+      {error && <p className="text-sm text-destructive">{error}</p>}
     </div>
-    {children}
-    {error ? <p className="text-xs text-danger">{error}</p> : null}
-  </div>
-);
+  );
+}

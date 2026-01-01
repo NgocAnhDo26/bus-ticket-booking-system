@@ -36,6 +36,9 @@ public class RouteStop implements Serializable {
     @Column(name = "duration_minutes_from_origin", nullable = false)
     private Integer durationMinutesFromOrigin;
 
+    @Column(name = "default_surcharge", precision = 15, scale = 2)
+    private java.math.BigDecimal defaultSurcharge = java.math.BigDecimal.ZERO;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "stop_type", nullable = false)
     private StopType stopType = StopType.BOTH;

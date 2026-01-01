@@ -29,7 +29,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { FormField } from '@/components/ui/form-field';
+import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -41,7 +41,14 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet';
 
-import { useBuses, useCreateBus, useDeleteBus, useOperators, useUpdateBus } from '../hooks';
+import {
+  useBusLayouts,
+  useBuses,
+  useCreateBus,
+  useDeleteBus,
+  useOperators,
+  useUpdateBus,
+} from '../hooks';
 import type { Bus } from '../types';
 
 const AMENITIES_LIST = ['WiFi', 'Máy lạnh', 'Cổng USB', 'Chăn đắp', 'Nước uống', 'Toilet', 'TV'];
@@ -60,6 +67,7 @@ export const BusManagementPage = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { data: buses, isLoading: isLoadingBuses } = useBuses();
   const { data: operators } = useOperators();
+  const { data: busLayouts } = useBusLayouts();
   const createBus = useCreateBus();
   const updateBus = useUpdateBus();
   const deleteBus = useDeleteBus();
@@ -254,7 +262,7 @@ export const BusManagementPage = () => {
         header: 'Trạng thái',
         sortable: true,
         cell: (bus) => (
-          <Badge variant={bus.isActive ? 'success' : 'default'}>
+          <Badge variant={bus.isActive ? 'default' : 'secondary'}>
             {bus.isActive ? 'Hoạt động' : 'Bảo trì'}
           </Badge>
         ),
@@ -299,7 +307,7 @@ export const BusManagementPage = () => {
         <h1 className="text-2xl font-bold tracking-tight">Quản lý Xe</h1>
         <Sheet
           open={isOpen}
-          onOpenChange={(open) => {
+          onOpenChange={(open: boolean) => {
             setIsOpen(open);
             if (!open) {
               setEditingBus(null);
@@ -324,17 +332,28 @@ export const BusManagementPage = () => {
             </SheetHeader>
             <div className="py-4">
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                <FormField label="Biển số xe" error={errors.plateNumber?.message}>
+                <Field>
+                  <FieldLabel>Biển số xe</FieldLabel>
                   <Input placeholder="51B-123.45" {...register('plateNumber')} />
-                </FormField>
-                <FormField
-                  label="Layout ID"
-                  hint="Nhập UUID của layout đã tạo"
-                  error={errors.busLayoutId?.message}
-                >
-                  <Input placeholder="Layout UUID" {...register('busLayoutId')} />
-                </FormField>
-                <FormField label="Nhà xe" error={errors.operatorId?.message}>
+                  <FieldError>{errors.plateNumber?.message}</FieldError>
+                </Field>
+                <Field>
+                  <FieldLabel>Loại ghế / Sơ đồ</FieldLabel>
+                  <select
+                    className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    {...register('busLayoutId')}
+                  >
+                    <option value="">Chọn sơ đồ xe...</option>
+                    {busLayouts?.map((layout) => (
+                      <option key={layout.id} value={layout.id}>
+                        {layout.name} ({layout.totalSeats} ghế, {layout.busType})
+                      </option>
+                    ))}
+                  </select>
+                  <FieldError>{errors.busLayoutId?.message}</FieldError>
+                </Field>
+                <Field>
+                  <FieldLabel>Nhà xe</FieldLabel>
                   <select
                     className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                     {...register('operatorId')}
@@ -346,7 +365,8 @@ export const BusManagementPage = () => {
                       </option>
                     ))}
                   </select>
-                </FormField>
+                  <FieldError>{errors.operatorId?.message}</FieldError>
+                </Field>
                 <div className="space-y-2">
                   <Label>Tiện ích</Label>
                   <div className="grid grid-cols-2 gap-2">
@@ -415,7 +435,10 @@ export const BusManagementPage = () => {
         </CardContent>
       </Card>
 
-      <AlertDialog open={!!deletingBus} onOpenChange={(open) => !open && setDeletingBus(null)}>
+      <AlertDialog
+        open={!!deletingBus}
+        onOpenChange={(open: boolean) => !open && setDeletingBus(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Bạn có chắc chắn muốn xóa?</AlertDialogTitle>
@@ -435,7 +458,10 @@ export const BusManagementPage = () => {
         </AlertDialogContent>
       </AlertDialog>
 
-      <AlertDialog open={!!forceDeleteId} onOpenChange={(open) => !open && setForceDeleteId(null)}>
+      <AlertDialog
+        open={!!forceDeleteId}
+        onOpenChange={(open: boolean) => !open && setForceDeleteId(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Cảnh báo: Dữ liệu liên quan</AlertDialogTitle>

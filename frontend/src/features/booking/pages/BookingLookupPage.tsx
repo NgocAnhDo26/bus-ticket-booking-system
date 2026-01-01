@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 
 import { useMutation } from '@tanstack/react-query';
 import { Search, Ticket } from 'lucide-react';
+import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -15,7 +16,6 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { toast } from '@/hooks/use-toast';
 
 import { lookupBooking } from '../api';
 
@@ -27,17 +27,14 @@ export const BookingLookupPage = () => {
   const lookupMutation = useMutation({
     mutationFn: (data: { code: string; email: string }) => lookupBooking(data.code, data.email),
     onSuccess: (data) => {
-      toast({
-        title: 'Tra cứu thành công',
+      toast.success('Tra cứu thành công', {
         description: `Đã tìm thấy vé #${data.code}`,
       });
       navigate(`/booking/confirmation/${data.id}`);
     },
     onError: () => {
-      toast({
-        title: 'Không tìm thấy vé',
+      toast.error('Không tìm thấy vé', {
         description: 'Vui lòng kiểm tra lại Mã đặt vé và Email.',
-        variant: 'destructive',
       });
     },
   });
@@ -51,7 +48,7 @@ export const BookingLookupPage = () => {
   return (
     <div className="container mx-auto p-4 flex items-center justify-center min-h-[calc(100vh-4rem)]">
       <Card className="w-full max-w-md shadow-lg border-t-4 border-t-primary">
-        <CardHeader className="text-center">
+        <CardHeader className="text-center mb-4">
           <div className="mx-auto bg-primary/10 w-12 h-12 rounded-full flex items-center justify-center mb-2">
             <Ticket className="h-6 w-6 text-primary" />
           </div>
@@ -85,7 +82,12 @@ export const BookingLookupPage = () => {
           </CardContent>
 
           <CardFooter>
-            <Button type="submit" className="w-full" size="lg" disabled={lookupMutation.isPending}>
+            <Button
+              type="submit"
+              className="w-full mt-8"
+              size="lg"
+              disabled={lookupMutation.isPending}
+            >
               {lookupMutation.isPending ? (
                 'Đang tìm kiếm...'
               ) : (

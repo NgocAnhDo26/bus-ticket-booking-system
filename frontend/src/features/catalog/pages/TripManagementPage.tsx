@@ -5,7 +5,17 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
 import { format } from 'date-fns';
-import { ArrowRight, Calendar, Clock, MoreHorizontal, Pencil, Plus, Trash2 } from 'lucide-react';
+import {
+  ArrowRight,
+  Calendar,
+  Clock,
+  MapPin,
+  MoreHorizontal,
+  Pencil,
+  Plus,
+  Trash2,
+  Users,
+} from 'lucide-react';
 import * as z from 'zod';
 
 import { type ColumnDef, GenericTable } from '@/components/common';
@@ -29,7 +39,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { FormField } from '@/components/ui/form-field';
+import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import {
   Sheet,
@@ -40,6 +50,8 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet';
 
+import { TripPassengersDialog } from '../components/TripPassengersDialog';
+import { TripStopsDialog } from '../components/TripStopsDialog';
 import {
   useBuses,
   useCreateTrip,
@@ -74,6 +86,8 @@ export const TripManagementPage = () => {
   const deleteTrip = useDeleteTrip();
   const [editingTrip, setEditingTrip] = useState<Trip | null>(null);
   const [deletingTrip, setDeletingTrip] = useState<Trip | null>(null);
+  const [managingStopsTrip, setManagingStopsTrip] = useState<Trip | null>(null);
+  const [viewingPassengersTrip, setViewingPassengersTrip] = useState<Trip | null>(null);
 
   const {
     register,
@@ -315,12 +329,12 @@ export const TripManagementPage = () => {
         cell: (trip) => {
           const statusMap: Record<
             string,
-            { label: string; variant: 'default' | 'success' | 'warning' }
+            { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
           > = {
-            SCHEDULED: { label: 'Sắp diễn ra', variant: 'default' },
-            COMPLETED: { label: 'Hoàn thành', variant: 'success' },
-            CANCELLED: { label: 'Đã hủy', variant: 'warning' },
-            DELAYED: { label: 'Hoãn', variant: 'warning' },
+            SCHEDULED: { label: 'Sắp diễn ra', variant: 'outline' },
+            COMPLETED: { label: 'Hoàn thành', variant: 'default' },
+            CANCELLED: { label: 'Đã hủy', variant: 'destructive' },
+            DELAYED: { label: 'Hoãn', variant: 'secondary' },
           };
           const config = statusMap[trip.status] || {
             label: trip.status,
@@ -341,8 +355,16 @@ export const TripManagementPage = () => {
                   <MoreHorizontal className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
+              <DropdownMenuContent align="end" className="w-fit">
                 <DropdownMenuLabel>Thao tác</DropdownMenuLabel>
+                <DropdownMenuItem onClick={() => setManagingStopsTrip(trip)}>
+                  <MapPin className="mr-2 h-4 w-4" />
+                  Quản lý trạm
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setViewingPassengersTrip(trip)}>
+                  <Users className="mr-2 h-4 w-4" />
+                  Danh sách hành khách
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => handleEdit(trip)}>
                   <Pencil className="mr-2 h-4 w-4" />
                   Sửa
@@ -369,7 +391,7 @@ export const TripManagementPage = () => {
         <h1 className="text-2xl font-bold tracking-tight">Quản lý Chuyến đi</h1>
         <Sheet
           open={isOpen}
-          onOpenChange={(open) => {
+          onOpenChange={(open: boolean) => {
             setIsOpen(open);
             if (!open) {
               setEditingTrip(null);
@@ -398,7 +420,8 @@ export const TripManagementPage = () => {
             </SheetHeader>
             <div className="py-4">
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                <FormField label="Tuyến đường" error={errors.routeId?.message}>
+                <Field>
+                  <FieldLabel>Tuyến đường</FieldLabel>
                   <select
                     className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                     {...register('routeId')}
@@ -410,8 +433,10 @@ export const TripManagementPage = () => {
                       </option>
                     ))}
                   </select>
-                </FormField>
-                <FormField label="Xe" error={errors.busId?.message}>
+                  <FieldError>{errors.routeId?.message}</FieldError>
+                </Field>
+                <Field>
+                  <FieldLabel>Xe</FieldLabel>
                   <select
                     className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                     {...register('busId')}
@@ -423,35 +448,38 @@ export const TripManagementPage = () => {
                       </option>
                     ))}
                   </select>
-                </FormField>
-                <FormField label="Thời gian đi" error={errors.departureTime?.message}>
+                  <FieldError>{errors.busId?.message}</FieldError>
+                </Field>
+                <Field>
+                  <FieldLabel>Thời gian đi</FieldLabel>
                   <Input type="datetime-local" {...register('departureTime')} />
-                </FormField>
-                <FormField label="Thời gian đến (Tự động tính)" error={errors.arrivalTime?.message}>
+                  <FieldError>{errors.departureTime?.message}</FieldError>
+                </Field>
+                <Field>
+                  <FieldLabel>Thời gian đến (Tự động tính)</FieldLabel>
                   <Input
                     type="datetime-local"
                     {...register('arrivalTime')}
                     readOnly
                     className="bg-muted"
                   />
-                </FormField>
+                  <FieldError>{errors.arrivalTime?.message}</FieldError>
+                </Field>
 
                 <div className="space-y-2">
                   <h3 className="text-sm font-medium">Giá vé</h3>
                   {fields.map((field, index) => (
                     <div key={field.id} className="flex gap-2 items-end">
-                      <FormField
-                        label={`Loại ghế: ${field.seatType}`}
-                        error={errors.pricings?.[index]?.price?.message}
-                        className="flex-1"
-                      >
+                      <Field className="flex-1">
+                        <FieldLabel>{`Loại ghế: ${field.seatType}`}</FieldLabel>
                         <Input
                           type="number"
                           {...register(`pricings.${index}.price`, {
                             valueAsNumber: true,
                           })}
                         />
-                      </FormField>
+                        <FieldError>{errors.pricings?.[index]?.price?.message}</FieldError>
+                      </Field>
                       <input type="hidden" {...register(`pricings.${index}.seatType`)} />
                     </div>
                   ))}
@@ -507,7 +535,10 @@ export const TripManagementPage = () => {
         </CardContent>
       </Card>
 
-      <AlertDialog open={!!deletingTrip} onOpenChange={(open) => !open && setDeletingTrip(null)}>
+      <AlertDialog
+        open={!!deletingTrip}
+        onOpenChange={(open: boolean) => !open && setDeletingTrip(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Bạn có chắc chắn muốn xóa?</AlertDialogTitle>
@@ -527,7 +558,10 @@ export const TripManagementPage = () => {
         </AlertDialogContent>
       </AlertDialog>
 
-      <AlertDialog open={!!forceDeleteId} onOpenChange={(open) => !open && setForceDeleteId(null)}>
+      <AlertDialog
+        open={!!forceDeleteId}
+        onOpenChange={(open: boolean) => !open && setForceDeleteId(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Cảnh báo: Dữ liệu liên quan</AlertDialogTitle>
@@ -547,6 +581,18 @@ export const TripManagementPage = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <TripStopsDialog
+        trip={managingStopsTrip}
+        open={!!managingStopsTrip}
+        onOpenChange={(open: boolean) => !open && setManagingStopsTrip(null)}
+      />
+
+      <TripPassengersDialog
+        trip={viewingPassengersTrip}
+        open={!!viewingPassengersTrip}
+        onOpenChange={(open: boolean) => !open && setViewingPassengersTrip(null)}
+      />
     </div>
   );
 };

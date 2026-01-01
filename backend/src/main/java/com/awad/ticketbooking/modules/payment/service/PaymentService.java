@@ -21,6 +21,7 @@ import vn.payos.PayOS;
 import vn.payos.model.v2.paymentRequests.CreatePaymentLinkRequest;
 import vn.payos.model.v2.paymentRequests.CreatePaymentLinkResponse;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -34,6 +35,8 @@ public class PaymentService {
     private final BookingRepository bookingRepository;
     private final ObjectMapper objectMapper;
     private final EmailService emailService;
+    private final com.awad.ticketbooking.modules.booking.repository.TicketRepository ticketRepository;
+    private final com.awad.ticketbooking.modules.booking.service.SeatLockService seatLockService;
 
     @Transactional
     public PaymentResponse createPayment(CreatePaymentRequest request) {
@@ -169,12 +172,12 @@ public class PaymentService {
             } else {
                 // Payment failed
                 transaction.setStatus(PaymentStatus.FAILED);
-                booking.setStatus(BookingStatus.CANCELLED);
+                handlePaymentFailure(booking);
+
                 log.warn("Payment failed for booking {} with code {}", booking.getCode(), code);
 
                 // Save updates
                 paymentTransactionRepository.save(transaction);
-                bookingRepository.save(booking);
             }
 
             // Log webhook event
@@ -262,10 +265,9 @@ public class PaymentService {
                 }
             } else if ("CANCELLED".equals(status) || "EXPIRED".equals(status)) {
                 transaction.setStatus(PaymentStatus.FAILED);
-                booking.setStatus(BookingStatus.CANCELLED);
+                handlePaymentFailure(booking); // Clean up seats
 
                 paymentTransactionRepository.save(transaction);
-                bookingRepository.save(booking);
 
                 log.warn("Payment {} for booking {}", status, booking.getCode());
             }
@@ -277,6 +279,26 @@ public class PaymentService {
             log.error("Failed to verify payment for booking {}: {}", bookingId, e.getMessage());
             throw new RuntimeException("Failed to verify payment: " + e.getMessage());
         }
+    }
+
+    private void handlePaymentFailure(Booking booking) {
+        booking.setStatus(BookingStatus.CANCELLED);
+
+        // release seats
+        List<com.awad.ticketbooking.modules.booking.entity.Ticket> tickets = booking.getTickets();
+        if (tickets != null && !tickets.isEmpty()) {
+            List<String> seatCodes = tickets.stream()
+                    .map(com.awad.ticketbooking.modules.booking.entity.Ticket::getSeatCode)
+                    .collect(java.util.stream.Collectors.toList());
+
+            ticketRepository.deleteAll(tickets);
+            booking.getTickets().clear();
+
+            if (booking.getTrip() != null) {
+                seatLockService.unlockSeatsForBooking(booking.getTrip().getId(), seatCodes);
+            }
+        }
+        bookingRepository.save(booking);
     }
 
     private PaymentResponse toPaymentResponse(PaymentTransaction transaction) {

@@ -4,6 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { ArrowLeft, Clock, Loader2, Mail, MapPin, Ticket, User } from 'lucide-react';
+import { toast } from 'sonner';
 import { useShallow } from 'zustand/react/shallow';
 
 import { Button } from '@/components/ui/button';
@@ -12,7 +13,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { getBusLayout } from '@/features/bus-layout/api';
-import { toast } from '@/hooks/use-toast';
 import { useAuthStore } from '@/store/auth-store';
 
 import { bookingApi, createBooking } from '../api';
@@ -34,11 +34,12 @@ export const PassengerInfoPage = () => {
   const [contactName, setContactName] = useState(user?.fullName || '');
   const [contactPhone, setContactPhone] = useState('');
   const [contactEmail, setContactEmail] = useState(user?.email || '');
+  const [contactIdNumber, setContactIdNumber] = useState('');
 
   // State for per-ticket passenger info
-  // ticketsDetails: Record<seatCode, { name: string, phone: string }>
+  // ticketsDetails: Record<seatCode, { name: string, phone: string, idNumber: string }>
   const [ticketsDetails, setTicketsDetails] = useState<
-    Record<string, { name: string; phone: string }>
+    Record<string, { name: string; phone: string; idNumber: string }>
   >({});
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -111,14 +112,18 @@ export const PassengerInfoPage = () => {
 
   // Initialize ticket details when seats are loaded
   useState(() => {
-    const initialDetails: Record<string, { name: string; phone: string }> = {};
+    const initialDetails: Record<string, { name: string; phone: string; idNumber: string }> = {};
     finalSeatDetails.forEach((s) => {
-      initialDetails[s.seatCode] = { name: '', phone: '' };
+      initialDetails[s.seatCode] = { name: '', phone: '', idNumber: '' };
     });
     setTicketsDetails((prev) => ({ ...initialDetails, ...prev })); // Merge to keep existing input if re-render
   });
 
-  const handleTicketChange = (seatCode: string, field: 'name' | 'phone', value: string) => {
+  const handleTicketChange = (
+    seatCode: string,
+    field: 'name' | 'phone' | 'idNumber',
+    value: string,
+  ) => {
     setTicketsDetails((prev) => ({
       ...prev,
       [seatCode]: {
@@ -134,20 +139,19 @@ export const PassengerInfoPage = () => {
       newDetails[s.seatCode] = {
         name: contactName,
         phone: contactPhone,
+        idNumber: contactIdNumber,
       };
     });
     setTicketsDetails(newDetails);
-    toast({ title: 'Đã sao chép thông tin' });
+    toast.success('Đã sao chép thông tin');
   };
 
   const handleSubmit = async () => {
     if (!tripId) return;
 
     if (finalSeatDetails.length === 0) {
-      toast({
-        title: 'Chưa chọn ghế',
+      toast.error('Chưa chọn ghế', {
         description: 'Vui lòng quay lại chọn ghế trước.',
-        variant: 'destructive',
       });
       navigate(`/booking/${tripId}`);
       return;
@@ -155,29 +159,23 @@ export const PassengerInfoPage = () => {
 
     // Validate totalPrice is calculated correctly
     if (finalTotalPrice <= 0) {
-      toast({
-        title: 'Lỗi tính giá',
+      toast.error('Lỗi tính giá', {
         description: 'Không thể tính được tổng tiền. Vui lòng thử lại hoặc chọn lại ghế.',
-        variant: 'destructive',
       });
       navigate(`/booking/${tripId}`);
       return;
     }
 
     if (!contactName.trim() || !contactPhone.trim()) {
-      toast({
-        title: 'Thiếu thông tin liên hệ',
+      toast.error('Thiếu thông tin liên hệ', {
         description: 'Vui lòng nhập họ tên và số điện thoại người đặt.',
-        variant: 'destructive',
       });
       return;
     }
 
     if (!user && !contactEmail.trim()) {
-      toast({
-        title: 'Thiếu email',
+      toast.error('Thiếu email', {
         description: 'Vui lòng nhập email để nhận vé (bắt buộc với khách vãng lai).',
-        variant: 'destructive',
       });
       return;
     }
@@ -189,10 +187,8 @@ export const PassengerInfoPage = () => {
     });
 
     if (missingInfo) {
-      toast({
-        title: 'Thiếu thông tin hành khách',
+      toast.error('Thiếu thông tin hành khách', {
         description: `Vui lòng nhập đủ tên và SĐT cho ghế ${missingInfo.seatCode}`,
-        variant: 'destructive',
       });
       return;
     }
@@ -204,6 +200,7 @@ export const PassengerInfoPage = () => {
         userId: user?.id, // Optional for guest
         passengerName: contactName.trim(),
         passengerPhone: contactPhone.trim(),
+        passengerIdNumber: contactIdNumber.trim(), // Add contact ID
         passengerEmail: !user ? contactEmail.trim() : undefined,
         pickupStationId: pickupStationId || undefined,
         dropoffStationId: dropoffStationId || undefined,
@@ -212,12 +209,12 @@ export const PassengerInfoPage = () => {
           seatCode: d.seatCode,
           passengerName: ticketsDetails[d.seatCode].name.trim(),
           passengerPhone: ticketsDetails[d.seatCode].phone.trim(),
+          passengerIdNumber: ticketsDetails[d.seatCode].idNumber?.trim(), // Add passenger ID
           price: d.price,
         })),
       });
 
-      toast({
-        title: 'Đang giữ vé cho bạn!',
+      toast.success('Đang giữ vé cho bạn!', {
         description: `Mã đặt vé: #${booking.code}. Vé sẽ được giữ trong 15 phút, vui lòng thanh toán để hoàn tất.`,
       });
 
@@ -232,10 +229,8 @@ export const PassengerInfoPage = () => {
 
       navigate(`/booking/confirmation/${booking.id}`);
     } catch {
-      toast({
-        title: 'Đặt vé thất bại',
+      toast.error('Đặt vé thất bại', {
         description: 'Có lỗi xảy ra, vui lòng thử lại.',
-        variant: 'destructive',
       });
     } finally {
       setIsSubmitting(false);
@@ -306,6 +301,17 @@ export const PassengerInfoPage = () => {
                   </div>
                 </div>
               )}
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="contactId">CMND/CCCD/Hộ chiếu</Label>
+                  <Input
+                    id="contactId"
+                    placeholder="Nhập số giấy tờ tùy thân"
+                    value={contactIdNumber}
+                    onChange={(e) => setContactIdNumber(e.target.value)}
+                  />
+                </div>
+              </div>
             </CardContent>
           </Card>
 
@@ -343,11 +349,10 @@ export const PassengerInfoPage = () => {
                           [seat.seatCode]: {
                             name: contactName,
                             phone: contactPhone,
+                            idNumber: contactIdNumber,
                           },
                         }));
-                        toast({
-                          title: `Đã sao chép cho ghế ${seat.seatCode}`,
-                        });
+                        toast.success(`Đã sao chép cho ghế ${seat.seatCode}`);
                       }}
                     >
                       Sao chép từ người đặt
@@ -368,6 +373,16 @@ export const PassengerInfoPage = () => {
                         value={ticketsDetails[seat.seatCode]?.phone || ''}
                         onChange={(e) => handleTicketChange(seat.seatCode, 'phone', e.target.value)}
                         placeholder="SĐT hành khách"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>CMND/CCCD</Label>
+                      <Input
+                        value={ticketsDetails[seat.seatCode]?.idNumber || ''}
+                        onChange={(e) =>
+                          handleTicketChange(seat.seatCode, 'idNumber', e.target.value)
+                        }
+                        placeholder="Số giấy tờ tùy thân"
                       />
                     </div>
                   </div>

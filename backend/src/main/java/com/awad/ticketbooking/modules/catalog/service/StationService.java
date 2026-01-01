@@ -33,6 +33,12 @@ public class StationService {
         return stationRepository.findAll(pageable);
     }
 
+    @Transactional(readOnly = true)
+    public org.springframework.data.domain.Page<Station> searchStations(String query,
+            org.springframework.data.domain.Pageable pageable) {
+        return stationRepository.search(query, pageable);
+    }
+
     @Transactional
     public Station updateStation(java.util.UUID id, CreateStationRequest request) {
         Station station = stationRepository.findById(id)

@@ -26,6 +26,8 @@ public class CreateBookingRequest {
     @NotBlank(message = "Passenger phone is required")
     private String passengerPhone;
 
+    private String passengerIdNumber;
+
     // Email for guest users (optional if logged in)
     @Email(message = "Invalid email format")
     private String passengerEmail;

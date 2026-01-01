@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { FormField } from '@/components/ui/form-field';
+import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import type { SeatType } from '@/features/catalog/types';
 
@@ -54,20 +54,24 @@ export function PassengerForm({
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField label="Họ và tên hành khách" error={errors?.passengerName}>
+          <Field data-invalid={!!errors?.passengerName}>
+            <FieldLabel>Họ và tên hành khách</FieldLabel>
             <Input
               placeholder="Nguyễn Văn A"
               value={values.passengerName}
               onChange={(e) => onChange({ ...values, passengerName: e.target.value })}
             />
-          </FormField>
-          <FormField label="Số điện thoại" error={errors?.passengerPhone}>
+            <FieldError>{errors?.passengerName}</FieldError>
+          </Field>
+          <Field data-invalid={!!errors?.passengerPhone}>
+            <FieldLabel>Số điện thoại</FieldLabel>
             <Input
               placeholder="0901234567"
               value={values.passengerPhone}
               onChange={(e) => onChange({ ...values, passengerPhone: e.target.value })}
             />
-          </FormField>
+            <FieldError>{errors?.passengerPhone}</FieldError>
+          </Field>
         </div>
       </CardContent>
     </Card>

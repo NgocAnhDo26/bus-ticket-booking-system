@@ -55,6 +55,7 @@ public class SecurityConfig {
 
                         // Auth and public APIs
                         .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/v1/ai/**").permitAll() // AI Chat endpoint
                         .requestMatchers("/ws/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/health").permitAll()
                         .requestMatchers("/api/trips/**").permitAll()
@@ -63,7 +64,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/operators/**").permitAll()
                         .requestMatchers("/api/buses/**").permitAll()
                         .requestMatchers("/api/stations/**").permitAll()
-                        .requestMatchers("/api/admin/**").permitAll()
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
 
                         // Bus Layouts
                         .requestMatchers(HttpMethod.GET, "/api/bus-layouts/**").permitAll()
@@ -72,6 +73,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.DELETE, "/api/bus-layouts/**").hasRole("ADMIN")
 
                         // Bookings
+                        .requestMatchers("/api/bookings/admin").hasRole("ADMIN") // Admin listing
                         .requestMatchers("/api/bookings/seats/**").permitAll() // Lock/Unlock/View seats
                         .requestMatchers(HttpMethod.GET, "/api/bookings/**").permitAll() // View booking details
                                                                                          // (confirmation)
@@ -83,6 +85,9 @@ public class SecurityConfig {
                         // Payments
                         .requestMatchers(HttpMethod.POST, "/api/payments").permitAll() // Create payment link
                         .requestMatchers(HttpMethod.GET, "/api/payments/**").permitAll() // Get payment details
+
+                        .requestMatchers(HttpMethod.POST, "/api/bookings/tickets/*/check-in").hasRole("ADMIN") // Check-in
+                                                                                                               // passenger
 
                         // Webhooks (no auth - signature verified internally)
                         .requestMatchers("/api/webhooks/**").permitAll()

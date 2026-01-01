@@ -14,4 +14,6 @@ public interface TicketRepository extends JpaRepository<Ticket, UUID> {
     List<String> findBookedSeatCodesByTripId(@Param("tripId") UUID tripId);
 
     List<Ticket> findByBookingTripIdAndSeatCodeIn(UUID tripId, List<String> seatCodes);
+
+    List<Ticket> findAllByBookingTripId(UUID tripId);
 }

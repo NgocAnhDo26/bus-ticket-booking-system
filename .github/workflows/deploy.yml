@@ -47,20 +47,42 @@ jobs:
     needs: build-backend
     runs-on: ubuntu-latest
     if: needs.build-backend.result == 'success'
+    # Note: If you get "i/o timeout" errors, check:
+    # 1. EC2 Security Group allows SSH (port 22) from GitHub Actions IPs
+    #    (GitHub Actions IPs change - consider using AWS Systems Manager or a bastion host)
+    # 2. EC2 instance is running and accessible
+    # 3. EC2_HOST, EC2_USER, and EC2_SSH_KEY secrets are correctly configured
     steps:
       - uses: actions/download-artifact@v4
         with:
           name: backend-jar
           path: artifact
 
+      - name: Setup SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -p ${{ secrets.EC2_SSH_PORT || 22 }} -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
+
+      - name: Test SSH connection
+        run: |
+          ssh -i ~/.ssh/deploy_key \
+            -o StrictHostKeyChecking=no \
+            -o ConnectTimeout=30 \
+            -p ${{ secrets.EC2_SSH_PORT || 22 }} \
+            ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} \
+            "echo 'SSH connection successful!' && whoami"
+
       - name: Copy jar to EC2
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          source: artifact/${{ env.JAR_NAME }}
-          target: ${{ secrets.EC2_DEPLOY_PATH }}
+        run: |
+          scp -i ~/.ssh/deploy_key \
+            -o StrictHostKeyChecking=no \
+            -o ConnectTimeout=60 \
+            -P ${{ secrets.EC2_SSH_PORT || 22 }} \
+            artifact/${{ env.JAR_NAME }} \
+            ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:${{ secrets.EC2_DEPLOY_PATH }}/${{ env.JAR_NAME }}
+          echo "JAR file copied successfully"
 
       - name: Verify file was copied
         uses: appleboy/ssh-action@v1.2.0
@@ -68,6 +90,9 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
+          port: ${{ secrets.EC2_SSH_PORT || 22 }}
+          timeout: 30s
+          command_timeout: 10s
           script: |
             echo "Verifying JAR file was copied..."
             DEPLOY_PATH="${{ secrets.EC2_DEPLOY_PATH }}"
@@ -92,6 +117,9 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
+          port: ${{ secrets.EC2_SSH_PORT || 22 }}
+          timeout: 30s
+          command_timeout: 10s
           script: |
             set -euo pipefail
             DEPLOY_PATH="${{ secrets.EC2_DEPLOY_PATH }}"
