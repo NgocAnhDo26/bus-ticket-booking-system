@@ -10,6 +10,7 @@ import java.util.UUID;
 @Builder
 public class RouteResponse {
     private UUID id;
+    private String name;
     private StationInfo originStation;
     private StationInfo destinationStation;
     private int durationMinutes;
@@ -34,5 +35,7 @@ public class RouteResponse {
         private int stopOrder;
         private int durationMinutesFromOrigin;
         private String stopType;
+        private String customName;
+        private String customAddress;
     }
 }

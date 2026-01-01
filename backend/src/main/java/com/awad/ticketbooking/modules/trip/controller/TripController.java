@@ -81,4 +81,11 @@ public class TripController {
             @RequestParam com.awad.ticketbooking.common.enums.TripStatus status) {
         return ResponseEntity.ok(tripService.updateTripStatus(id, status));
     }
+
+    @GetMapping("/{id}/can-update-recurrence")
+    @Operation(summary = "Check recurrence update eligibility", description = "Checks if recurrence configuration can be updated. Returns false if there are future bookings.")
+    public ResponseEntity<com.awad.ticketbooking.modules.trip.service.TripService.RecurrenceUpdateCheck> checkCanUpdateRecurrence(
+            @PathVariable UUID id) {
+        return ResponseEntity.ok(tripService.checkCanUpdateRecurrence(id));
+    }
 }

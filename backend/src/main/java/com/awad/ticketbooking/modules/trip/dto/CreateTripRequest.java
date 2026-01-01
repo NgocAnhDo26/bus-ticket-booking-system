@@ -23,4 +23,9 @@ public class CreateTripRequest {
 
     @NotNull
     private java.util.List<PricingRequest> pricings;
+
+    // New fields for recurrence and stops
+    private String tripType; // SINGLE, RECURRING
+    private RecurrenceDto recurrence;
+    private java.util.List<TripStopDto> stops;
 }

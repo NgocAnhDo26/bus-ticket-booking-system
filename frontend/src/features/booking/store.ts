@@ -77,7 +77,25 @@ export const useBookingStore = create<BookingState>()(
           try {
             // 1. Load initial status
             const initialStatus = await bookingApi.getSeatStatus(tripId);
-            set({ seatStatusMap: initialStatus });
+
+            // Restore selection if locked by current user/guest
+            const user = useAuthStore.getState().user;
+            const guestId = sessionStorage.getItem('guest_id');
+            const mySelectedSeats: string[] = [];
+
+            Object.entries(initialStatus).forEach(([seatCode, status]) => {
+              if (
+                (user && status === `LOCKED:${user.id}`) ||
+                (!user && guestId && status === `LOCKED:${guestId}`)
+              ) {
+                mySelectedSeats.push(seatCode);
+              }
+            });
+
+            set({
+              seatStatusMap: initialStatus,
+              selectedSeats: mySelectedSeats, // Auto-select my locked seats
+            });
 
             // 2. Connect WebSocket
             // In vite, if global variable 'global' is not defined, sockjs might fail.

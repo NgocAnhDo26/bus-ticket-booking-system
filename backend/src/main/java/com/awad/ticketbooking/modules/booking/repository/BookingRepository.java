@@ -110,6 +110,14 @@ public interface BookingRepository extends JpaRepository<Booking, java.util.UUID
 
         boolean existsByTripId(java.util.UUID tripId);
 
+        // Count future bookings for trips generated from a schedule
+        @Query("SELECT COUNT(b) FROM Booking b WHERE b.trip.tripSchedule.id = :scheduleId AND b.trip.departureTime > :now")
+        long countFutureBookingsByScheduleId(@Param("scheduleId") java.util.UUID scheduleId, @Param("now") Instant now);
+
+        // Count future bookings for a specific trip
+        @Query("SELECT COUNT(b) FROM Booking b WHERE b.trip.id = :tripId AND b.trip.departureTime > :now")
+        long countFutureBookingsByTripId(@Param("tripId") java.util.UUID tripId, @Param("now") Instant now);
+
         boolean existsByTripIdAndTicketsSeatCodeAndStatusNot(java.util.UUID tripId, String seatCode,
                         BookingStatus status);
 

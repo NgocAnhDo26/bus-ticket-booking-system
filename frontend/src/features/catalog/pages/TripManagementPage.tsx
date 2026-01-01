@@ -1,7 +1,6 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useFieldArray, useForm, useWatch } from 'react-hook-form';
+import { useCallback, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
-import { zodResolver } from '@hookform/resolvers/zod';
 import { useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
 import { format } from 'date-fns';
@@ -9,14 +8,13 @@ import {
   ArrowRight,
   Calendar,
   Clock,
-  MapPin,
   MoreHorizontal,
   Pencil,
   Plus,
   Trash2,
   Users,
 } from 'lucide-react';
-import * as z from 'zod';
+import { toast } from 'sonner';
 
 import { type ColumnDef, GenericTable } from '@/components/common';
 import {
@@ -39,181 +37,60 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Field, FieldError, FieldLabel } from '@/components/ui/field';
-import { Input } from '@/components/ui/input';
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from '@/components/ui/sheet';
 
 import { TripPassengersDialog } from '../components/TripPassengersDialog';
-import { TripStopsDialog } from '../components/TripStopsDialog';
 import {
-  useBuses,
-  useCreateTrip,
   useDeleteTrip,
-  useRoutes,
   useTrips,
-  useUpdateTrip,
+  // Added useStations hook
 } from '../hooks';
-import { SeatType, type Trip } from '../types';
-
-const formSchema = z.object({
-  routeId: z.string().min(1, 'Vui lòng chọn tuyến đường'),
-  busId: z.string().min(1, 'Vui lòng chọn xe'),
-  departureTime: z.string().min(1, 'Thời gian đi là bắt buộc'),
-  arrivalTime: z.string().min(1, 'Thời gian đến là bắt buộc'),
-  pricings: z.array(
-    z.object({
-      seatType: z.enum([SeatType.NORMAL, SeatType.VIP]),
-      price: z.number().min(0, 'Giá vé phải lớn hơn hoặc bằng 0'),
-    }),
-  ),
-});
+import { type Trip } from '../types';
 
 export const TripManagementPage = () => {
   const queryClient = useQueryClient();
-  const [isOpen, setIsOpen] = useState(false);
   const { data: trips, isLoading: isLoadingTrips } = useTrips();
-  const { data: routes } = useRoutes();
-  const { data: buses } = useBuses();
-  const createTrip = useCreateTrip();
-  const updateTrip = useUpdateTrip();
   const deleteTrip = useDeleteTrip();
-  const [editingTrip, setEditingTrip] = useState<Trip | null>(null);
-  const [deletingTrip, setDeletingTrip] = useState<Trip | null>(null);
-  const [managingStopsTrip, setManagingStopsTrip] = useState<Trip | null>(null);
+  const navigate = useNavigate();
+
+  // Dialog states
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [selectedTrip, setSelectedTrip] = useState<Trip | null>(null);
+
+  // Other dialog states
   const [viewingPassengersTrip, setViewingPassengersTrip] = useState<Trip | null>(null);
+  const [forceDeleteId, setForceDeleteId] = useState<string | null>(null);
 
-  const {
-    register,
-    control,
-    handleSubmit,
-    reset,
-    setValue,
-    formState: { errors },
-  } = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      routeId: '',
-      busId: '',
-      departureTime: '',
-      arrivalTime: '',
-      pricings: [
-        { seatType: SeatType.NORMAL, price: 0 },
-        { seatType: SeatType.VIP, price: 0 },
-      ],
-    },
-  });
-  const { fields } = useFieldArray({
-    control,
-    name: 'pricings',
-  });
-
-  const routeId = useWatch({ control, name: 'routeId' });
-  const departureTime = useWatch({ control, name: 'departureTime' });
-
-  useEffect(() => {
-    if (routeId && departureTime && routes) {
-      const selectedRoute = routes.find((r) => r.id === routeId);
-      if (selectedRoute) {
-        const start = new Date(departureTime);
-        const end = new Date(start.getTime() + selectedRoute.durationMinutes * 60000);
-
-        const offset = end.getTimezoneOffset() * 60000;
-        const localISOTime = new Date(end.getTime() - offset).toISOString().slice(0, 16);
-
-        setValue('arrivalTime', localISOTime);
-      }
-    }
-  }, [routeId, departureTime, routes, setValue]);
-
-  const onSubmit = (values: z.infer<typeof formSchema>) => {
-    const departureDate = new Date(values.departureTime);
-    const arrivalDate = new Date(values.arrivalTime);
-
-    const payload = {
-      ...values,
-      departureTime: departureDate.toISOString(),
-      arrivalTime: arrivalDate.toISOString(),
-    };
-
-    if (editingTrip) {
-      updateTrip.mutate(
-        { id: editingTrip.id, data: payload },
-        {
-          onSuccess: () => {
-            setIsOpen(false);
-            setEditingTrip(null);
-            reset();
-          },
-          onError: (error: Error) => {
-            const axiosError = error as AxiosError<string>;
-            const message = axiosError.response?.data || error.message || 'Có lỗi xảy ra';
-            alert('Lỗi cập nhật: ' + message);
-          },
-        },
-      );
-    } else {
-      createTrip.mutate(payload, {
-        onSuccess: () => {
-          setIsOpen(false);
-          reset();
-        },
-        onError: (error: Error) => {
-          const axiosError = error as AxiosError<string>;
-          const message = axiosError.response?.data || error.message || 'Có lỗi xảy ra';
-          alert('Lỗi tạo chuyến đi: ' + message);
-        },
-      });
-    }
-  };
+  // Handlers
 
   const handleEdit = useCallback(
     (trip: Trip) => {
-      setEditingTrip(trip);
-
-      // Helper to convert UTC string to Local ISO string for datetime-local input
-      const toLocalISO = (dateStr: string) => {
-        const date = new Date(dateStr);
-        const offset = date.getTimezoneOffset() * 60000;
-        return new Date(date.getTime() - offset).toISOString().slice(0, 16);
-      };
-
-      reset({
-        routeId: trip.route.id,
-        busId: trip.bus.id,
-        departureTime: toLocalISO(trip.departureTime),
-        arrivalTime: toLocalISO(trip.arrivalTime),
-        pricings: trip.tripPricings.map((p) => ({
-          seatType: p.seatType,
-          price: p.price,
-        })),
-      });
-      setIsOpen(true);
+      navigate(`/admin/catalog/trips/edit/${trip.id}`);
     },
-    [reset],
+    [navigate],
   );
 
-  const [forceDeleteId, setForceDeleteId] = useState<string | null>(null);
-
   const handleDelete = () => {
-    if (deletingTrip) {
+    if (selectedTrip) {
       deleteTrip.mutate(
-        { id: deletingTrip.id },
+        { id: selectedTrip.id },
         {
           onSuccess: () => {
-            setDeletingTrip(null);
+            setSelectedTrip(null);
+            setIsDeleteDialogOpen(false);
+            toast.success('Chuyến đi đã được xóa thành công!');
           },
           onError: (error: Error) => {
             const axiosError = error as AxiosError;
             if (axiosError.response?.status === 409) {
-              setForceDeleteId(deletingTrip.id);
-              setDeletingTrip(null);
+              setForceDeleteId(selectedTrip.id);
+              setSelectedTrip(null);
+              setIsDeleteDialogOpen(false);
+            } else {
+              toast.error('Xóa chuyến đi thất bại.', {
+                description: axiosError.response?.data
+                  ? (axiosError.response.data as { message: string }).message
+                  : axiosError.message,
+              });
             }
           },
         },
@@ -229,12 +106,22 @@ export const TripManagementPage = () => {
           onSuccess: () => {
             setForceDeleteId(null);
             queryClient.invalidateQueries({ queryKey: ['trips'] });
+            toast.success('Chuyến đi và các vé liên quan đã được xóa thành công!');
+          },
+          onError: (error: Error) => {
+            const axiosError = error as AxiosError;
+            toast.error('Xóa bắt buộc chuyến đi thất bại.', {
+              description: axiosError.response?.data
+                ? (axiosError.response.data as { message: string }).message
+                : axiosError.message,
+            });
           },
         },
       );
     }
   };
 
+  // Pagination & Sorting logic
   const [pageIndex, setPageIndex] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [sorting, setSorting] = useState<{
@@ -357,20 +244,20 @@ export const TripManagementPage = () => {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-fit">
                 <DropdownMenuLabel>Thao tác</DropdownMenuLabel>
-                <DropdownMenuItem onClick={() => setManagingStopsTrip(trip)}>
-                  <MapPin className="mr-2 h-4 w-4" />
-                  Quản lý trạm
-                </DropdownMenuItem>
+
                 <DropdownMenuItem onClick={() => setViewingPassengersTrip(trip)}>
                   <Users className="mr-2 h-4 w-4" />
                   Danh sách hành khách
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => handleEdit(trip)}>
                   <Pencil className="mr-2 h-4 w-4" />
-                  Sửa
+                  Sửa thông tin
                 </DropdownMenuItem>
                 <DropdownMenuItem
-                  onClick={() => setDeletingTrip(trip)}
+                  onClick={() => {
+                    setSelectedTrip(trip);
+                    setIsDeleteDialogOpen(true);
+                  }}
                   className="text-destructive focus:text-destructive"
                 >
                   <Trash2 className="mr-2 h-4 w-4" />
@@ -387,119 +274,17 @@ export const TripManagementPage = () => {
 
   return (
     <div className="flex flex-col gap-8 p-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold tracking-tight">Quản lý Chuyến đi</h1>
-        <Sheet
-          open={isOpen}
-          onOpenChange={(open: boolean) => {
-            setIsOpen(open);
-            if (!open) {
-              setEditingTrip(null);
-              reset({
-                routeId: '',
-                busId: '',
-                departureTime: '',
-                arrivalTime: '',
-                pricings: [
-                  { seatType: SeatType.NORMAL, price: 0 },
-                  { seatType: SeatType.VIP, price: 0 },
-                ],
-              });
-            }
-          }}
-        >
-          <SheetTrigger asChild>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" /> Thêm Chuyến đi
-            </Button>
-          </SheetTrigger>
-          <SheetContent className="overflow-y-auto max-h-screen">
-            <SheetHeader>
-              <SheetTitle>{editingTrip ? 'Cập nhật Chuyến đi' : 'Thêm Chuyến đi mới'}</SheetTitle>
-              <SheetDescription>Nhập thông tin chi tiết về chuyến đi mới.</SheetDescription>
-            </SheetHeader>
-            <div className="py-4">
-              <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                <Field>
-                  <FieldLabel>Tuyến đường</FieldLabel>
-                  <select
-                    className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                    {...register('routeId')}
-                  >
-                    <option value="">Chọn tuyến đường...</option>
-                    {routes?.map((route) => (
-                      <option key={route.id} value={route.id}>
-                        {route.originStation.name} - {route.destinationStation.name}
-                      </option>
-                    ))}
-                  </select>
-                  <FieldError>{errors.routeId?.message}</FieldError>
-                </Field>
-                <Field>
-                  <FieldLabel>Xe</FieldLabel>
-                  <select
-                    className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                    {...register('busId')}
-                  >
-                    <option value="">Chọn xe...</option>
-                    {buses?.map((bus) => (
-                      <option key={bus.id} value={bus.id}>
-                        {bus.plateNumber} ({bus.operator.name})
-                      </option>
-                    ))}
-                  </select>
-                  <FieldError>{errors.busId?.message}</FieldError>
-                </Field>
-                <Field>
-                  <FieldLabel>Thời gian đi</FieldLabel>
-                  <Input type="datetime-local" {...register('departureTime')} />
-                  <FieldError>{errors.departureTime?.message}</FieldError>
-                </Field>
-                <Field>
-                  <FieldLabel>Thời gian đến (Tự động tính)</FieldLabel>
-                  <Input
-                    type="datetime-local"
-                    {...register('arrivalTime')}
-                    readOnly
-                    className="bg-muted"
-                  />
-                  <FieldError>{errors.arrivalTime?.message}</FieldError>
-                </Field>
-
-                <div className="space-y-2">
-                  <h3 className="text-sm font-medium">Giá vé</h3>
-                  {fields.map((field, index) => (
-                    <div key={field.id} className="flex gap-2 items-end">
-                      <Field className="flex-1">
-                        <FieldLabel>{`Loại ghế: ${field.seatType}`}</FieldLabel>
-                        <Input
-                          type="number"
-                          {...register(`pricings.${index}.price`, {
-                            valueAsNumber: true,
-                          })}
-                        />
-                        <FieldError>{errors.pricings?.[index]?.price?.message}</FieldError>
-                      </Field>
-                      <input type="hidden" {...register(`pricings.${index}.seatType`)} />
-                    </div>
-                  ))}
-                </div>
-
-                <Button
-                  type="submit"
-                  className="w-full"
-                  disabled={createTrip.isPending || updateTrip.isPending}
-                >
-                  {createTrip.isPending || updateTrip.isPending
-                    ? 'Đang xử lý...'
-                    : editingTrip
-                      ? 'Cập nhật'
-                      : 'Tạo Chuyến đi'}
-                </Button>
-              </form>
-            </div>
-          </SheetContent>
-        </Sheet>
+      <div className="mb-6 flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Quản lý Chuyến xe</h1>
+          <p className="text-muted-foreground">
+            Quản lý lịch trình, giá vé và thông tin chuyến xe.
+          </p>
+        </div>
+        <Button onClick={() => navigate('/admin/catalog/trips/create')}>
+          <Plus className="mr-2 h-4 w-4" />
+          Thêm Chuyến xe
+        </Button>
       </div>
 
       <Card>
@@ -535,10 +320,8 @@ export const TripManagementPage = () => {
         </CardContent>
       </Card>
 
-      <AlertDialog
-        open={!!deletingTrip}
-        onOpenChange={(open: boolean) => !open && setDeletingTrip(null)}
-      >
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Bạn có chắc chắn muốn xóa?</AlertDialogTitle>
@@ -558,6 +341,7 @@ export const TripManagementPage = () => {
         </AlertDialogContent>
       </AlertDialog>
 
+      {/* Force Delete Confirmation */}
       <AlertDialog
         open={!!forceDeleteId}
         onOpenChange={(open: boolean) => !open && setForceDeleteId(null)}
@@ -582,12 +366,7 @@ export const TripManagementPage = () => {
         </AlertDialogContent>
       </AlertDialog>
 
-      <TripStopsDialog
-        trip={managingStopsTrip}
-        open={!!managingStopsTrip}
-        onOpenChange={(open: boolean) => !open && setManagingStopsTrip(null)}
-      />
-
+      {/* Passengers List Dialog */}
       <TripPassengersDialog
         trip={viewingPassengersTrip}
         open={!!viewingPassengersTrip}

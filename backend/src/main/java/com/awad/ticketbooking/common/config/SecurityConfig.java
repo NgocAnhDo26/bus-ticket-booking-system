@@ -87,7 +87,8 @@ public class SecurityConfig {
 
                         // Reviews
                         .requestMatchers(HttpMethod.GET, "/api/reviews/**").permitAll() // View reviews (public)
-                        // POST /api/reviews requires authentication and PASSENGER role (handled by @PreAuthorize)
+                        // POST /api/reviews requires authentication and PASSENGER role (handled by
+                        // @PreAuthorize)
 
                         // Webhooks (no auth - signature verified internally)
                         .requestMatchers("/api/webhooks/**").permitAll()

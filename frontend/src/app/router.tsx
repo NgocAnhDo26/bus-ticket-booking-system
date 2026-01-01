@@ -20,8 +20,10 @@ import { BusLayoutCreatePage, BusLayoutManagementPage } from '@/features/bus-lay
 import {
   BusManagementPage,
   OperatorManagementPage,
+  RouteFormPage,
   RouteManagementPage,
   StationManagementPage,
+  TripFormPage,
   TripManagementPage,
 } from '@/features/catalog';
 import { UserDashboardPage } from '@/features/dashboard';
@@ -148,8 +150,24 @@ export const router = createBrowserRouter([
             element: <RouteManagementPage />,
           },
           {
+            path: '/admin/catalog/trips/create',
+            element: <TripFormPage />,
+          },
+          {
+            path: '/admin/catalog/trips/edit/:id',
+            element: <TripFormPage />,
+          },
+          {
             path: '/admin/catalog/trips',
             element: <TripManagementPage />,
+          },
+          {
+            path: '/admin/catalog/routes/create',
+            element: <RouteFormPage />,
+          },
+          {
+            path: '/admin/catalog/routes/edit/:id',
+            element: <RouteFormPage />,
           },
           {
             path: '/admin/catalog/layouts',

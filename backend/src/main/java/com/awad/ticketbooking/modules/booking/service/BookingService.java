@@ -115,112 +115,102 @@ public class BookingService {
                 booking.setStatus(BookingStatus.PENDING);
 
                 // Validate Pickup/Dropoff
-                Station pickupStation = null;
-                int pickupOrder = -1; // -1 for undefined, 0 for Origin
-
-                if (request.getPickupStationId() != null) {
-                        // Check if it is Origin
-                        if (request.getPickupStationId().equals(trip.getRoute().getOriginStation().getId())) {
-                                pickupStation = trip.getRoute().getOriginStation();
-                                pickupOrder = 0;
-                        } else {
-                                // Check in stops (TripStops first, then RouteStops)
-                                java.util.stream.Stream<? extends Object> stopsStream;
-                                if (trip.getTripStops() != null && !trip.getTripStops().isEmpty()) {
-                                        stopsStream = trip.getTripStops().stream();
-                                } else {
-                                        stopsStream = trip.getRoute().getStops().stream();
-                                }
-
-                                var stopObj = stopsStream
-                                                .filter(s -> {
-                                                        if (s instanceof com.awad.ticketbooking.modules.trip.entity.TripStop) {
-                                                                com.awad.ticketbooking.modules.trip.entity.TripStop ts = (com.awad.ticketbooking.modules.trip.entity.TripStop) s;
-                                                                return ts.getStation().getId()
-                                                                                .equals(request.getPickupStationId()) &&
-                                                                                (ts.getStopType() == com.awad.ticketbooking.common.enums.StopType.PICKUP
-                                                                                                || ts.getStopType() == com.awad.ticketbooking.common.enums.StopType.BOTH);
-                                                        } else {
-                                                                com.awad.ticketbooking.modules.catalog.entity.RouteStop rs = (com.awad.ticketbooking.modules.catalog.entity.RouteStop) s;
-                                                                return rs.getStation().getId()
-                                                                                .equals(request.getPickupStationId()) &&
-                                                                                (rs.getStopType() == com.awad.ticketbooking.common.enums.StopType.PICKUP
-                                                                                                || rs.getStopType() == com.awad.ticketbooking.common.enums.StopType.BOTH);
-                                                        }
-                                                })
-                                                .findFirst()
-                                                .orElseThrow(() -> new RuntimeException(
-                                                                "Invalid pickup station for this route"));
-
-                                if (stopObj instanceof com.awad.ticketbooking.modules.trip.entity.TripStop) {
-                                        com.awad.ticketbooking.modules.trip.entity.TripStop ts = (com.awad.ticketbooking.modules.trip.entity.TripStop) stopObj;
-                                        pickupStation = ts.getStation();
-                                        pickupOrder = ts.getStopOrder();
-                                } else {
-                                        com.awad.ticketbooking.modules.catalog.entity.RouteStop rs = (com.awad.ticketbooking.modules.catalog.entity.RouteStop) stopObj;
-                                        pickupStation = rs.getStation();
-                                        pickupOrder = rs.getStopOrder();
-                                }
-                        }
-                        booking.setPickupStation(pickupStation);
-                } else {
-                        pickupStation = trip.getRoute().getOriginStation();
-                        pickupOrder = 0;
-                        booking.setPickupStation(pickupStation);
-                }
-
-                Station dropoffStation = null;
+                com.awad.ticketbooking.modules.trip.entity.TripStop pickupStop = null;
+                com.awad.ticketbooking.modules.trip.entity.TripStop dropoffStop = null;
+                int pickupOrder = -1;
                 int dropoffOrder = Integer.MAX_VALUE;
 
-                if (request.getDropoffStationId() != null) {
-                        // Check if it is Destination
-                        if (request.getDropoffStationId().equals(trip.getRoute().getDestinationStation().getId())) {
-                                dropoffStation = trip.getRoute().getDestinationStation();
-                                dropoffOrder = Integer.MAX_VALUE;
+                // PICKUP LOGIC
+                if (request.getPickupTripStopId() != null) {
+                        // New flow: TripStop ID provided
+                        final UUID id = request.getPickupTripStopId();
+                        pickupStop = trip.getTripStops().stream()
+                                        .filter(ts -> ts.getId().equals(id))
+                                        .findFirst()
+                                        .orElseThrow(() -> new RuntimeException("Invalid pickup trip stop ID"));
+
+                        pickupOrder = pickupStop.getStopOrder();
+                        booking.setPickupTripStop(pickupStop);
+                        booking.setPickupStation(pickupStop.getStation());
+
+                } else if (request.getPickupStationId() != null) {
+                        // Legacy flow: Station ID provided
+                        final UUID id = request.getPickupStationId();
+
+                        if (trip.getRoute().getOriginStation().getId().equals(id)) {
+                                // Origin Station
+                                booking.setPickupStation(trip.getRoute().getOriginStation());
+                                pickupOrder = 0;
                         } else {
-                                // Check in stops
-                                java.util.stream.Stream<? extends Object> stopsStreamDrop;
-                                if (trip.getTripStops() != null && !trip.getTripStops().isEmpty()) {
-                                        stopsStreamDrop = trip.getTripStops().stream();
-                                } else {
-                                        stopsStreamDrop = trip.getRoute().getStops().stream();
-                                }
-
-                                var stopObj = stopsStreamDrop
-                                                .filter(s -> {
-                                                        if (s instanceof com.awad.ticketbooking.modules.trip.entity.TripStop) {
-                                                                com.awad.ticketbooking.modules.trip.entity.TripStop ts = (com.awad.ticketbooking.modules.trip.entity.TripStop) s;
-                                                                return ts.getStation().getId().equals(
-                                                                                request.getDropoffStationId()) &&
-                                                                                (ts.getStopType() == com.awad.ticketbooking.common.enums.StopType.DROPOFF
-                                                                                                || ts.getStopType() == com.awad.ticketbooking.common.enums.StopType.BOTH);
-                                                        } else {
-                                                                com.awad.ticketbooking.modules.catalog.entity.RouteStop rs = (com.awad.ticketbooking.modules.catalog.entity.RouteStop) s;
-                                                                return rs.getStation().getId().equals(
-                                                                                request.getDropoffStationId()) &&
-                                                                                (rs.getStopType() == com.awad.ticketbooking.common.enums.StopType.DROPOFF
-                                                                                                || rs.getStopType() == com.awad.ticketbooking.common.enums.StopType.BOTH);
-                                                        }
-                                                })
+                                // Find TripStop by Station ID
+                                pickupStop = trip.getTripStops().stream()
+                                                .filter(ts -> ts.getStation() != null
+                                                                && ts.getStation().getId().equals(id))
                                                 .findFirst()
-                                                .orElseThrow(() -> new RuntimeException(
-                                                                "Invalid dropoff station for this route"));
+                                                .orElse(null);
 
-                                if (stopObj instanceof com.awad.ticketbooking.modules.trip.entity.TripStop) {
-                                        com.awad.ticketbooking.modules.trip.entity.TripStop ts = (com.awad.ticketbooking.modules.trip.entity.TripStop) stopObj;
-                                        dropoffStation = ts.getStation();
-                                        dropoffOrder = ts.getStopOrder();
+                                if (pickupStop != null) {
+                                        pickupOrder = pickupStop.getStopOrder();
+                                        booking.setPickupTripStop(pickupStop);
+                                        booking.setPickupStation(pickupStop.getStation());
                                 } else {
-                                        com.awad.ticketbooking.modules.catalog.entity.RouteStop rs = (com.awad.ticketbooking.modules.catalog.entity.RouteStop) stopObj;
-                                        dropoffStation = rs.getStation();
-                                        dropoffOrder = rs.getStopOrder();
+                                        // If station ID valid but not a trip stop, fallback or error?
+                                        // For safety, let's treat it as valid station if found in route stops, but for
+                                        // Booking we prefer TripStop linkage
+                                        // If not found in TripStops, we can try RouteStops but we are deprecating that
+                                        // link in Booking entity (maybe?)
+                                        // For now, assume if user selected it, it should exist in TripStops or be
+                                        // Origin.
+                                        throw new RuntimeException("Invalid pickup station for this trip");
                                 }
                         }
-                        booking.setDropoffStation(dropoffStation);
                 } else {
-                        dropoffStation = trip.getRoute().getDestinationStation();
+                        // Default: Origin
+                        booking.setPickupStation(trip.getRoute().getOriginStation());
+                        pickupOrder = 0;
+                }
+
+                // DROPOFF LOGIC
+                if (request.getDropoffTripStopId() != null) {
+                        // New flow: TripStop ID provided
+                        final UUID id = request.getDropoffTripStopId();
+                        dropoffStop = trip.getTripStops().stream()
+                                        .filter(ts -> ts.getId().equals(id))
+                                        .findFirst()
+                                        .orElseThrow(() -> new RuntimeException("Invalid dropoff trip stop ID"));
+
+                        dropoffOrder = dropoffStop.getStopOrder();
+                        booking.setDropoffTripStop(dropoffStop);
+                        booking.setDropoffStation(dropoffStop.getStation());
+
+                } else if (request.getDropoffStationId() != null) {
+                        // Legacy flow: Station ID provided
+                        final UUID id = request.getDropoffStationId();
+
+                        if (trip.getRoute().getDestinationStation().getId().equals(id)) {
+                                // Destination Station
+                                booking.setDropoffStation(trip.getRoute().getDestinationStation());
+                                dropoffOrder = Integer.MAX_VALUE;
+                        } else {
+                                // Find TripStop by Station ID
+                                dropoffStop = trip.getTripStops().stream()
+                                                .filter(ts -> ts.getStation() != null
+                                                                && ts.getStation().getId().equals(id))
+                                                .findFirst()
+                                                .orElse(null);
+
+                                if (dropoffStop != null) {
+                                        dropoffOrder = dropoffStop.getStopOrder();
+                                        booking.setDropoffTripStop(dropoffStop);
+                                        booking.setDropoffStation(dropoffStop.getStation());
+                                } else {
+                                        throw new RuntimeException("Invalid dropoff station for this trip");
+                                }
+                        }
+                } else {
+                        // Default: Destination
+                        booking.setDropoffStation(trip.getRoute().getDestinationStation());
                         dropoffOrder = Integer.MAX_VALUE;
-                        booking.setDropoffStation(dropoffStation);
                 }
 
                 if (pickupOrder >= dropoffOrder) {
@@ -239,8 +229,9 @@ public class BookingService {
                 }
                 booking.setCode(bookingCode);
 
-                booking.setTickets(request.getTickets().stream()
-                                .map(ticketReq -> mapTicket(ticketReq, booking))
+                booking.setTickets(request.getTickets().stream().map(ticketReq ->
+
+                mapTicket(ticketReq, booking))
                                 .collect(Collectors.toList()));
 
                 BigDecimal calculatedTotal = booking.getTickets().stream()

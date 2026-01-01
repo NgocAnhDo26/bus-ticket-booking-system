@@ -30,6 +30,9 @@ public class Route implements Serializable {
     @JoinColumn(name = "destination_station_id", nullable = false)
     private Station destinationStation;
 
+    @Column(name = "name")
+    private String name;
+
     @Column(name = "duration_minutes")
     private Integer durationMinutes;
 

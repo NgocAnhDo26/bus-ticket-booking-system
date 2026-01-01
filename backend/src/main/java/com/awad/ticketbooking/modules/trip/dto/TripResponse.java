@@ -42,6 +42,9 @@ public class TripResponse {
         private int stopOrder;
         private int durationMinutesFromOrigin;
         private String stopType;
+        private Instant estimatedArrivalTime;
+        private BigDecimal normalPrice;
+        private BigDecimal vipPrice;
     }
 
     @Data

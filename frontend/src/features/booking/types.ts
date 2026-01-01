@@ -85,6 +85,8 @@ export type CreateBookingRequest = {
   passengerEmail?: string; // For guests to receive tickets
   pickupStationId?: string;
   dropoffStationId?: string;
+  pickupTripStopId?: string;
+  dropoffTripStopId?: string;
   totalPrice: number;
   tickets: (TicketRequest & { passengerIdNumber?: string })[];
 };
