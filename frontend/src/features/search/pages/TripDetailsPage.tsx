@@ -19,6 +19,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useGetTripById } from '@/features/api/trips/trips';
 import { BookingSeatMap } from '@/features/booking/components/BookingSeatMap';
 import { useBookedSeats } from '@/features/booking/hooks';
+import { useSearchTrips } from '@/features/catalog/hooks';
 import { TripPricingInfoSeatType } from '@/model/tripPricingInfoSeatType';
 import type { TripResponse } from '@/model/tripResponse';
 import { mapAmenityToVietnamese } from '@/utils/amenities';
@@ -36,6 +37,24 @@ export const TripDetailsPage = () => {
   });
 
   const { data: bookedSeats = [] } = useBookedSeats(tripId);
+
+  // Extract search parameters for related trips (before early returns to satisfy React Hooks rules)
+  const tempTripData = trip as TripResponse | undefined;
+  const tempDeparture = tempTripData?.departureTime ? new Date(tempTripData.departureTime) : null;
+  const tempRoute = tempTripData?.route;
+  const originCity = tempRoute?.originStation?.city;
+  const destinationCity = tempRoute?.destinationStation?.city;
+  const tripDate = tempDeparture ? format(tempDeparture, 'yyyy-MM-dd') : undefined;
+
+  // Fetch related trips (same route, same or similar dates)
+  // Hook is called at top level, but query is only enabled when we have required params
+  const { data: relatedTripsData, isLoading: isLoadingRelatedTrips } = useSearchTrips({
+    origin: originCity,
+    destination: destinationCity,
+    date: tripDate,
+    page: 0,
+    size: 5, // Show up to 5 related trips
+  });
 
   if (isLoading) {
     return (
@@ -76,6 +95,7 @@ export const TripDetailsPage = () => {
     );
   }
 
+  // At this point, we know trip exists (passed early returns)
   const tripData = trip as TripResponse;
   const departure = tripData.departureTime ? new Date(tripData.departureTime) : null;
   const arrival = tripData.arrivalTime ? new Date(tripData.arrivalTime) : null;
@@ -89,11 +109,15 @@ export const TripDetailsPage = () => {
   const amenities = bus?.amenities || [];
   const tripPricings = tripData.tripPricings || [];
 
+  const minPrice = tripPricings.length > 0 ? Math.min(...tripPricings.map((p) => p.price || 0)) : 0;
+  const maxPrice = tripPricings.length > 0 ? Math.max(...tripPricings.map((p) => p.price || 0)) : 0;
+
   // Sort stops by stopOrder
   const sortedStops = [...stops].sort((a, b) => (a.stopOrder || 0) - (b.stopOrder || 0));
 
-  const minPrice = tripPricings.length > 0 ? Math.min(...tripPricings.map((p) => p.price || 0)) : 0;
-  const maxPrice = tripPricings.length > 0 ? Math.max(...tripPricings.map((p) => p.price || 0)) : 0;
+  // Filter out the current trip and get related trips
+  const relatedTrips =
+    relatedTripsData?.trips.filter((t) => t.id !== tripData.id && t.id).slice(0, 4) || [];
 
   return (
     <div className="min-h-screen bg-background pb-12">
@@ -107,9 +131,9 @@ export const TripDetailsPage = () => {
           <h1 className="text-3xl font-bold text-foreground">Chi tiết chuyến xe</h1>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="space-y-4">
             {/* Route Information */}
             <Card>
               <CardHeader>
@@ -225,7 +249,7 @@ export const TripDetailsPage = () => {
                     <ArrowUpFromLine className="h-4 w-4 text-green-600" />
                     <h4 className="font-medium text-foreground">Điểm đón</h4>
                   </div>
-                  <div className="space-y-2 pl-6">
+                  <div className="space-y-2">
                     {/* Origin station is always a pickup point */}
                     <div className="flex items-center gap-3 p-2 rounded-lg bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-900">
                       <div className="w-2 h-2 rounded-full bg-green-600" />
@@ -274,7 +298,7 @@ export const TripDetailsPage = () => {
                     <ArrowDownToLine className="h-4 w-4 text-blue-600" />
                     <h4 className="font-medium text-foreground">Điểm trả</h4>
                   </div>
-                  <div className="space-y-2 pl-6">
+                  <div className="space-y-2">
                     {sortedStops
                       .filter((stop) => stop.stopType === 'DROPOFF' || stop.stopType === 'BOTH')
                       .map((stop) => (
@@ -436,9 +460,9 @@ export const TripDetailsPage = () => {
             )}
           </div>
 
-          {/* Sidebar - Booking Card */}
-          <div className="lg:col-span-1">
-            <Card className="sticky top-4">
+          <div className="flex flex-col gap-4">
+            {/* Booking card */}
+            <Card>
               <CardHeader>
                 <CardTitle>Đặt vé</CardTitle>
                 <CardDescription>Chọn chuyến xe này để tiếp tục</CardDescription>
@@ -504,6 +528,123 @@ export const TripDetailsPage = () => {
                   <p className="text-xs text-center text-muted-foreground">
                     Chuyến xe này không còn khả dụng để đặt vé
                   </p>
+                )}
+              </CardContent>
+            </Card>
+
+            <Separator className="my-4" />
+
+            {/* Relevant trips section */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Bus className="h-5 w-5 text-primary" />
+                  Chuyến xe liên quan
+                </CardTitle>
+                <CardDescription>
+                  Các chuyến xe khác trên cùng tuyến đường hoặc ngày tương tự
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {isLoadingRelatedTrips ? (
+                  <div className="space-y-4">
+                    {[1, 2, 3].map((i) => (
+                      <Skeleton key={i} className="h-32 w-full rounded-lg" />
+                    ))}
+                  </div>
+                ) : relatedTrips.length === 0 ? (
+                  <div className="text-center py-8">
+                    <p className="text-sm text-muted-foreground">
+                      Không có chuyến xe liên quan nào
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {relatedTrips.map((relatedTrip) => (
+                      <div
+                        key={relatedTrip.id}
+                        className="border rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
+                        onClick={() => navigate(`/trips/${relatedTrip.id}`)}
+                      >
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1 space-y-2">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-medium">
+                                {relatedTrip.bus.operator.name}
+                              </span>
+                              <Badge variant="outline" className="text-xs">
+                                {relatedTrip.bus.totalSeats} chỗ
+                              </Badge>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <div className="text-center">
+                                <p className="text-lg font-bold text-primary">
+                                  {format(new Date(relatedTrip.departureTime), 'HH:mm')}
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                  {relatedTrip.route.originStation.name}
+                                </p>
+                              </div>
+                              <div className="flex-1 flex flex-col items-center">
+                                <p className="text-xs text-muted-foreground">
+                                  {Math.floor(
+                                    differenceInMinutes(
+                                      new Date(relatedTrip.arrivalTime),
+                                      new Date(relatedTrip.departureTime),
+                                    ) / 60,
+                                  )}
+                                  h{' '}
+                                  {differenceInMinutes(
+                                    new Date(relatedTrip.arrivalTime),
+                                    new Date(relatedTrip.departureTime),
+                                  ) % 60}
+                                  m
+                                </p>
+                                <div className="w-full h-0.5 bg-border relative my-1">
+                                  <div className="absolute -top-0.5 left-0 w-1.5 h-1.5 rounded-full bg-primary" />
+                                  <div className="absolute -top-0.5 right-0 w-1.5 h-1.5 rounded-full bg-primary" />
+                                </div>
+                              </div>
+                              <div className="text-center">
+                                <p className="text-lg font-bold text-muted-foreground">
+                                  {format(new Date(relatedTrip.arrivalTime), 'HH:mm')}
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                  {relatedTrip.route.destinationStation.name}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                              <Calendar className="h-3 w-3" />
+                              <span>
+                                {format(new Date(relatedTrip.departureTime), 'dd/MM/yyyy')}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-xs text-muted-foreground mb-1">Giá từ</p>
+                            <p className="text-lg font-bold text-primary">
+                              {new Intl.NumberFormat('vi-VN', {
+                                style: 'currency',
+                                currency: 'VND',
+                              }).format(Math.min(...relatedTrip.tripPricings.map((p) => p.price)))}
+                            </p>
+                          </div>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full mt-3"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/trips/${relatedTrip.id}`);
+                          }}
+                        >
+                          Xem chi tiết
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
                 )}
               </CardContent>
             </Card>
