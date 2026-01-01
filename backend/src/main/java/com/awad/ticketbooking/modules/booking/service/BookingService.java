@@ -18,9 +18,11 @@ import com.awad.ticketbooking.modules.catalog.entity.Station;
 import com.awad.ticketbooking.modules.catalog.repository.StationRepository;
 import com.awad.ticketbooking.modules.trip.entity.Trip;
 import com.awad.ticketbooking.modules.trip.repository.TripRepository;
+import com.awad.ticketbooking.modules.booking.repository.BookingSpecification;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -380,6 +382,13 @@ public class BookingService {
         }
 
         @Transactional(readOnly = true)
+        public Page<BookingResponse> getAdminBookings(String search, List<BookingStatus> statuses,
+                        java.time.Instant startDate, java.time.Instant endDate, Pageable pageable) {
+                Specification<Booking> spec = BookingSpecification.withFilters(search, statuses, startDate, endDate);
+                return bookingRepository.findAll(spec, pageable).map(this::toBookingResponse);
+        }
+
+        @Transactional(readOnly = true)
         public List<String> getBookedSeatsForTrip(UUID tripId) {
                 return ticketRepository.findBookedSeatCodesByTripId(tripId);
         }
@@ -440,6 +449,62 @@ public class BookingService {
 
                 booking.setStatus(BookingStatus.CANCELLED);
                 return toBookingResponse(bookingRepository.save(booking));
+        }
+
+        @Transactional
+        public BookingResponse refundBooking(UUID bookingId) {
+                Booking booking = bookingRepository.findById(bookingId)
+                                .orElseThrow(() -> new RuntimeException("Booking not found"));
+
+                if (booking.getStatus() != BookingStatus.CONFIRMED) {
+                        // Allow refunding cancelled bookings if they were previously paid?
+                        // Ideally refund is for CONFIRMED. If CANCELLED, it might have been
+                        // auto-cancelled without refund.
+                        // Let's stick to CONFIRMED or CANCELLED (if manual refund is needed after
+                        // cancellation)
+                        // But requirements say "Process refunds: Handle refund requests". usually for
+                        // confirmed.
+                        // Safety: Ensure it's not already refunded or pending.
+                        if (booking.getStatus() == BookingStatus.REFUNDED) {
+                                throw new RuntimeException("Booking is already refunded");
+                        }
+                        if (booking.getStatus() == BookingStatus.PENDING) {
+                                throw new RuntimeException("Cannot refund a pending booking");
+                        }
+                }
+
+                // Delete tickets to release seats if not already released (e.g. if CONFIRMED)
+                if (!booking.getTickets().isEmpty()) {
+                        List<String> seatCodes = booking.getTickets().stream()
+                                        .map(Ticket::getSeatCode)
+                                        .collect(Collectors.toList());
+
+                        ticketRepository.deleteAll(booking.getTickets());
+                        booking.getTickets().clear();
+
+                        if (booking.getTrip() != null) {
+                                seatLockService.unlockSeatsForBooking(booking.getTrip().getId(), seatCodes);
+                        }
+                }
+
+                booking.setStatus(BookingStatus.REFUNDED);
+                Booking savedBooking = bookingRepository.save(booking);
+
+                // Determine email for notification
+                String recipientEmail = booking.getPassengerEmail();
+                if (recipientEmail == null && booking.getUser() != null) {
+                        recipientEmail = booking.getUser().getEmail();
+                }
+
+                // Send Refund Email (We can use a generic notification or create a new one. For
+                // now, log it)
+                // Ideally we should add sendRefundEmail to EmailService.
+                if (recipientEmail != null) {
+                        // TODO: Add specific refund email template
+                        // emailService.sendRefundNotification(booking, recipientEmail);
+                }
+
+                return toBookingResponse(savedBooking);
         }
 
         private Ticket mapTicket(TicketRequest ticketReq, Booking booking) {

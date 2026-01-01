@@ -4,6 +4,7 @@ import { Navigate, createBrowserRouter } from 'react-router-dom';
 import { ProtectedRoute, PublicRoute } from '@/components/common';
 import { DashboardLayout } from '@/components/layout';
 import { AdminDashboardLayout } from '@/components/layout/AdminLayout';
+import { BookingManagementPage } from '@/features/admin-booking';
 import {
   ActivationPage,
   ForgotPasswordPage,
@@ -115,6 +116,7 @@ export const router = createBrowserRouter([
         element: <AdminDashboardLayout />,
         children: [
           { path: '/admin/dashboard', element: <AdminDashboardPage /> },
+          { path: '/admin/bookings', element: <BookingManagementPage /> },
           {
             path: '/admin/catalog/stations',
             element: <StationManagementPage />,

@@ -60,7 +60,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/operators/**").permitAll()
                         .requestMatchers("/api/buses/**").permitAll()
                         .requestMatchers("/api/stations/**").permitAll()
-                        .requestMatchers("/api/admin/**").permitAll()
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
 
                         // Bus Layouts
                         .requestMatchers(HttpMethod.GET, "/api/bus-layouts/**").permitAll()
@@ -69,6 +69,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.DELETE, "/api/bus-layouts/**").hasRole("ADMIN")
 
                         // Bookings
+                        .requestMatchers("/api/bookings/admin").hasRole("ADMIN") // Admin listing
                         .requestMatchers("/api/bookings/seats/**").permitAll() // Lock/Unlock/View seats
                         .requestMatchers(HttpMethod.GET, "/api/bookings/**").permitAll() // View booking details
                                                                                          // (confirmation)
