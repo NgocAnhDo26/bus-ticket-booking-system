@@ -670,4 +670,15 @@ public class BookingService {
                                                 : null)
                                 .build();
         }
+
+        @Transactional
+        public BookingResponse checkInPassenger(UUID ticketId) {
+                Ticket ticket = ticketRepository.findById(ticketId)
+                                .orElseThrow(() -> new RuntimeException("Ticket not found"));
+
+                ticket.setBoarded(!ticket.isBoarded()); // Toggle status
+                ticketRepository.save(ticket);
+
+                return toBookingResponse(ticket.getBooking());
+        }
 }

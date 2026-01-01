@@ -304,3 +304,23 @@ export const useBusLayouts = () => {
     queryFn: fetchBusLayouts,
   });
 };
+
+export const useTripPassengers = (tripId: string | undefined) => {
+  return useQuery({
+    queryKey: ['tripPassengers', tripId],
+    queryFn: () => import('./api').then((mod) => mod.getTripPassengers(tripId!)),
+    enabled: !!tripId,
+  });
+};
+
+export const useUpdateTripStatus = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, status }: { id: string; status: string }) =>
+      import('./api').then((mod) => mod.updateTripStatus(id, status)),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['trips'] });
+      queryClient.invalidateQueries({ queryKey: ['trip', data.id] });
+    },
+  });
+};

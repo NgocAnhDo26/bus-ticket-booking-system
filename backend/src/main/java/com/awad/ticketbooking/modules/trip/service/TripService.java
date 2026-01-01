@@ -37,6 +37,7 @@ public class TripService {
     private final BusRepository busRepository;
     private final RouteRepository routeRepository;
     private final com.awad.ticketbooking.modules.booking.repository.BookingRepository bookingRepository;
+    private final com.awad.ticketbooking.modules.booking.repository.TicketRepository ticketRepository;
     private final com.awad.ticketbooking.modules.catalog.repository.StationRepository stationRepository;
 
     @Transactional
@@ -374,5 +375,38 @@ public class TripService {
         Trip trip = tripRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Trip not found")); // Should use custom exception
         return mapToResponse(trip);
+    }
+
+    @Transactional(readOnly = true)
+    public List<com.awad.ticketbooking.modules.trip.dto.TripPassengerResponse> getTripPassengers(
+            java.util.UUID tripId) {
+        List<com.awad.ticketbooking.modules.booking.entity.Ticket> tickets = ticketRepository
+                .findAllByBookingTripId(tripId);
+
+        return tickets.stream().map(ticket -> com.awad.ticketbooking.modules.trip.dto.TripPassengerResponse.builder()
+                .ticketId(ticket.getId())
+                .bookingCode(ticket.getBooking().getCode())
+                .passengerName(ticket.getPassengerName())
+                .passengerPhone(ticket.getPassengerPhone())
+                .seatCode(ticket.getSeatCode())
+                .isBoarded(ticket.isBoarded())
+                .bookingStatus(ticket.getBooking().getStatus())
+                .pickupStation(ticket.getBooking().getPickupStation() != null
+                        ? ticket.getBooking().getPickupStation().getName()
+                        : "")
+                .dropoffStation(ticket.getBooking().getDropoffStation() != null
+                        ? ticket.getBooking().getDropoffStation().getName()
+                        : "")
+                .build())
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public TripResponse updateTripStatus(java.util.UUID tripId, com.awad.ticketbooking.common.enums.TripStatus status) {
+        Trip trip = tripRepository.findById(tripId)
+                .orElseThrow(() -> new RuntimeException("Trip not found"));
+
+        trip.setStatus(status);
+        return mapToResponse(tripRepository.save(trip));
     }
 }

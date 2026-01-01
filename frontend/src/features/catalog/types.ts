@@ -199,3 +199,15 @@ export type TripStopDto = {
 export type UpdateTripStopsRequest = {
   stops: TripStopDto[];
 };
+
+export type TripPassenger = {
+  ticketId: string;
+  bookingCode: string;
+  passengerName: string;
+  passengerPhone: string;
+  seatCode: string;
+  isBoarded: boolean;
+  bookingStatus: string;
+  pickupStation: string;
+  dropoffStation: string;
+};

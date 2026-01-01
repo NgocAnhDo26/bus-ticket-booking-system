@@ -67,4 +67,18 @@ public class TripController {
             @RequestBody @Valid com.awad.ticketbooking.modules.trip.dto.UpdateTripStopsRequest request) {
         return ResponseEntity.ok(tripService.updateTripStops(id, request));
     }
+
+    @GetMapping("/{id}/passengers")
+    @Operation(summary = "Get trip passengers", description = "Returns a list of passengers for a specific trip.")
+    public ResponseEntity<java.util.List<com.awad.ticketbooking.modules.trip.dto.TripPassengerResponse>> getTripPassengers(
+            @PathVariable UUID id) {
+        return ResponseEntity.ok(tripService.getTripPassengers(id));
+    }
+
+    @PatchMapping("/{id}/status")
+    @Operation(summary = "Update trip status", description = "Updates the status of a trip.")
+    public ResponseEntity<TripResponse> updateTripStatus(@PathVariable UUID id,
+            @RequestParam com.awad.ticketbooking.common.enums.TripStatus status) {
+        return ResponseEntity.ok(tripService.updateTripStatus(id, status));
+    }
 }

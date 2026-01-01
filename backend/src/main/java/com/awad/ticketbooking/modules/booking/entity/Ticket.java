@@ -46,4 +46,7 @@ public class Ticket {
 
     @Column(nullable = false)
     private BigDecimal price;
+
+    @Column(name = "is_boarded", nullable = false)
+    private boolean isBoarded = false;
 }

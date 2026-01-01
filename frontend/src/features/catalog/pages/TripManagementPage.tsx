@@ -14,6 +14,7 @@ import {
   Pencil,
   Plus,
   Trash2,
+  Users,
 } from 'lucide-react';
 import * as z from 'zod';
 
@@ -49,6 +50,7 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet';
 
+import { TripPassengersDialog } from '../components/TripPassengersDialog';
 import { TripStopsDialog } from '../components/TripStopsDialog';
 import {
   useBuses,
@@ -85,6 +87,7 @@ export const TripManagementPage = () => {
   const [editingTrip, setEditingTrip] = useState<Trip | null>(null);
   const [deletingTrip, setDeletingTrip] = useState<Trip | null>(null);
   const [managingStopsTrip, setManagingStopsTrip] = useState<Trip | null>(null);
+  const [viewingPassengersTrip, setViewingPassengersTrip] = useState<Trip | null>(null);
 
   const {
     register,
@@ -354,13 +357,17 @@ export const TripManagementPage = () => {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-fit">
                 <DropdownMenuLabel>Thao tác</DropdownMenuLabel>
-                <DropdownMenuItem onClick={() => handleEdit(trip)}>
-                  <Pencil className="mr-2 h-4 w-4" />
-                  Sửa
-                </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setManagingStopsTrip(trip)}>
                   <MapPin className="mr-2 h-4 w-4" />
                   Quản lý trạm
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setViewingPassengersTrip(trip)}>
+                  <Users className="mr-2 h-4 w-4" />
+                  Danh sách hành khách
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleEdit(trip)}>
+                  <Pencil className="mr-2 h-4 w-4" />
+                  Sửa
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => setDeletingTrip(trip)}
@@ -579,6 +586,12 @@ export const TripManagementPage = () => {
         trip={managingStopsTrip}
         open={!!managingStopsTrip}
         onOpenChange={(open: boolean) => !open && setManagingStopsTrip(null)}
+      />
+
+      <TripPassengersDialog
+        trip={viewingPassengersTrip}
+        open={!!viewingPassengersTrip}
+        onOpenChange={(open: boolean) => !open && setViewingPassengersTrip(null)}
       />
     </div>
   );

@@ -77,6 +77,17 @@ export const useCancelBooking = () => {
   });
 };
 
+export const useCheckInPassenger = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (ticketId: string) => import('./api').then((mod) => mod.checkInPassenger(ticketId)),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tripPassengers'] });
+    },
+  });
+};
+
 export const useCreatePayment = () => {
   return useMutation({
     mutationFn: (request: CreatePaymentRequest) => createPayment(request),
