@@ -102,7 +102,7 @@ const toRoute = (r: ApiRoute | RouteResponse | undefined): Route => ({
   ),
   destinationStation: toStation(
     (r as ApiRoute | undefined)?.destinationStation ??
-    (r as RouteResponse | undefined)?.destinationStation,
+      (r as RouteResponse | undefined)?.destinationStation,
   ),
   durationMinutes: r?.durationMinutes ?? 0,
   distanceKm: 'distanceKm' in (r ?? {}) ? ((r as ApiRoute).distanceKm ?? 0) : 0,
@@ -339,9 +339,7 @@ export const updateTripStops = async (id: string, data: UpdateTripStopsRequest):
   return toTrip(response.data);
 };
 
-export const getTripPassengers = async (
-  id: string,
-): Promise<import('./types').TripPassenger[]> => {
+export const getTripPassengers = async (id: string): Promise<import('./types').TripPassenger[]> => {
   const response = await apiClient.get<import('./types').TripPassenger[]>(
     `/api/trips/${id}/passengers`,
   );

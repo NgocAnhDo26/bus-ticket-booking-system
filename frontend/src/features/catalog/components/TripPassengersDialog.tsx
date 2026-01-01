@@ -1,9 +1,9 @@
 import { useMemo, useState } from 'react';
-import { toast } from 'sonner';
 
 import { Check, Loader2, Search, X } from 'lucide-react';
+import { toast } from 'sonner';
 
-
+import { type ColumnDef, GenericTable } from '@/components/common';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -24,7 +24,6 @@ import {
 import { useCheckInPassenger } from '@/features/booking/hooks';
 import type { Trip } from '@/features/catalog/types';
 import { cn } from '@/lib/utils';
-import { type ColumnDef, GenericTable } from '@/components/common';
 
 import { useTripPassengers, useUpdateTripStatus } from '../hooks';
 import type { TripPassenger } from '../types';
@@ -43,7 +42,7 @@ export const TripPassengersDialog = ({ trip, open, onOpenChange }: TripPassenger
 
   const filteredPassengers = useMemo(() => {
     if (!passengers) return [];
-    
+
     // Filter out CANCELLED bookings and apply search
     let result = passengers.filter((p) => p.bookingStatus !== 'CANCELLED');
 
@@ -59,13 +58,15 @@ export const TripPassengersDialog = ({ trip, open, onOpenChange }: TripPassenger
     }
 
     // Stable sort by Seat Code to prevent jumping when data refreshes
-    return result.sort((a, b) => a.seatCode.localeCompare(b.seatCode, undefined, { numeric: true }));
+    return result.sort((a, b) =>
+      a.seatCode.localeCompare(b.seatCode, undefined, { numeric: true }),
+    );
   }, [passengers, searchTerm]);
 
   // Statistics
   const stats = useMemo(() => {
     if (!passengers) return { total: 0, boarded: 0, pending: 0 };
-    const activePassengers = passengers.filter(p => p.bookingStatus !== 'CANCELLED');
+    const activePassengers = passengers.filter((p) => p.bookingStatus !== 'CANCELLED');
     return {
       total: activePassengers.length,
       boarded: activePassengers.filter((p) => p.isBoarded).length,
@@ -165,26 +166,34 @@ export const TripPassengersDialog = ({ trip, open, onOpenChange }: TripPassenger
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[800px] min-w-[600px] max-h-[90vh] flex flex-col">
         <DialogHeader>
-          <DialogTitle>Quản lý Chuyến đi: {trip?.route.originStation.name} - {trip?.route.destinationStation.name}</DialogTitle>
+          <DialogTitle>
+            Quản lý Chuyến đi: {trip?.route.originStation.name} -{' '}
+            {trip?.route.destinationStation.name}
+          </DialogTitle>
           <DialogDescription>
-            {trip?.bus.plateNumber} | {trip?.departureTime && new Date(trip.departureTime).toLocaleString('vi-VN')}
+            {trip?.bus.plateNumber} |{' '}
+            {trip?.departureTime && new Date(trip.departureTime).toLocaleString('vi-VN')}
           </DialogDescription>
         </DialogHeader>
 
         <div className="flex items-center justify-between gap-4 py-4 border-b">
           <div className="flex gap-4 items-center">
-             <div className="flex flex-col items-center p-2 bg-muted rounded-lg w-24">
-                <span className="text-xs text-muted-foreground">Tổng khách</span>
-                <span className="text-xl font-bold">{stats.total}</span>
-             </div>
-             <div className="flex flex-col items-center p-2 bg-green-100 dark:bg-green-900 rounded-lg w-24">
-                <span className="text-xs text-green-700 dark:text-green-300">Đã lên xe</span>
-                <span className="text-xl font-bold text-green-700 dark:text-green-300">{stats.boarded}</span>
-             </div>
-             <div className="flex flex-col items-center p-2 bg-yellow-100 dark:bg-yellow-900 rounded-lg w-24">
-                <span className="text-xs text-yellow-700 dark:text-yellow-300">Chưa lên</span>
-                <span className="text-xl font-bold text-yellow-700 dark:text-yellow-300">{stats.pending}</span>
-             </div>
+            <div className="flex flex-col items-center p-2 bg-muted rounded-lg w-24">
+              <span className="text-xs text-muted-foreground">Tổng khách</span>
+              <span className="text-xl font-bold">{stats.total}</span>
+            </div>
+            <div className="flex flex-col items-center p-2 bg-green-100 dark:bg-green-900 rounded-lg w-24">
+              <span className="text-xs text-green-700 dark:text-green-300">Đã lên xe</span>
+              <span className="text-xl font-bold text-green-700 dark:text-green-300">
+                {stats.boarded}
+              </span>
+            </div>
+            <div className="flex flex-col items-center p-2 bg-yellow-100 dark:bg-yellow-900 rounded-lg w-24">
+              <span className="text-xs text-yellow-700 dark:text-yellow-300">Chưa lên</span>
+              <span className="text-xl font-bold text-yellow-700 dark:text-yellow-300">
+                {stats.pending}
+              </span>
+            </div>
           </div>
 
           <div className="flex items-center gap-2">
