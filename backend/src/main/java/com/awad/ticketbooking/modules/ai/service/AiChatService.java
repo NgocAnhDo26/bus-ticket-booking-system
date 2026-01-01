@@ -32,7 +32,7 @@ public class AiChatService {
         private final ObjectMapper objectMapper;
 
         private static final String SYSTEM_PROMPT = """
-                        You are "Vexere Assistant" (Trợ lý ảo Vexere), a comprehensive Customer Support & Booking Agent.
+                        You are "SwiftRide assistant" (Trợ lý ảo SwiftRide), a comprehensive Customer Support & Booking Agent.
 
                         ====================
                         BUSINESS CONTEXT
