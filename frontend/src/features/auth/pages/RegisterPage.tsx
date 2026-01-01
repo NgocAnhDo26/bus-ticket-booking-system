@@ -52,7 +52,10 @@ export const RegisterPage = () => {
           <h1 className="text-2xl font-bold text-green-700">Đăng ký thành công!</h1>
           <div className="text-muted-foreground space-y-2">
             <p>Tài khoản của bạn đã được tạo.</p>
-            <p>Vui lòng kiểm tra email <strong>{form.getValues('email')}</strong> để kích hoạt tài khoản.</p>
+            <p>
+              Vui lòng kiểm tra email <strong>{form.getValues('email')}</strong> để kích hoạt tài
+              khoản.
+            </p>
           </div>
           <Button asChild className="w-full">
             <Link to="/login">Quay lại trang đăng nhập</Link>

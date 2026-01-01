@@ -4,7 +4,13 @@ import { Navigate, createBrowserRouter } from 'react-router-dom';
 import { ProtectedRoute, PublicRoute } from '@/components/common';
 import { DashboardLayout } from '@/components/layout';
 import { AdminDashboardLayout } from '@/components/layout/AdminLayout';
-import { ActivationPage, ForgotPasswordPage, LoginPage, RegisterPage, ResetPasswordPage } from '@/features/auth';
+import {
+  ActivationPage,
+  ForgotPasswordPage,
+  LoginPage,
+  RegisterPage,
+  ResetPasswordPage,
+} from '@/features/auth';
 import { useHydrateAuth } from '@/features/auth/hooks';
 import { BookingLookupPage, BookingPage, PassengerInfoPage } from '@/features/booking';
 import { BookingConfirmationPage } from '@/features/booking/pages/BookingConfirmationPage';

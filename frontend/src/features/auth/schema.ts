@@ -18,7 +18,7 @@ export const registerSchema = loginSchema
       .min(8, 'Mật khẩu phải có ít nhất 8 ký tự')
       .regex(
         /^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=!]).*$/,
-        'Mật khẩu phải chứa ít nhất 1 chữ hoa, 1 chữ thường, 1 số và 1 ký tự đặc biệt'
+        'Mật khẩu phải chứa ít nhất 1 chữ hoa, 1 chữ thường, 1 số và 1 ký tự đặc biệt',
       ),
     confirmPassword: z.string().min(8, 'Vui lòng xác nhận mật khẩu'),
   })

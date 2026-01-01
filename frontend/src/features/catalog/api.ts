@@ -46,6 +46,8 @@ import type {
   SearchTripRequest as ApiSearchTripRequest,
   Station as ApiStation,
   OperatorInfo,
+  PagedModelRouteResponse,
+  PagedModelStation,
   RouteResponse,
   SearchTripsParams,
   StationInfo,
@@ -53,8 +55,6 @@ import type {
   TripPricingInfoSeatType,
   TripResponse,
   TripResponseStatus,
-  PagedModelStation,
-  PagedModelRouteResponse,
 } from '@/model';
 
 import {
@@ -102,7 +102,7 @@ const toRoute = (r: ApiRoute | RouteResponse | undefined): Route => ({
   ),
   destinationStation: toStation(
     (r as ApiRoute | undefined)?.destinationStation ??
-    (r as RouteResponse | undefined)?.destinationStation,
+      (r as RouteResponse | undefined)?.destinationStation,
   ),
   durationMinutes: r?.durationMinutes ?? 0,
   distanceKm: 'distanceKm' in (r ?? {}) ? ((r as ApiRoute).distanceKm ?? 0) : 0,

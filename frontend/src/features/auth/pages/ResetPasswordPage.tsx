@@ -1,7 +1,8 @@
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useMutation } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { z } from 'zod';
 
@@ -17,6 +18,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { AuthLayout } from '@/features/auth/components/AuthLayout';
+
 import { resetPassword } from '../api';
 
 const resetPasswordSchema = z
@@ -70,7 +72,7 @@ export const ResetPasswordPage = () => {
 
   if (!token) {
     return (
-      <AuthLayout title="Lỗi">
+      <AuthLayout>
         <Card className="w-full max-w-md">
           <CardHeader>
             <CardTitle className="text-destructive">Lỗi liên kết</CardTitle>
@@ -79,9 +81,9 @@ export const ResetPasswordPage = () => {
             </CardDescription>
           </CardHeader>
           <CardFooter className="justify-center">
-             <Button variant="link" asChild>
-                <Link to="/auth/forgot-password">Yêu cầu liên kết mới</Link>
-             </Button>
+            <Button variant="link" asChild>
+              <Link to="/auth/forgot-password">Yêu cầu liên kết mới</Link>
+            </Button>
           </CardFooter>
         </Card>
       </AuthLayout>
@@ -89,49 +91,45 @@ export const ResetPasswordPage = () => {
   }
 
   return (
-    <AuthLayout title="Đặt lại mật khẩu">
+    <AuthLayout>
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle>Mật khẩu mới</CardTitle>
-          <CardDescription>
-            Nhập mật khẩu mới cho tài khoản của bạn.
-          </CardDescription>
+          <CardDescription>Nhập mật khẩu mới cho tài khoản của bạn.</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <div className="grid gap-2">
-                 <Label htmlFor="password">Mật khẩu mới</Label>
-                 <Input 
-                   id="password" 
-                   type="password" 
-                   placeholder="******" 
-                   {...form.register('password')} 
-                 />
-                 {form.formState.errors.password && (
-                    <p className="text-sm text-destructive">{form.formState.errors.password.message}</p>
-                 )}
-              </div>
+            <div className="grid gap-2">
+              <Label htmlFor="password">Mật khẩu mới</Label>
+              <Input
+                id="password"
+                type="password"
+                placeholder="******"
+                {...form.register('password')}
+              />
+              {form.formState.errors.password && (
+                <p className="text-sm text-destructive">{form.formState.errors.password.message}</p>
+              )}
+            </div>
 
-              <div className="grid gap-2">
-                 <Label htmlFor="confirmPassword">Xác nhận mật khẩu</Label>
-                 <Input 
-                   id="confirmPassword" 
-                   type="password" 
-                   placeholder="******" 
-                   {...form.register('confirmPassword')} 
-                 />
-                 {form.formState.errors.confirmPassword && (
-                    <p className="text-sm text-destructive">{form.formState.errors.confirmPassword.message}</p>
-                 )}
-              </div>
+            <div className="grid gap-2">
+              <Label htmlFor="confirmPassword">Xác nhận mật khẩu</Label>
+              <Input
+                id="confirmPassword"
+                type="password"
+                placeholder="******"
+                {...form.register('confirmPassword')}
+              />
+              {form.formState.errors.confirmPassword && (
+                <p className="text-sm text-destructive">
+                  {form.formState.errors.confirmPassword.message}
+                </p>
+              )}
+            </div>
 
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={mutation.isPending}
-              >
-                {mutation.isPending ? 'Đang xử lý...' : 'Đặt lại mật khẩu'}
-              </Button>
+            <Button type="submit" className="w-full" disabled={mutation.isPending}>
+              {mutation.isPending ? 'Đang xử lý...' : 'Đặt lại mật khẩu'}
+            </Button>
           </form>
         </CardContent>
       </Card>

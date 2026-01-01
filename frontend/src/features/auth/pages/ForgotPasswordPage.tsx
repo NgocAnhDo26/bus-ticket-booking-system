@@ -1,7 +1,8 @@
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useMutation } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { Link } from 'react-router-dom';
+
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { z } from 'zod';
 
@@ -17,6 +18,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { AuthLayout } from '@/features/auth/components/AuthLayout';
+
 import { forgotPassword } from '../api';
 
 const forgotPasswordSchema = z.object({
@@ -53,34 +55,28 @@ export const ForgotPasswordPage = () => {
   };
 
   return (
-    <AuthLayout title="Quên mật khẩu">
+    <AuthLayout>
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle>Khôi phục mật khẩu</CardTitle>
-          <CardDescription>
-            Nhập email của bạn để nhận liên kết đặt lại mật khẩu.
-          </CardDescription>
+          <CardDescription>Nhập email của bạn để nhận liên kết đặt lại mật khẩu.</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <div className="grid gap-2">
-               <Label htmlFor="email">Email</Label>
-               <Input 
-                  id="email"
-                  type="email"
-                  placeholder="name@example.com"
-                  {...form.register('email')}
-               />
-               {form.formState.errors.email && (
-                  <p className="text-sm text-destructive">{form.formState.errors.email.message}</p>
-               )}
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="name@example.com"
+                {...form.register('email')}
+              />
+              {form.formState.errors.email && (
+                <p className="text-sm text-destructive">{form.formState.errors.email.message}</p>
+              )}
             </div>
-          
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={mutation.isPending}
-            >
+
+            <Button type="submit" className="w-full" disabled={mutation.isPending}>
               {mutation.isPending ? 'Đang gửi...' : 'Gửi liên kết'}
             </Button>
           </form>

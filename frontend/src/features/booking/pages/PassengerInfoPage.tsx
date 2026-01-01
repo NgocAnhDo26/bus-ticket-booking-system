@@ -119,7 +119,11 @@ export const PassengerInfoPage = () => {
     setTicketsDetails((prev) => ({ ...initialDetails, ...prev })); // Merge to keep existing input if re-render
   });
 
-  const handleTicketChange = (seatCode: string, field: 'name' | 'phone' | 'idNumber', value: string) => {
+  const handleTicketChange = (
+    seatCode: string,
+    field: 'name' | 'phone' | 'idNumber',
+    value: string,
+  ) => {
     setTicketsDetails((prev) => ({
       ...prev,
       [seatCode]: {
@@ -297,93 +301,95 @@ export const PassengerInfoPage = () => {
                   </div>
                 </div>
               )}
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="contactId">CMND/CCCD/Hộ chiếu</Label>
+                  <Input
+                    id="contactId"
+                    placeholder="Nhập số giấy tờ tùy thân"
+                    value={contactIdNumber}
+                    onChange={(e) => setContactIdNumber(e.target.value)}
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* 2. Passenger Info Per Seat */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold flex items-center gap-2">
+                <User className="h-5 w-5 text-primary" />
+                Thông tin hành khách từng ghế
+              </h3>
+              <Button variant="outline" size="sm" onClick={copyContactToAll}>
+                Sao chép thông tin người đặt
+              </Button>
+            </div>
+
+            {finalSeatDetails.map((seat) => (
+              <Card key={seat.seatCode}>
+                <CardHeader className="py-3 bg-muted/20">
+                  <CardTitle className="text-base flex justify-between">
+                    <span>Ghế {seat.seatCode}</span>
+                    <span className="text-sm font-normal text-muted-foreground">
+                      {seat.seatType === 'VIP' ? 'VIP' : 'Thường'} - {formatCurrency(seat.price)}
+                    </span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-4 space-y-4">
+                  <div className="flex justify-end">
+                    <Button
+                      variant="link"
+                      size="sm"
+                      className="h-auto p-0 text-xs text-primary"
+                      onClick={() => {
+                        setTicketsDetails((prev) => ({
+                          ...prev,
+                          [seat.seatCode]: {
+                            name: contactName,
+                            phone: contactPhone,
+                            idNumber: contactIdNumber,
+                          },
+                        }));
+                        toast.success(`Đã sao chép cho ghế ${seat.seatCode}`);
+                      }}
+                    >
+                      Sao chép từ người đặt
+                    </Button>
+                  </div>
                   <div className="grid md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                       <Label htmlFor="contactId">CMND/CCCD/Hộ chiếu</Label>
-                       <Input
-                         id="contactId"
-                         placeholder="Nhập số giấy tờ tùy thân"
-                         value={contactIdNumber}
-                         onChange={(e) => setContactIdNumber(e.target.value)}
-                       />
+                      <Label>Họ tên hành khách</Label>
+                      <Input
+                        value={ticketsDetails[seat.seatCode]?.name || ''}
+                        onChange={(e) => handleTicketChange(seat.seatCode, 'name', e.target.value)}
+                        placeholder="Tên hành khách"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>SĐT hành khách</Label>
+                      <Input
+                        value={ticketsDetails[seat.seatCode]?.phone || ''}
+                        onChange={(e) => handleTicketChange(seat.seatCode, 'phone', e.target.value)}
+                        placeholder="SĐT hành khách"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>CMND/CCCD</Label>
+                      <Input
+                        value={ticketsDetails[seat.seatCode]?.idNumber || ''}
+                        onChange={(e) =>
+                          handleTicketChange(seat.seatCode, 'idNumber', e.target.value)
+                        }
+                        placeholder="Số giấy tờ tùy thân"
+                      />
                     </div>
                   </div>
-                 </CardContent>
-               </Card>
-
-           {/* 2. Passenger Info Per Seat */}
-           <div className="space-y-4">
-             <div className="flex items-center justify-between">
-               <h3 className="text-lg font-semibold flex items-center gap-2">
-                 <User className="h-5 w-5 text-primary" />
-                 Thông tin hành khách từng ghế
-               </h3>
-               <Button variant="outline" size="sm" onClick={copyContactToAll}>
-                 Sao chép thông tin người đặt
-               </Button>
-             </div>
-
-             {finalSeatDetails.map((seat) => (
-               <Card key={seat.seatCode}>
-                 <CardHeader className="py-3 bg-muted/20">
-                   <CardTitle className="text-base flex justify-between">
-                     <span>Ghế {seat.seatCode}</span>
-                     <span className="text-sm font-normal text-muted-foreground">
-                       {seat.seatType === 'VIP' ? 'VIP' : 'Thường'} - {formatCurrency(seat.price)}
-                     </span>
-                   </CardTitle>
-                 </CardHeader>
-                 <CardContent className="pt-4 space-y-4">
-                   <div className="flex justify-end">
-                     <Button
-                       variant="link"
-                       size="sm"
-                       className="h-auto p-0 text-xs text-primary"
-                       onClick={() => {
-                         setTicketsDetails((prev) => ({
-                           ...prev,
-                           [seat.seatCode]: {
-                             name: contactName,
-                             phone: contactPhone,
-                             idNumber: contactIdNumber,
-                           },
-                         }));
-                         toast.success(`Đã sao chép cho ghế ${seat.seatCode}`);
-                       }}
-                     >
-                       Sao chép từ người đặt
-                     </Button>
-                   </div>
-                   <div className="grid md:grid-cols-2 gap-4">
-                     <div className="space-y-2">
-                       <Label>Họ tên hành khách</Label>
-                       <Input
-                         value={ticketsDetails[seat.seatCode]?.name || ''}
-                         onChange={(e) => handleTicketChange(seat.seatCode, 'name', e.target.value)}
-                         placeholder="Tên hành khách"
-                       />
-                     </div>
-                     <div className="space-y-2">
-                       <Label>SĐT hành khách</Label>
-                       <Input
-                         value={ticketsDetails[seat.seatCode]?.phone || ''}
-                         onChange={(e) => handleTicketChange(seat.seatCode, 'phone', e.target.value)}
-                         placeholder="SĐT hành khách"
-                       />
-                     </div>
-                     <div className="space-y-2">
-                       <Label>CMND/CCCD</Label>
-                       <Input
-                         value={ticketsDetails[seat.seatCode]?.idNumber || ''}
-                         onChange={(e) => handleTicketChange(seat.seatCode, 'idNumber', e.target.value)}
-                         placeholder="Số giấy tờ tùy thân"
-                       />
-                     </div>
-                   </div>
-                 </CardContent>
-               </Card>
-             ))}
-           </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
 
           <Button
             className="w-full md:hidden"

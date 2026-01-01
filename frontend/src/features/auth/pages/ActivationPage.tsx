@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 
 import { useMutation } from '@tanstack/react-query';
@@ -6,10 +6,9 @@ import { CheckCircle2, XCircle } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { customInstance } from '@/lib/api-client';
+import type { ApiResponseAuthResponse } from '@/model';
 
 import { AuthLayout } from '../components/AuthLayout';
-
-import type { ApiResponseAuthResponse } from '@/model';
 
 // We need to define this manually or use generated one if available later
 const activateAccount = (token: string) => {
@@ -22,25 +21,29 @@ const activateAccount = (token: string) => {
 export const ActivationPage = () => {
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token');
-  const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
+  const hasActivated = useRef(false);
 
   const activationMutation = useMutation({
     mutationFn: activateAccount,
-    onSuccess: () => {
-      setStatus('success');
-    },
-    onError: () => {
-      setStatus('error');
-    },
   });
 
   useEffect(() => {
+    if (hasActivated.current) return;
+
     if (token) {
+      hasActivated.current = true;
       activationMutation.mutate(token);
-    } else {
-      setStatus('error');
     }
-  }, [token]);
+  }, [token, activationMutation]);
+
+  // Derive status from mutation state and token
+  const status = !token
+    ? 'error'
+    : activationMutation.isSuccess
+      ? 'success'
+      : activationMutation.isError
+        ? 'error'
+        : 'loading';
 
   return (
     <AuthLayout>

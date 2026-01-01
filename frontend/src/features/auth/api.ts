@@ -5,6 +5,7 @@ import {
   register as orvalRegister,
 } from '@/features/api/authentication/authentication';
 import { me as orvalMe } from '@/features/api/users/users';
+import { apiClient } from '@/lib/api-client';
 import {
   type ApiResponseAuthResponse,
   type ApiResponseUserResponse,
@@ -76,8 +77,6 @@ export interface ResetPasswordRequest {
   token: string;
   newPassword: string;
 }
-
-import { apiClient } from '@/lib/api-client';
 
 export const forgotPassword = async (data: ForgotPasswordRequest) => {
   return apiClient.post('/api/auth/forgot-password', data);

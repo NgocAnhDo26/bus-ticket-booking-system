@@ -61,9 +61,9 @@ export const SearchForm = () => {
 
   if (error) {
     return (
-     <div className="p-4 text-red-500 bg-red-50 rounded-lg">
-       Lỗi tải dữ liệu: {(error as any).message || 'Không thể kết nối server'}
-     </div>
+      <div className="p-4 text-red-500 bg-red-50 rounded-lg">
+        Lỗi tải dữ liệu: {(error as Error).message || 'Không thể kết nối server'}
+      </div>
     );
   }
 
@@ -76,7 +76,8 @@ export const SearchForm = () => {
         >
           <div className="space-y-2">
             <Label className="flex items-center gap-2">
-              <MapPin className="w-4 h-4 text-primary" /> Điểm đi {isLoading && <span className="text-xs text-muted-foreground">(Đang tải...)</span>}
+              <MapPin className="w-4 h-4 text-primary" /> Điểm đi{' '}
+              {isLoading && <span className="text-xs text-muted-foreground">(Đang tải...)</span>}
             </Label>
             <div className="relative">
               <Combobox

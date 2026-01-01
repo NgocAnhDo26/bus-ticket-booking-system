@@ -95,24 +95,23 @@ const TripStopsDialogContent = ({
     if (!newAddress.trim()) return;
 
     const maxOrder = stops.length > 0 ? Math.max(...stops.map((s) => s.stopOrder)) : 0;
-    
+
     // Simple heuristic for new stop time: +30 mins from last stop or departure time
     const lastStop = stops.length > 0 ? stops[stops.length - 1] : null;
     let newScheduledTime = new Date(trip.departureTime); // Default to departure
-    
-    if (lastStop && lastStop.scheduledTime) {
-        newScheduledTime = new Date(lastStop.scheduledTime);
-        newScheduledTime.setMinutes(newScheduledTime.getMinutes() + 30);
-    } else {
-         newScheduledTime.setMinutes(newScheduledTime.getMinutes() + 30);
-    }
 
+    if (lastStop && lastStop.scheduledTime) {
+      newScheduledTime = new Date(lastStop.scheduledTime);
+      newScheduledTime.setMinutes(newScheduledTime.getMinutes() + 30);
+    } else {
+      newScheduledTime.setMinutes(newScheduledTime.getMinutes() + 30);
+    }
 
     const newStop: EditableStop = {
       customName: newName.trim() || newAddress.trim(),
       customAddress: newAddress.trim(),
       stopOrder: maxOrder + 1,
-      durationMinutesFromOrigin: 0, 
+      durationMinutesFromOrigin: 0,
       stopType: 'BOTH',
       scheduledTime: newScheduledTime.toISOString(),
     };
@@ -131,19 +130,23 @@ const TripStopsDialogContent = ({
   };
 
   const handleScheduledTimeChange = (index: number, value: string) => {
-     // Value comes from input type="datetime-local" (YYYY-MM-DDTHH:mm)
-     // Need to convert to ISO string
-     const date = new Date(value);
-     if (!isNaN(date.getTime())) {
-         setStops((prev) => prev.map((s, i) => (i === index ? { ...s, scheduledTime: date.toISOString() } : s)));
-     }
+    // Value comes from input type="datetime-local" (YYYY-MM-DDTHH:mm)
+    // Need to convert to ISO string
+    const date = new Date(value);
+    if (!isNaN(date.getTime())) {
+      setStops((prev) =>
+        prev.map((s, i) => (i === index ? { ...s, scheduledTime: date.toISOString() } : s)),
+      );
+    }
   };
 
-    const handleActualTimeChange = (index: number, value: string) => {
-     const date = new Date(value);
-     if (!isNaN(date.getTime())) {
-         setStops((prev) => prev.map((s, i) => (i === index ? { ...s, actualTime: date.toISOString() } : s)));
-     }
+  const handleActualTimeChange = (index: number, value: string) => {
+    const date = new Date(value);
+    if (!isNaN(date.getTime())) {
+      setStops((prev) =>
+        prev.map((s, i) => (i === index ? { ...s, actualTime: date.toISOString() } : s)),
+      );
+    }
   };
 
   const handleStopTypeChange = (index: number, value: 'PICKUP' | 'DROPOFF' | 'BOTH') => {
@@ -184,14 +187,14 @@ const TripStopsDialogContent = ({
   };
 
   const formatDateTimeLocal = (isoString?: string) => {
-      if (!isoString) return '';
-      const date = new Date(isoString);
-      // Format to YYYY-MM-DDTHH:mm for input type="datetime-local"
-      // Adjust to local timezone logic if needed, but simple slice works for UTC-like behavior in browsers sometimes
-      // Better to use library or simple offset construction
-      const offset = date.getTimezoneOffset(); 
-      const localDate = new Date(date.getTime() - (offset*60*1000));
-      return localDate.toISOString().slice(0, 16);
+    if (!isoString) return '';
+    const date = new Date(isoString);
+    // Format to YYYY-MM-DDTHH:mm for input type="datetime-local"
+    // Adjust to local timezone logic if needed, but simple slice works for UTC-like behavior in browsers sometimes
+    // Better to use library or simple offset construction
+    const offset = date.getTimezoneOffset();
+    const localDate = new Date(date.getTime() - offset * 60 * 1000);
+    return localDate.toISOString().slice(0, 16);
   };
 
   return (
@@ -232,99 +235,99 @@ const TripStopsDialogContent = ({
 
       {/* Stops table */}
       <div className="border rounded-md">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-[50px]">#</TableHead>
-            <TableHead>Tên trạm / Địa chỉ</TableHead>
-            <TableHead className="w-[180px]">Giờ Dự Kiến</TableHead>
-            <TableHead className="w-[180px]">Giờ Thực Tế</TableHead>
-            <TableHead className="w-[100px]">Loại</TableHead>
-            <TableHead className="w-[50px]"></TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {stops.map((stop, index) => (
-            <TableRow key={index}>
-              <TableCell>
-                <Input
-                  type="number"
-                  min={1}
-                  value={stop.stopOrder}
-                  onChange={(e) => handleStopOrderChange(index, parseInt(e.target.value) || 1)}
-                  className="w-12 px-2"
-                />
-              </TableCell>
-              <TableCell>
-                <div className="space-y-1">
-                    <Input
-                    value={stop.customName}
-                    onChange={(e) => handleNameChange(index, e.target.value)}
-                    placeholder="Tên trạm"
-                    className="h-8 text-sm"
-                    />
-                    <Input
-                    value={stop.customAddress}
-                    onChange={(e) => handleAddressChange(index, e.target.value)}
-                    placeholder="Địa chỉ"
-                    className="h-8 text-xs text-muted-foreground"
-                    />
-                </div>
-              </TableCell>
-              <TableCell>
-                <Input
-                  type="datetime-local"
-                  value={formatDateTimeLocal(stop.scheduledTime)}
-                  onChange={(e) => handleScheduledTimeChange(index, e.target.value)}
-                  className="w-full text-xs"
-                />
-              </TableCell>
-               <TableCell>
-                <Input
-                  type="datetime-local"
-                  value={formatDateTimeLocal(stop.actualTime)}
-                  onChange={(e) => handleActualTimeChange(index, e.target.value)}
-                  className="w-full text-xs"
-                />
-              </TableCell>
-              <TableCell>
-                <Select
-                  value={stop.stopType}
-                  onValueChange={(v) =>
-                    handleStopTypeChange(index, v as 'PICKUP' | 'DROPOFF' | 'BOTH')
-                  }
-                >
-                  <SelectTrigger className="w-full h-8">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="PICKUP">Đón</SelectItem>
-                    <SelectItem value="DROPOFF">Trả</SelectItem>
-                    <SelectItem value="BOTH">Cả hai</SelectItem>
-                  </SelectContent>
-                </Select>
-              </TableCell>
-              <TableCell>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => handleRemove(index)}
-                  className="text-destructive hover:text-destructive h-8 w-8"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </TableCell>
-            </TableRow>
-          ))}
-          {stops.length === 0 && (
+        <Table>
+          <TableHeader>
             <TableRow>
-              <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
-                Chưa có trạm nào. Thêm trạm dừng ở form phía trên.
-              </TableCell>
+              <TableHead className="w-[50px]">#</TableHead>
+              <TableHead>Tên trạm / Địa chỉ</TableHead>
+              <TableHead className="w-[180px]">Giờ Dự Kiến</TableHead>
+              <TableHead className="w-[180px]">Giờ Thực Tế</TableHead>
+              <TableHead className="w-[100px]">Loại</TableHead>
+              <TableHead className="w-[50px]"></TableHead>
             </TableRow>
-          )}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {stops.map((stop, index) => (
+              <TableRow key={index}>
+                <TableCell>
+                  <Input
+                    type="number"
+                    min={1}
+                    value={stop.stopOrder}
+                    onChange={(e) => handleStopOrderChange(index, parseInt(e.target.value) || 1)}
+                    className="w-12 px-2"
+                  />
+                </TableCell>
+                <TableCell>
+                  <div className="space-y-1">
+                    <Input
+                      value={stop.customName}
+                      onChange={(e) => handleNameChange(index, e.target.value)}
+                      placeholder="Tên trạm"
+                      className="h-8 text-sm"
+                    />
+                    <Input
+                      value={stop.customAddress}
+                      onChange={(e) => handleAddressChange(index, e.target.value)}
+                      placeholder="Địa chỉ"
+                      className="h-8 text-xs text-muted-foreground"
+                    />
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <Input
+                    type="datetime-local"
+                    value={formatDateTimeLocal(stop.scheduledTime)}
+                    onChange={(e) => handleScheduledTimeChange(index, e.target.value)}
+                    className="w-full text-xs"
+                  />
+                </TableCell>
+                <TableCell>
+                  <Input
+                    type="datetime-local"
+                    value={formatDateTimeLocal(stop.actualTime)}
+                    onChange={(e) => handleActualTimeChange(index, e.target.value)}
+                    className="w-full text-xs"
+                  />
+                </TableCell>
+                <TableCell>
+                  <Select
+                    value={stop.stopType}
+                    onValueChange={(v) =>
+                      handleStopTypeChange(index, v as 'PICKUP' | 'DROPOFF' | 'BOTH')
+                    }
+                  >
+                    <SelectTrigger className="w-full h-8">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="PICKUP">Đón</SelectItem>
+                      <SelectItem value="DROPOFF">Trả</SelectItem>
+                      <SelectItem value="BOTH">Cả hai</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </TableCell>
+                <TableCell>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleRemove(index)}
+                    className="text-destructive hover:text-destructive h-8 w-8"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+            {stops.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                  Chưa có trạm nào. Thêm trạm dừng ở form phía trên.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
       </div>
 
       <DialogFooter>

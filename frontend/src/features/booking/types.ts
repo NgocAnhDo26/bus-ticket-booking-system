@@ -57,13 +57,15 @@ export type BookingResponse = {
   tickets: TicketInfo[];
   pickupStation?: StationInfo;
   dropoffStation?: StationInfo;
-  pickupTripPoint?: { // Added
+  pickupTripPoint?: {
+    // Added
     id: string;
     scheduledTime: string;
     actualTime?: string;
     surcharge: number;
   };
-  dropoffTripPoint?: { // Added
+  dropoffTripPoint?: {
+    // Added
     id: string;
     scheduledTime: string;
     actualTime?: string;

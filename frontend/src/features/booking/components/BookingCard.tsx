@@ -109,19 +109,19 @@ export const BookingCard = ({ booking, onCancel, isCancelling }: BookingCardProp
                       <div className="bg-blue-50 text-blue-700 px-2 py-0.5 rounded border border-blue-200 text-xs text-nowrap">
                         Đón: {booking.pickupStation.name}
                         {booking.pickupTripPoint && (
-                            <span className="ml-1 font-mono">
-                                ({formatTime(booking.pickupTripPoint.scheduledTime)})
-                            </span>
+                          <span className="ml-1 font-mono">
+                            ({formatTime(booking.pickupTripPoint.scheduledTime)})
+                          </span>
                         )}
                       </div>
                     )}
                     {booking.dropoffStation && (
                       <div className="bg-orange-50 text-orange-700 px-2 py-0.5 rounded border border-orange-200 text-xs text-nowrap">
                         Trả: {booking.dropoffStation.name}
-                         {booking.dropoffTripPoint && (
-                            <span className="ml-1 font-mono">
-                                ({formatTime(booking.dropoffTripPoint.scheduledTime)})
-                            </span>
+                        {booking.dropoffTripPoint && (
+                          <span className="ml-1 font-mono">
+                            ({formatTime(booking.dropoffTripPoint.scheduledTime)})
+                          </span>
                         )}
                       </div>
                     )}

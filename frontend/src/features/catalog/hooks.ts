@@ -19,14 +19,14 @@ import {
   fetchStations,
   fetchTrips,
   getTripById,
+  searchRoutes,
+  searchStations,
   searchTrips,
   updateBus,
   updateOperator,
   updateRoute,
   updateStation,
   updateTrip,
-  searchStations,
-  searchRoutes,
   updateTripStops,
 } from './api';
 import { fetchBusLayouts } from './api';
