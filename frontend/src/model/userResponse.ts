@@ -7,10 +7,14 @@
  */
 import type { UserResponseRole } from './userResponseRole';
 
+export type AuthProvider = 'LOCAL' | 'GOOGLE' | 'FACEBOOK';
+
 export interface UserResponse {
   id?: string;
   fullName?: string;
   email?: string;
+  phone?: string;
   role?: UserResponseRole;
   avatarUrl?: string;
+  authProvider?: AuthProvider;
 }

@@ -121,6 +121,63 @@ export function useMe<TData = Awaited<ReturnType<typeof me>>, TError = unknown>(
   return query;
 }
 
+// Manual API functions for profile updates
+export interface UpdateProfileRequest {
+  fullName: string;
+  phone: string;
+}
+
+export interface ChangePasswordRequest {
+  oldPassword: string;
+  newPassword: string;
+}
+
+export interface UpdateAvatarRequest {
+  avatarUrl: string | null;
+}
+
+export const updateProfile = (
+  data: UpdateProfileRequest,
+  options?: SecondParameter<typeof customInstance>,
+) => {
+  return customInstance<ApiResponseUserResponse>(
+    {
+      url: `/api/users/me/profile`,
+      method: 'PUT',
+      data,
+    },
+    options,
+  );
+};
+
+export const changePassword = (
+  data: ChangePasswordRequest,
+  options?: SecondParameter<typeof customInstance>,
+) => {
+  return customInstance<{ status: number; message: string; data: null }>(
+    {
+      url: `/api/users/me/password`,
+      method: 'PUT',
+      data,
+    },
+    options,
+  );
+};
+
+export const updateAvatar = (
+  data: UpdateAvatarRequest,
+  options?: SecondParameter<typeof customInstance>,
+) => {
+  return customInstance<ApiResponseUserResponse>(
+    {
+      url: `/api/users/me/avatar`,
+      method: 'PUT',
+      data,
+    },
+    options,
+  );
+};
+
 
 
 

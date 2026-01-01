@@ -99,8 +99,9 @@ function SimpleNavItem({ item, currentPath }: { item: NavItem; currentPath: stri
     );
   }
 
-  // Otherwise, render the item itself as a simple link
-  const isActive = isPathActive(item.url, currentPath);
+  // Use isActive prop if provided, otherwise check path
+  const isActive =
+    item.isActive !== undefined ? item.isActive : isPathActive(item.url, currentPath);
   return (
     <SidebarMenuItem key={item.title}>
       <SidebarMenuButton tooltip={item.title} asChild isActive={isActive}>
