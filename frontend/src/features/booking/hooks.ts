@@ -10,6 +10,7 @@ import {
   getBookingById,
   getUserBookings,
 } from './api';
+import { useBookingStore } from './store';
 import type { CreateBookingRequest } from './types';
 
 export const useBookingById = (id: string | undefined) => {
@@ -48,6 +49,7 @@ export const useCreateBooking = () => {
       queryClient.invalidateQueries({
         queryKey: ['bookedSeats', data.trip.id],
       });
+      useBookingStore.getState().clearSelection();
     },
   });
 };

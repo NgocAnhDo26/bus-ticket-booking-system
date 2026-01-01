@@ -250,6 +250,12 @@ public class BookingService {
 
                 Booking savedBooking = bookingRepository.save(booking);
 
+                // Broadcast BOOKED status to WebSocket clients
+                List<String> seatCodes = savedBooking.getTickets().stream()
+                                .map(Ticket::getSeatCode)
+                                .collect(Collectors.toList());
+                seatLockService.markSeatsAsBooked(trip.getId(), seatCodes);
+
                 return toBookingResponse(savedBooking);
         }
 
