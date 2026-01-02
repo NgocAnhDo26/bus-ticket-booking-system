@@ -38,13 +38,19 @@ public class StationService {
     @Transactional(readOnly = true)
     public org.springframework.data.domain.Page<Station> searchStations(String query,
             org.springframework.data.domain.Pageable pageable) {
-        // Try fulltext search first, fallback to LIKE if it fails
-        try {
-            return stationRepository.searchFulltext(query, pageable);
-        } catch (Exception e) {
-            log.warn("Fulltext search failed, falling back to LIKE: {}", e.getMessage());
-            return stationRepository.search(query, pageable);
-        }
+        // Use LIKE search (fulltext is handled at DB level via the query)
+        // The searchFulltext query already includes LIKE fallback in the SQL
+        return stationRepository.search(query, pageable);
+    }
+
+    /**
+     * Search stations using fulltext search.
+     * Only use this after V26 migration has been applied.
+     */
+    @Transactional(readOnly = true)
+    public org.springframework.data.domain.Page<Station> searchStationsFulltext(String query,
+            org.springframework.data.domain.Pageable pageable) {
+        return stationRepository.searchFulltext(query, pageable);
     }
 
     @Transactional

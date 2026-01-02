@@ -48,15 +48,20 @@ public class RouteService {
     @Transactional(readOnly = true)
     public org.springframework.data.domain.Page<com.awad.ticketbooking.modules.catalog.dto.RouteResponse> searchRoutes(
                         String query, org.springframework.data.domain.Pageable pageable) {
-                // Try fulltext search first, fallback to LIKE if it fails
-                try {
-                        return routeRepository.searchFulltext(query, pageable)
-                                        .map(this::mapToRouteResponse);
-                } catch (Exception e) {
-                        log.warn("Fulltext search failed, falling back to LIKE: {}", e.getMessage());
-                        return routeRepository.search(query, pageable)
-                                        .map(this::mapToRouteResponse);
-                }
+                // Use LIKE search (fulltext is handled at DB level via the query)
+                return routeRepository.search(query, pageable)
+                                .map(this::mapToRouteResponse);
+        }
+
+        /**
+         * Search routes using fulltext search.
+         * Only use this after V26 migration has been applied.
+         */
+        @Transactional(readOnly = true)
+        public org.springframework.data.domain.Page<com.awad.ticketbooking.modules.catalog.dto.RouteResponse> searchRoutesFulltext(
+                        String query, org.springframework.data.domain.Pageable pageable) {
+                return routeRepository.searchFulltext(query, pageable)
+                                .map(this::mapToRouteResponse);
         }
 
         @Transactional
