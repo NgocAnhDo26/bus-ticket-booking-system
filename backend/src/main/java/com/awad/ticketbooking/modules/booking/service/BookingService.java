@@ -10,8 +10,10 @@ import com.awad.ticketbooking.modules.booking.dto.TicketRequest;
 import com.awad.ticketbooking.modules.booking.dto.UpdateBookingRequest;
 import com.awad.ticketbooking.modules.booking.entity.Booking;
 import com.awad.ticketbooking.modules.booking.entity.Ticket;
+import com.awad.ticketbooking.modules.booking.dto.RefundCalculation;
 import com.awad.ticketbooking.modules.booking.repository.BookingRepository;
 import com.awad.ticketbooking.modules.booking.repository.TicketRepository;
+import java.time.Instant;
 import java.util.Set;
 import java.util.Map;
 import com.awad.ticketbooking.modules.catalog.entity.Station;
@@ -431,6 +433,13 @@ public class BookingService {
                         if (booking.getTrip().getDepartureTime().isBefore(java.time.Instant.now())) {
                                 throw new RuntimeException("Cannot cancel booking for departed trip");
                         }
+
+                        // Check refund eligibility
+                        RefundCalculation refundCalc = calculateRefund(bookingId);
+                        if (refundCalc.isRefundable()) {
+                                // If refundable, we process it as a refund
+                                return refundBooking(bookingId);
+                        }
                 }
 
                 // Delete tickets to release seats
@@ -438,15 +447,39 @@ public class BookingService {
                                 .map(Ticket::getSeatCode)
                                 .collect(Collectors.toList());
 
-                // Tickets are preserved for history using the new repository filter logic
-                // ticketRepository.deleteAll(booking.getTickets());
-                // booking.getTickets().clear();
-
                 // Release Redis locks
                 seatLockService.unlockSeatsForBooking(booking.getTrip().getId(), seatCodes);
 
                 booking.setStatus(BookingStatus.CANCELLED);
                 return toBookingResponse(bookingRepository.save(booking));
+        }
+
+        @Transactional(readOnly = true)
+        public RefundCalculation calculateRefund(UUID bookingId) {
+                Booking booking = bookingRepository.findById(bookingId)
+                                .orElseThrow(() -> new RuntimeException("Booking not found"));
+
+                Instant now = Instant.now();
+                Instant departureTime = booking.getTrip().getDepartureTime();
+
+                // Policy: 100% refund if > 24 hours before departure
+                // 0% refund if <= 24 hours
+                long hoursUntilDeparture = java.time.Duration.between(now, departureTime).toHours();
+
+                boolean isRefundable = hoursUntilDeparture > 24;
+                double refundPercentage = isRefundable ? 100.0 : 0.0;
+                BigDecimal refundAmount = isRefundable ? booking.getTotalPrice() : BigDecimal.ZERO;
+
+                String policyDesc = isRefundable
+                                ? "Hoàn tiền 100% vì hủy trước 24h khởi hành."
+                                : "Không hoàn tiền vì hủy trong vòng 24h trước khởi hành.";
+
+                return RefundCalculation.builder()
+                                .refundAmount(refundAmount)
+                                .refundPercentage(refundPercentage)
+                                .policyDescription(policyDesc)
+                                .isRefundable(isRefundable)
+                                .build();
         }
 
         @Transactional

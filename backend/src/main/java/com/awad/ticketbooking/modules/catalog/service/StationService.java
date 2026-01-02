@@ -4,6 +4,7 @@ import com.awad.ticketbooking.modules.catalog.dto.CreateStationRequest;
 import com.awad.ticketbooking.modules.catalog.entity.Station;
 import com.awad.ticketbooking.modules.catalog.repository.StationRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -11,6 +12,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class StationService {
 
     private final StationRepository stationRepository;
@@ -36,7 +38,13 @@ public class StationService {
     @Transactional(readOnly = true)
     public org.springframework.data.domain.Page<Station> searchStations(String query,
             org.springframework.data.domain.Pageable pageable) {
-        return stationRepository.search(query, pageable);
+        // Try fulltext search first, fallback to LIKE if it fails
+        try {
+            return stationRepository.searchFulltext(query, pageable);
+        } catch (Exception e) {
+            log.warn("Fulltext search failed, falling back to LIKE: {}", e.getMessage());
+            return stationRepository.search(query, pageable);
+        }
     }
 
     @Transactional

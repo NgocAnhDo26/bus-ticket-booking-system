@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
@@ -13,7 +13,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Combobox } from '@/components/ui/combobox';
 import { Label } from '@/components/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { useStations } from '@/features/catalog/hooks';
+import { useSearchStations } from '@/features/catalog/hooks';
 
 const searchSchema = z.object({
   origin: z.string().min(1, 'Vui lòng chọn điểm đi'),
@@ -24,13 +24,28 @@ const searchSchema = z.object({
 export const SearchForm = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { data: stations, isLoading, error } = useStations();
 
-  const cityOptions = useMemo(() => {
-    if (!stations) return [];
-    const cities = Array.from(new Set(stations.map((s) => s.city)));
+  // State for search queries
+  const [originSearch, setOriginSearch] = useState('');
+  const [destinationSearch, setDestinationSearch] = useState('');
+
+  // Use search API instead of loading all stations
+  const { data: originStations, isLoading: isLoadingOrigin } = useSearchStations(originSearch);
+  const { data: destinationStations, isLoading: isLoadingDestination } =
+    useSearchStations(destinationSearch);
+
+  // Convert stations to city options
+  const originCityOptions = useMemo(() => {
+    if (!originStations) return [];
+    const cities = Array.from(new Set(originStations.map((s) => s.city)));
     return cities.map((city) => ({ value: city, label: city }));
-  }, [stations]);
+  }, [originStations]);
+
+  const destinationCityOptions = useMemo(() => {
+    if (!destinationStations) return [];
+    const cities = Array.from(new Set(destinationStations.map((s) => s.city)));
+    return cities.map((city) => ({ value: city, label: city }));
+  }, [destinationStations]);
 
   const {
     handleSubmit,
@@ -59,14 +74,6 @@ export const SearchForm = () => {
     navigate(`/search?${searchParams.toString()}`);
   };
 
-  if (error) {
-    return (
-      <div className="p-4 text-red-500 bg-red-50 rounded-lg">
-        Lỗi tải dữ liệu: {(error as Error).message || 'Không thể kết nối server'}
-      </div>
-    );
-  }
-
   return (
     <Card className="w-full max-w-4xl mx-auto supports-backdrop-filter:bg-card/80">
       <CardContent className="px-6 pt-2 py-3">
@@ -76,16 +83,17 @@ export const SearchForm = () => {
         >
           <div className="space-y-2">
             <Label className="flex items-center gap-2">
-              <MapPin className="w-4 h-4 text-primary" /> Điểm đi{' '}
-              {isLoading && <span className="text-xs text-muted-foreground">(Đang tải...)</span>}
+              <MapPin className="w-4 h-4 text-primary" /> Điểm đi
             </Label>
             <div className="relative">
               <Combobox
-                options={cityOptions}
+                options={originCityOptions}
                 value={origin}
                 onSelect={(value) => setValue('origin', value, { shouldValidate: true })}
-                placeholder="Chọn điểm đi"
-                emptyText="Không tìm thấy tỉnh/thành"
+                onSearchChange={setOriginSearch}
+                placeholder="Nhập để tìm điểm đi"
+                emptyText={isLoadingOrigin ? 'Đang tìm...' : 'Không tìm thấy tỉnh/thành'}
+                isLoading={isLoadingOrigin}
                 className="w-full pr-2"
               />
               {errors.origin && (
@@ -102,11 +110,13 @@ export const SearchForm = () => {
             </Label>
             <div className="relative">
               <Combobox
-                options={cityOptions}
+                options={destinationCityOptions}
                 value={destination}
                 onSelect={(value) => setValue('destination', value, { shouldValidate: true })}
-                placeholder="Chọn điểm đến"
-                emptyText="Không tìm thấy tỉnh/thành"
+                onSearchChange={setDestinationSearch}
+                placeholder="Nhập để tìm điểm đến"
+                emptyText={isLoadingDestination ? 'Đang tìm...' : 'Không tìm thấy tỉnh/thành'}
+                isLoading={isLoadingDestination}
                 className="w-full pr-2"
               />
               {errors.destination && (

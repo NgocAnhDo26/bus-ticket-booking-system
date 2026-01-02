@@ -9,6 +9,7 @@ import com.awad.ticketbooking.modules.trip.dto.CreateTripRequest;
 import com.awad.ticketbooking.modules.trip.dto.RecurrenceDto;
 import com.awad.ticketbooking.modules.trip.dto.SearchTripRequest;
 import com.awad.ticketbooking.modules.trip.dto.TripResponse;
+import com.awad.ticketbooking.modules.trip.dto.TripStatusMessage;
 import com.awad.ticketbooking.modules.trip.dto.TripStopDto;
 import com.awad.ticketbooking.modules.trip.dto.UpdateTripStopsRequest;
 import com.awad.ticketbooking.modules.trip.entity.Trip;
@@ -19,6 +20,11 @@ import com.awad.ticketbooking.modules.trip.repository.TripRepository;
 import com.awad.ticketbooking.modules.trip.repository.TripScheduleRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.awad.ticketbooking.modules.booking.service.BookingService;
+import com.awad.ticketbooking.modules.booking.entity.Booking;
+import com.awad.ticketbooking.common.enums.BookingStatus;
+import com.awad.ticketbooking.common.enums.TripStatus;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
@@ -38,6 +44,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@lombok.extern.slf4j.Slf4j
 public class TripService {
 
     // Maximum allowed days for recurrence to prevent server overload
@@ -51,7 +58,9 @@ public class TripService {
     private final com.awad.ticketbooking.modules.booking.repository.BookingRepository bookingRepository;
     private final com.awad.ticketbooking.modules.booking.repository.TicketRepository ticketRepository;
     private final TripScheduleRepository tripScheduleRepository;
+    private final BookingService bookingService;
     private final ObjectMapper objectMapper;
+    private final SimpMessagingTemplate messagingTemplate;
 
     @Transactional
     public TripResponse createTrip(CreateTripRequest request) {
@@ -227,13 +236,38 @@ public class TripService {
 
     @Transactional
     public void deleteTrip(java.util.UUID id, boolean force) {
-        if (!tripRepository.existsById(id)) {
-            throw new RuntimeException("Trip not found");
-        }
+        Trip trip = tripRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Trip not found"));
+
         if (force) {
-            bookingRepository.deleteByTripId(id);
+            // Find all bookings for this trip
+            List<Booking> bookings = bookingRepository.findByTripId(id);
+            for (Booking booking : bookings) {
+                if (booking.getStatus() == BookingStatus.CONFIRMED) {
+                    // Process refund for confirmed bookings
+                    bookingService.refundBooking(booking.getId());
+                    // Note: refundBooking sets status to REFUNDED
+                } else if (booking.getStatus() == BookingStatus.PENDING) {
+                    // Cancel pending bookings
+                    bookingService.cancelBooking(booking.getId());
+                }
+            }
+        } else {
+            // Check if there are active bookings (CONFIRMED or PENDING)
+            // leveraging the repository check which likely checks for future bookings
+            // or we manually check list
+            boolean hasActiveBookings = bookingRepository.findByTripId(id).stream()
+                    .anyMatch(b -> b.getStatus() == BookingStatus.CONFIRMED || b.getStatus() == BookingStatus.PENDING);
+
+            if (hasActiveBookings) {
+                throw new RuntimeException(
+                        "Cannot delete trip with active bookings. Use force=true to refund/cancel them.");
+            }
         }
-        tripRepository.deleteById(id);
+
+        // Soft Delete: Set status to CANCELLED instead of deleting record
+        trip.setStatus(TripStatus.CANCELLED);
+        tripRepository.save(trip);
     }
 
     @Transactional
@@ -499,8 +533,76 @@ public class TripService {
         Trip trip = tripRepository.findById(tripId)
                 .orElseThrow(() -> new RuntimeException("Trip not found"));
 
+        TripStatus oldStatus = trip.getStatus();
         trip.setStatus(status);
-        return mapToResponse(tripRepository.save(trip));
+        Trip savedTrip = tripRepository.save(trip);
+
+        // Build and broadcast status message
+        broadcastTripStatusUpdate(savedTrip, status, oldStatus);
+
+        return mapToResponse(savedTrip);
+    }
+
+    /**
+     * Broadcasts trip status updates via WebSocket to:
+     * 1. Trip-specific channel (for users viewing trip details)
+     * 2. User-specific channels (for users with confirmed bookings on this trip)
+     */
+    private void broadcastTripStatusUpdate(Trip trip, TripStatus newStatus, TripStatus oldStatus) {
+        try {
+            String statusMessage = buildStatusMessage(newStatus, oldStatus, trip);
+            
+            TripStatusMessage message = new TripStatusMessage(
+                trip.getId(),
+                newStatus.name(),
+                statusMessage,
+                java.time.Instant.now(),
+                newStatus == TripStatus.DELAYED ? trip.getDepartureTime() : null
+            );
+            
+            // Broadcast to trip-specific channel (for users viewing trip details)
+            messagingTemplate.convertAndSend("/topic/trip/" + trip.getId() + "/status", message);
+            log.info("Broadcasted trip status update to /topic/trip/{}/status", trip.getId());
+            
+            // Broadcast to users with confirmed bookings on this trip
+            List<Booking> bookings = bookingRepository.findByTripIdAndStatus(
+                trip.getId(), 
+                BookingStatus.CONFIRMED
+            );
+            
+            for (Booking booking : bookings) {
+                if (booking.getUser() != null) {
+                    messagingTemplate.convertAndSend(
+                        "/topic/user/" + booking.getUser().getId() + "/trips",
+                        message
+                    );
+                    log.debug("Broadcasted trip status update to user {}", booking.getUser().getId());
+                }
+            }
+            
+            log.info("Trip {} status changed from {} to {}. Notified {} users.", 
+                trip.getId(), oldStatus, newStatus, bookings.size());
+        } catch (Exception e) {
+            log.error("Failed to broadcast trip status update: {}", e.getMessage(), e);
+            // Don't fail the status update if broadcast fails
+        }
+    }
+
+    private String buildStatusMessage(TripStatus newStatus, TripStatus oldStatus, Trip trip) {
+        switch (newStatus) {
+            case DELAYED:
+                return "Chuyến xe bị hoãn. Vui lòng kiểm tra thời gian mới.";
+            case CANCELLED:
+                return "Chuyến xe đã bị hủy. Vui lòng liên hệ để được hoàn tiền.";
+            case BOARDING:
+                return "Chuyến xe đang lên khách. Vui lòng đến bến sớm.";
+            case DEPARTED:
+                return "Chuyến xe đã khởi hành.";
+            case COMPLETED:
+                return "Chuyến xe đã hoàn thành.";
+            default:
+                return "Trạng thái chuyến xe đã được cập nhật.";
+        }
     }
 
     /**

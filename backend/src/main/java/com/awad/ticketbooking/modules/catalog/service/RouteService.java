@@ -45,11 +45,18 @@ public class RouteService {
                                 .map(this::mapToRouteResponse);
         }
 
-        @Transactional(readOnly = true)
-        public org.springframework.data.domain.Page<com.awad.ticketbooking.modules.catalog.dto.RouteResponse> searchRoutes(
+    @Transactional(readOnly = true)
+    public org.springframework.data.domain.Page<com.awad.ticketbooking.modules.catalog.dto.RouteResponse> searchRoutes(
                         String query, org.springframework.data.domain.Pageable pageable) {
-                return routeRepository.search(query, pageable)
-                                .map(this::mapToRouteResponse);
+                // Try fulltext search first, fallback to LIKE if it fails
+                try {
+                        return routeRepository.searchFulltext(query, pageable)
+                                        .map(this::mapToRouteResponse);
+                } catch (Exception e) {
+                        log.warn("Fulltext search failed, falling back to LIKE: {}", e.getMessage());
+                        return routeRepository.search(query, pageable)
+                                        .map(this::mapToRouteResponse);
+                }
         }
 
         @Transactional

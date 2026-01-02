@@ -3,6 +3,7 @@ package com.awad.ticketbooking.modules.booking.controller;
 import com.awad.ticketbooking.common.config.security.ApplicationUserDetails;
 import com.awad.ticketbooking.modules.booking.dto.BookingResponse;
 import com.awad.ticketbooking.modules.booking.dto.CreateBookingRequest;
+import com.awad.ticketbooking.modules.booking.dto.RefundCalculation;
 import com.awad.ticketbooking.modules.booking.service.BookingService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -81,6 +82,12 @@ public class BookingController {
     @Operation(summary = "Cancel booking", description = "Cancels an existing booking and releases seats.")
     public ResponseEntity<BookingResponse> cancelBooking(@PathVariable UUID id) {
         return ResponseEntity.ok(bookingService.cancelBooking(id));
+    }
+
+    @GetMapping("/{id}/refund-estimate")
+    @Operation(summary = "Get refund estimate", description = "Returns the estimated refund amount and policy for a booking.")
+    public ResponseEntity<RefundCalculation> getRefundEstimate(@PathVariable UUID id) {
+        return ResponseEntity.ok(bookingService.calculateRefund(id));
     }
 
     @PostMapping("/tickets/{id}/check-in")
