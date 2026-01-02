@@ -52,8 +52,7 @@ export const useStations = () => {
 export const useSearchStations = (query: string) => {
   return useQuery({
     queryKey: ['stations', 'search', query],
-    queryFn: () => searchStations(query),
-    enabled: !!query,
+    queryFn: () => (query ? searchStations(query) : fetchStations()),
   });
 };
 

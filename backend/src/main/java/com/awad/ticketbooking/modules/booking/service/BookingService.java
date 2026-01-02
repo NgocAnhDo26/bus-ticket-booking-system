@@ -778,4 +778,31 @@ public class BookingService {
 
                 return toBookingResponse(ticket.getBooking());
         }
+
+        @Transactional
+        public BookingResponse checkInBooking(String code) {
+                Booking booking = bookingRepository.findByCode(code)
+                                .orElseThrow(() -> new RuntimeException("Booking not found"));
+
+                if (booking.getStatus() != BookingStatus.CONFIRMED) {
+                        throw new RuntimeException(
+                                        "INVALID_STATUS: Vé không hợp lệ (Trạng thái: " + booking.getStatus() + ")");
+                }
+
+                // Check if all tickets are already boarded
+                boolean allBoarded = booking.getTickets().stream()
+                                .allMatch(Ticket::isBoarded);
+
+                if (allBoarded) {
+                        throw new RuntimeException("ALREADY_CHECKED_IN: Vé này đã được check-in trước đó.");
+                }
+
+                // Mark all tickets as boarded
+                for (Ticket ticket : booking.getTickets()) {
+                        ticket.setBoarded(true);
+                }
+                ticketRepository.saveAll(booking.getTickets());
+
+                return toBookingResponse(booking);
+        }
 }

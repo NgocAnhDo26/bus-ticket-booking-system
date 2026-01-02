@@ -190,10 +190,14 @@ public class TripGenerationScheduler {
                         });
 
                 for (PricingDto dto : pricingDtos) {
+                    if (dto.getSeatType() == null) {
+                        log.warn("Skipping invalid pricing config for schedule {}: seatType is null", schedule.getId());
+                        continue;
+                    }
                     TripPricing pricing = new TripPricing();
                     pricing.setTrip(trip);
-                    pricing.setSeatType(dto.seatType);
-                    pricing.setPrice(dto.price);
+                    pricing.setSeatType(dto.getSeatType());
+                    pricing.setPrice(dto.getPrice());
                     trip.getTripPricings().add(pricing);
                 }
             } catch (Exception e) {
@@ -213,6 +217,7 @@ public class TripGenerationScheduler {
     @lombok.NoArgsConstructor
     @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
     private static class PricingDto {
+        @com.fasterxml.jackson.annotation.JsonAlias("seat_type")
         private SeatType seatType;
         private BigDecimal price;
     }

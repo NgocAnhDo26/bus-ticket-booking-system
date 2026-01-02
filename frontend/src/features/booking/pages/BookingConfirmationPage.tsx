@@ -288,13 +288,15 @@ export const BookingConfirmationPage = () => {
             <p className="text-lg font-mono font-bold text-primary mt-1">{booking.code}</p>
             <p className="text-xs text-muted-foreground">Mã đặt vé</p>
 
-            <div className="mt-4 flex justify-center">
-              <img
-                src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${booking.code}`}
-                alt="QR Code"
-                className="border p-2 rounded-lg"
-              />
-            </div>
+            {isPaid && (
+              <div className="mt-4 flex justify-center">
+                <img
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${booking.code}`}
+                  alt="QR Code"
+                  className="border p-2 rounded-lg"
+                />
+              </div>
+            )}
           </CardHeader>
 
           <div className="px-6">

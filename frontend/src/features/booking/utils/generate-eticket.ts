@@ -1,4 +1,5 @@
 import { jsPDF } from 'jspdf';
+import QRCode from 'qrcode';
 
 import type { BookingResponse } from '../types';
 
@@ -30,7 +31,9 @@ function formatCurrencyDisplay(amount: number): string {
   return new Intl.NumberFormat('vi-VN').format(amount) + ' VND';
 }
 
-export function generateETicketPDF(booking: BookingResponse) {
+// ... (existing imports)
+
+export async function generateETicketPDF(booking: BookingResponse) {
   // A5 size for compact ticket (148 x 210 mm)
   const doc = new jsPDF({
     format: 'a5',
@@ -68,6 +71,32 @@ export function generateETicketPDF(booking: BookingResponse) {
   y += 5;
   centerText('E-TICKET', y, 10);
   y += 10;
+
+  // QR Code Generation
+  try {
+    // Generate QR Code as DataURL
+    const qrDataUrl = await QRCode.toDataURL(booking.code, {
+      errorCorrectionLevel: 'H',
+      margin: 1,
+      width: 150,
+      color: {
+        dark: '#000000',
+        light: '#ffffff',
+      },
+    });
+
+    // Add QR Code to PDF
+    // Centered, size 30x30mm
+    const qrSize = 30;
+    const qrX = (PageWidth - qrSize) / 2;
+    doc.addImage(qrDataUrl, 'PNG', qrX, y, qrSize, qrSize);
+    y += qrSize + 5; // Advance y past the QR code
+  } catch (err) {
+    console.error('Error generating QR code for PDF:', err);
+    // Fallback text if QR fails
+    centerText('[QR Code Error]', y + 10, 8);
+    y += 20;
+  }
 
   centerText('Ma ve: ' + booking.code, y, 12, true);
   y += 10;
