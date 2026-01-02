@@ -778,4 +778,18 @@ public class BookingService {
 
                 return toBookingResponse(ticket.getBooking());
         }
+
+        @Transactional
+        public BookingResponse checkInBooking(String code) {
+                Booking booking = bookingRepository.findByCode(code)
+                                .orElseThrow(() -> new RuntimeException("Booking not found"));
+
+                // Mark all tickets as boarded
+                for (Ticket ticket : booking.getTickets()) {
+                        ticket.setBoarded(true);
+                }
+                ticketRepository.saveAll(booking.getTickets());
+
+                return toBookingResponse(booking);
+        }
 }

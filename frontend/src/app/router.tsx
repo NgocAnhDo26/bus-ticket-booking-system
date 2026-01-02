@@ -6,6 +6,7 @@ import { DashboardLayout } from '@/components/layout';
 import { AdminDashboardLayout } from '@/components/layout/AdminLayout';
 import { UserDashboardLayout } from '@/components/layout/UserDashboardLayout';
 import { BookingManagementPage } from '@/features/admin-booking';
+import { AdminCheckInScannerPage } from '@/features/admin/pages/AdminCheckInScannerPage';
 import {
   ActivationPage,
   ForgotPasswordPage,
@@ -150,6 +151,7 @@ export const router = createBrowserRouter([
           { path: '/admin/dashboard', element: <AdminDashboardPage /> },
           { path: '/admin/profile', element: <ProfilePage /> },
           { path: '/admin/bookings', element: <BookingManagementPage /> },
+          { path: '/admin/check-in', element: <AdminCheckInScannerPage /> },
           {
             path: '/admin/bookings/transactions',
             element: <Navigate to="/admin/bookings" replace />,

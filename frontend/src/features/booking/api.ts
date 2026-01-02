@@ -90,6 +90,11 @@ export const checkInPassenger = async (ticketId: string): Promise<BookingRespons
   return response.data;
 };
 
+export const checkInBooking = async (code: string): Promise<BookingResponse> => {
+  const response = await apiClient.post<BookingResponse>(`/api/bookings/${code}/check-in-booking`);
+  return response.data;
+};
+
 // Payment API
 export interface CreatePaymentRequest {
   bookingId: string;

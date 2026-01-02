@@ -96,6 +96,12 @@ public class BookingController {
         return ResponseEntity.ok(bookingService.checkInPassenger(id));
     }
 
+    @PostMapping("/{code}/check-in-booking")
+    @Operation(summary = "Check-in by Booking Code", description = "Marks all tickets in the booking as boarded (scanned).")
+    public ResponseEntity<BookingResponse> checkInBooking(@PathVariable String code) {
+        return ResponseEntity.ok(bookingService.checkInBooking(code));
+    }
+
     @GetMapping("/admin")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Get admin bookings", description = "Returns a paginated list of bookings with filtering options (Admin only).")
