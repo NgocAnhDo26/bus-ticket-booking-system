@@ -122,3 +122,18 @@ export type SeatStatusMessage = {
 
 // Prefer OpenAPI/Orval request models as the source of truth.
 export type LockSeatRequest = ApiLockSeatRequest;
+
+export type RefundCalculation = {
+  refundAmount: number;
+  refundPercentage: number;
+  policyDescription: string;
+  isRefundable: boolean;
+};
+
+export type TripStatusMessage = {
+  tripId: string;
+  status: string;
+  message: string;
+  updatedAt: string;
+  newDepartureTime?: string;
+};

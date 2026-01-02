@@ -32,6 +32,7 @@ import { AdminDashboardPage } from '@/features/dashboard-admin';
 import { AboutPage } from '@/features/home/pages/AboutPage';
 import { ContactPage } from '@/features/home/pages/ContactPage';
 import { HomePage } from '@/features/home/pages/HomePage';
+import { ProfilePage } from '@/features/profile';
 import { SearchResultsPage } from '@/features/search/pages/SearchResultsPage';
 import { TripDetailsPage } from '@/features/search/pages/TripDetailsPage';
 import { AdminManagementPage, CustomerManagementPage } from '@/features/user-management';
@@ -147,6 +148,7 @@ export const router = createBrowserRouter([
         element: <AdminDashboardLayout />,
         children: [
           { path: '/admin/dashboard', element: <AdminDashboardPage /> },
+          { path: '/admin/profile', element: <ProfilePage /> },
           { path: '/admin/bookings', element: <BookingManagementPage /> },
           {
             path: '/admin/bookings/transactions',

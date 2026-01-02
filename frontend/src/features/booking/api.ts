@@ -19,6 +19,7 @@ import type {
   BookingResponse,
   CreateBookingRequest,
   LockSeatRequest,
+  RefundCalculation,
   UpdateBookingRequest,
 } from './types';
 
@@ -70,6 +71,11 @@ export const confirmBooking = async (id: string): Promise<BookingResponse> => {
 export const cancelBooking = async (id: string): Promise<BookingResponse> => {
   const resp = await orvalCancelBooking(id);
   return resp as unknown as BookingResponse;
+};
+
+export const getRefundEstimate = async (id: string): Promise<RefundCalculation> => {
+  const response = await apiClient.get<RefundCalculation>(`/api/bookings/${id}/refund-estimate`);
+  return response.data;
 };
 
 export const lookupBooking = async (code: string, email: string): Promise<BookingResponse> => {

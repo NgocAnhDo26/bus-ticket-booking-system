@@ -17,7 +17,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 
-import type { BookingResponse } from '../types';
+import { getRefundEstimate } from '../api';
+import type { BookingResponse, RefundCalculation } from '../types';
 import { BookingEditDialog } from './BookingEditDialog';
 
 type BookingCardProps = {
@@ -75,6 +76,8 @@ const statusConfig = {
 export const BookingCard = ({ booking, onCancel, isCancelling }: BookingCardProps) => {
   const [showEdit, setShowEdit] = useState(false);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [refundData, setRefundData] = useState<RefundCalculation | null>(null);
+  const [loadingEstimate, setLoadingEstimate] = useState(false);
   const status = statusConfig[booking.status];
   const canCancel =
     booking.status !== 'CANCELLED' && new Date(booking.trip.departureTime) > new Date();
@@ -201,13 +204,61 @@ export const BookingCard = ({ booking, onCancel, isCancelling }: BookingCardProp
       {onCancel && (
         <AlertDialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
           <AlertDialogContent>
-            <AlertDialogHeader>
+            <AlertDialogHeader className="space-y-4">
               <AlertDialogTitle>Xác nhận hủy vé</AlertDialogTitle>
+
               <AlertDialogDescription>
                 Bạn có chắc chắn muốn hủy đặt vé{' '}
-                <span className="font-mono font-bold">#{booking.code}</span>? Hành động này không
-                thể hoàn tác.
+                <span className="font-mono font-bold">#{booking.code}</span>?
               </AlertDialogDescription>
+
+              {!refundData && !loadingEstimate && (
+                <div className="py-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={async () => {
+                      try {
+                        setLoadingEstimate(true);
+                        const est = await getRefundEstimate(booking.id);
+                        setRefundData(est);
+                      } catch (e) {
+                        console.error('Failed to load estimate', e);
+                      } finally {
+                        setLoadingEstimate(false);
+                      }
+                    }}
+                    className="p-0 h-auto text-blue-600 underline"
+                  >
+                    Xem chính sách hoàn tiền
+                  </Button>
+                </div>
+              )}
+
+              {loadingEstimate && (
+                <p className="text-sm text-muted-foreground">Đang tính toán hoàn tiền...</p>
+              )}
+
+              {refundData && (
+                <div className="bg-muted p-4 rounded-md text-sm space-y-2">
+                  <div className="flex justify-between">
+                    <span>Số tiền hoàn lại ({refundData.refundPercentage}%):</span>
+                    <span className="font-bold">{formatCurrency(refundData.refundAmount)}</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground border-t pt-2 mt-2">
+                    {refundData.policyDescription}
+                  </p>
+                  {refundData.isRefundable && (
+                    <p className="text-xs text-green-600 mt-1">
+                      *Số tiền sẽ được hoàn về phương thức thanh toán ban đầu.
+                    </p>
+                  )}
+                </div>
+              )}
+
+              <p className="text-sm text-muted-foreground mt-2">
+                Hành động này không thể hoàn tác.
+              </p>
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel disabled={isCancelling}>Không</AlertDialogCancel>

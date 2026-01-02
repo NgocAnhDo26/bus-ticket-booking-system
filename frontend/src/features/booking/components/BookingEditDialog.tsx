@@ -7,6 +7,16 @@ import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import * as z from 'zod';
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -20,11 +30,18 @@ import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field
 import { Input } from '@/components/ui/input';
 import { getBusLayout } from '@/features/bus-layout/api';
 
-import { bookingApi, updateBooking } from '../api';
+import { bookingApi, getRefundEstimate, updateBooking } from '../api';
 import { useCancelBooking } from '../hooks';
 import { useBookingStore } from '../store';
-import type { BookingResponse } from '../types';
+import type { BookingResponse, RefundCalculation } from '../types';
 import { BookingSeatMap } from './BookingSeatMap';
+
+const formatCurrency = (amount: number) => {
+  return new Intl.NumberFormat('vi-VN', {
+    style: 'currency',
+    currency: 'VND',
+  }).format(amount);
+};
 
 const formSchema = z.object({
   passengerName: z.string().min(2, 'Tên phải có ít nhất 2 ký tự'),
@@ -45,17 +62,38 @@ export const BookingEditDialog = ({ booking, open, onOpenChange }: BookingEditDi
   const { initialize, cleanup, toggleSeat } = useBookingStore();
   const [localSelectedSeats, setLocalSelectedSeats] = useState<string[]>([]);
   const cancelMutation = useCancelBooking();
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [refundData, setRefundData] = useState<RefundCalculation | null>(null);
+  const [loadingEstimate, setLoadingEstimate] = useState(false);
 
   const canCancel =
     booking.status !== 'CANCELLED' && new Date(booking.trip.departureTime) > new Date();
 
-  const handleCancelBooking = async () => {
+  const handleCancelClick = () => {
+    setShowCancelDialog(true);
+    setRefundData(null);
+  };
+
+  const handleCancelConfirm = async () => {
     try {
       await cancelMutation.mutateAsync(booking.id);
       toast.success('Hủy vé thành công', { id: 'dialog-cancel-success' });
+      setShowCancelDialog(false);
       onOpenChange(false);
     } catch {
       toast.error('Hủy vé thất bại', { id: 'dialog-cancel-error' });
+    }
+  };
+
+  const handleLoadRefundEstimate = async () => {
+    try {
+      setLoadingEstimate(true);
+      const estimate = await getRefundEstimate(booking.id);
+      setRefundData(estimate);
+    } catch (e) {
+      console.error('Failed to load refund estimate', e);
+    } finally {
+      setLoadingEstimate(false);
     }
   };
 
@@ -447,7 +485,7 @@ export const BookingEditDialog = ({ booking, open, onOpenChange }: BookingEditDi
           {canCancel && (
             <Button
               variant="destructive"
-              onClick={handleCancelBooking}
+              onClick={handleCancelClick}
               disabled={cancelMutation.isPending}
             >
               {cancelMutation.isPending ? 'Đang hủy...' : 'Hủy đặt vé'}
@@ -468,6 +506,66 @@ export const BookingEditDialog = ({ booking, open, onOpenChange }: BookingEditDi
           </div>
         </DialogFooter>
       </DialogContent>
+
+      {/* Cancel Confirmation Dialog */}
+      <AlertDialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader className="space-y-4">
+            <AlertDialogTitle>Xác nhận hủy vé</AlertDialogTitle>
+
+            <AlertDialogDescription>
+              Bạn có chắc chắn muốn hủy đặt vé{' '}
+              <span className="font-mono font-bold">#{booking.code}</span>?
+            </AlertDialogDescription>
+
+            {!refundData && !loadingEstimate && (
+              <div className="py-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleLoadRefundEstimate}
+                  className="p-0 h-auto text-blue-600 underline"
+                >
+                  Xem chính sách hoàn tiền
+                </Button>
+              </div>
+            )}
+
+            {loadingEstimate && (
+              <p className="text-sm text-muted-foreground">Đang tính toán hoàn tiền...</p>
+            )}
+
+            {refundData && (
+              <div className="bg-muted p-4 rounded-md text-sm space-y-2">
+                <div className="flex justify-between">
+                  <span>Số tiền hoàn lại ({refundData.refundPercentage}%):</span>
+                  <span className="font-bold">{formatCurrency(refundData.refundAmount)}</span>
+                </div>
+                <p className="text-xs text-muted-foreground border-t pt-2 mt-2">
+                  {refundData.policyDescription}
+                </p>
+                {refundData.isRefundable && (
+                  <p className="text-xs text-green-600 mt-1">
+                    *Số tiền sẽ được hoàn về phương thức thanh toán ban đầu.
+                  </p>
+                )}
+              </div>
+            )}
+
+            <p className="text-sm text-muted-foreground mt-2">Hành động này không thể hoàn tác.</p>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={cancelMutation.isPending}>Không</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleCancelConfirm}
+              disabled={cancelMutation.isPending}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {cancelMutation.isPending ? 'Đang hủy...' : 'Xác nhận hủy'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 };

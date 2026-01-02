@@ -6,7 +6,7 @@ import { persist } from 'zustand/middleware';
 import { useAuthStore } from '@/store/auth-store';
 
 import { bookingApi } from './api';
-import { type LockSeatRequest, type SeatStatusMessage } from './types';
+import { type LockSeatRequest, type SeatStatusMessage, type TripStatusMessage } from './types';
 
 const getBaseUrl = () => {
   const apiUrl = import.meta.env.VITE_API_URL ?? 'http://localhost:8080';
@@ -19,6 +19,9 @@ type BookingState = {
   isConnected: boolean;
   isLoading: boolean;
   error: string | null;
+
+  // Trip status from WebSocket
+  tripStatus: TripStatusMessage | null;
 
   // Draft / Pending State (for restoring when going back)
   pendingBookingId: string | null;
@@ -50,6 +53,7 @@ export const useBookingStore = create<BookingState>()(
         isConnected: false,
         isLoading: false,
         error: null,
+        tripStatus: null,
         pendingBookingId: null,
         pendingSelectedSeats: [],
         selectedSeats: [],
@@ -134,6 +138,24 @@ export const useBookingStore = create<BookingState>()(
                     });
                   },
                 );
+
+                // Subscribe to trip status updates
+                stompClient?.subscribe(
+                  `/topic/trip/${tripId}/status`,
+                  (message: { body: string }) => {
+                    const statusUpdate: TripStatusMessage = JSON.parse(message.body);
+                    set({ tripStatus: statusUpdate });
+
+                    // Log notification based on status
+                    if (statusUpdate.status === 'CANCELLED') {
+                      console.error(`Trip cancelled: ${statusUpdate.message}`);
+                    } else if (statusUpdate.status === 'DELAYED') {
+                      console.warn(`Trip delayed: ${statusUpdate.message}`);
+                    } else {
+                      console.info(`Trip status update: ${statusUpdate.message}`);
+                    }
+                  },
+                );
               },
               onStompError: (frame: { headers: Record<string, string>; body: string }) => {
                 console.error('Broker reported error: ' + frame.headers['message']);
@@ -172,6 +194,7 @@ export const useBookingStore = create<BookingState>()(
             seatStatusMap: {},
             isConnected: false,
             error: null,
+            tripStatus: null,
             // Keep pendingBookingId and selectedSeats?
             // If we clear selectedSeats, we lose selection on Back.
             // So we should NOT clear selectedSeats here.
