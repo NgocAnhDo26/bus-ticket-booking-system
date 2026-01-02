@@ -23,6 +23,14 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -32,14 +40,6 @@ import {
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from '@/components/ui/sheet';
 
 import {
   useBusLayouts,
@@ -305,7 +305,7 @@ export const BusManagementPage = () => {
     <div className="flex flex-col gap-8 p-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold tracking-tight">Quản lý Xe</h1>
-        <Sheet
+        <Dialog
           open={isOpen}
           onOpenChange={(open: boolean) => {
             setIsOpen(open);
@@ -320,16 +320,16 @@ export const BusManagementPage = () => {
             }
           }}
         >
-          <SheetTrigger asChild>
+          <DialogTrigger asChild>
             <Button>
               <Plus className="mr-2 h-4 w-4" /> Thêm Xe
             </Button>
-          </SheetTrigger>
-          <SheetContent>
-            <SheetHeader>
-              <SheetTitle>{editingBus ? 'Cập nhật Xe' : 'Thêm Xe mới'}</SheetTitle>
-              <SheetDescription>Nhập thông tin chi tiết về xe mới.</SheetDescription>
-            </SheetHeader>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle>{editingBus ? 'Cập nhật Xe' : 'Thêm Xe mới'}</DialogTitle>
+              <DialogDescription>Nhập thông tin chi tiết về xe mới.</DialogDescription>
+            </DialogHeader>
             <div className="py-4">
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                 <Field>
@@ -397,8 +397,8 @@ export const BusManagementPage = () => {
                 </Button>
               </form>
             </div>
-          </SheetContent>
-        </Sheet>
+          </DialogContent>
+        </Dialog>
       </div>
 
       <Card>

@@ -147,9 +147,9 @@ export const RouteStopsManager = ({
           </p>
         </CardHeader>
         <CardContent>
-          <div className="rounded-md border">
+          <div className="rounded-md border max-h-[500px] overflow-y-auto relative">
             <Table>
-              <TableHeader>
+              <TableHeader className="sticky top-0 z-10 bg-background shadow-sm">
                 <TableRow>
                   <TableHead className="w-[80px]">Thứ tự</TableHead>
                   <TableHead>Tên điểm dừng</TableHead>

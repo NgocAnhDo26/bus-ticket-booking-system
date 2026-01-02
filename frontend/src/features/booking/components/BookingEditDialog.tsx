@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -18,7 +18,6 @@ import {
 } from '@/components/ui/dialog';
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { getBusLayout } from '@/features/bus-layout/api';
 
 import { bookingApi, updateBooking } from '../api';
@@ -53,10 +52,10 @@ export const BookingEditDialog = ({ booking, open, onOpenChange }: BookingEditDi
   const handleCancelBooking = async () => {
     try {
       await cancelMutation.mutateAsync(booking.id);
-      toast.success('Hủy vé thành công');
+      toast.success('Hủy vé thành công', { id: 'dialog-cancel-success' });
       onOpenChange(false);
     } catch {
-      toast.error('Hủy vé thất bại');
+      toast.error('Hủy vé thất bại', { id: 'dialog-cancel-error' });
     }
   };
 
@@ -121,8 +120,7 @@ export const BookingEditDialog = ({ booking, open, onOpenChange }: BookingEditDi
     }
   };
 
-  // Fetch trip details for pricing
-  const { data: trip } = useQuery({
+  const { data: trip, isLoading: isLoadingTrip } = useQuery({
     queryKey: ['trip', booking.trip.id],
     queryFn: () => bookingApi.getTrip(booking.trip.id),
     enabled: open,
@@ -135,34 +133,104 @@ export const BookingEditDialog = ({ booking, open, onOpenChange }: BookingEditDi
     enabled: !!trip?.bus?.busLayoutId,
   });
 
+  const pickupStationId = form.watch('pickupStationId');
+  const dropoffStationId = form.watch('dropoffStationId');
+
+  // Calculate estimated price
+  const { totalPrice, seatDetails } = useMemo(() => {
+    if (!layout?.seats || !trip?.tripPricings) {
+      return { totalPrice: 0, seatDetails: [] };
+    }
+
+    const pickupId = pickupStationId;
+    const dropoffId = dropoffStationId;
+
+    // 1. Base prices (full route)
+    const basePrices: Record<string, number> = {};
+    trip.tripPricings.forEach((p) => {
+      basePrices[p.seatType] = p.price;
+    });
+
+    // 2. Identify Pickup Prices
+    const pickupPrices = { NORMAL: 0, VIP: 0 };
+    if (pickupId && pickupId !== 'ORIGIN' && pickupId !== 'DESTINATION') {
+      const stop = trip.route.stops?.find((s) => s.id === pickupId);
+      if (stop) {
+        if (stop.normalPrice) pickupPrices['NORMAL'] = stop.normalPrice;
+        if (stop.vipPrice) pickupPrices['VIP'] = stop.vipPrice;
+      }
+    }
+
+    // 3. Identify Dropoff Prices
+    const dropoffPrices = { ...basePrices };
+    if (dropoffId && dropoffId !== 'DESTINATION' && dropoffId !== 'ORIGIN') {
+      const stop = trip.route.stops?.find((s) => s.id === dropoffId);
+      if (stop) {
+        if (stop.normalPrice) dropoffPrices['NORMAL'] = stop.normalPrice;
+        if (stop.vipPrice) dropoffPrices['VIP'] = stop.vipPrice;
+      }
+    }
+
+    // 4. Effective Prices = Dropoff - Pickup
+    const effectivePrices: Record<string, number> = {
+      NORMAL: Math.max(0, dropoffPrices.NORMAL - pickupPrices.NORMAL),
+      VIP: Math.max(0, dropoffPrices.VIP - pickupPrices.VIP),
+    };
+
+    const seats = layout.seats || [];
+    const details = localSelectedSeats.map((seatCode) => {
+      const seat = seats.find((s) => s.seatCode === seatCode);
+      const seatType = seat?.type || 'NORMAL';
+      const price = effectivePrices[seatType] || 0;
+      return { seatCode, seatType, price };
+    });
+
+    const total = details.reduce((sum, d) => sum + d.price, 0);
+    return { totalPrice: total, seatDetails: details };
+  }, [layout, trip, localSelectedSeats, pickupStationId, dropoffStationId]);
+
   const { mutateAsync: updateBookingMutation, isPending } = useMutation({
     mutationFn: (data: z.infer<typeof formSchema>) => {
-      // Build price map
-      const priceMap: Record<string, number> = {};
-      if (trip?.tripPricings) {
-        trip.tripPricings.forEach((p) => (priceMap[p.seatType] = p.price));
+      // Map pickup/dropoff logic from PassengerInfoPage
+      let finalPickupId: string | undefined;
+      let finalPickupStopId: string | undefined;
+
+      if (!data.pickupStationId || data.pickupStationId === 'ORIGIN') {
+        finalPickupId = trip?.route.originStation.id;
+      } else if (data.pickupStationId === 'DESTINATION') {
+        finalPickupId = trip?.route.destinationStation.id; // Should not happen logically for pickup
+      } else {
+        finalPickupStopId = data.pickupStationId;
+      }
+
+      let finalDropoffId: string | undefined;
+      let finalDropoffStopId: string | undefined;
+
+      if (!data.dropoffStationId || data.dropoffStationId === 'DESTINATION') {
+        finalDropoffId = trip?.route.destinationStation.id;
+      } else if (data.dropoffStationId === 'ORIGIN') {
+        finalDropoffId = trip?.route.originStation.id; // Should not happen logically for dropoff
+      } else {
+        finalDropoffStopId = data.dropoffStationId;
       }
 
       return updateBooking(booking.id, {
-        ...data,
-        tickets: localSelectedSeats.map((code) => {
-          // Try to preserve price for original seats if logic dictates,
-          // BUT better to recalculate to ensure validity or use current price.
-          // However, original booking might have had a discount or old price.
-          // Usually for "Change Seat", we apply current price or keep old if same type?
-          // Let's use current trip pricing for simplicity and correctness.
+        passengerName: data.passengerName,
+        passengerPhone: data.passengerPhone,
+        passengerEmail: data.passengerEmail || undefined,
 
-          const seat = layout?.seats?.find((s) => s.seatCode === code);
-          const seatType = seat?.type || 'NORMAL';
-          const price = priceMap[seatType] || 0;
+        pickupStationId: finalPickupId,
+        pickupTripStopId: finalPickupStopId,
 
-          return {
-            seatCode: code,
-            passengerName: data.passengerName,
-            passengerPhone: data.passengerPhone,
-            price: price,
-          };
-        }),
+        dropoffStationId: finalDropoffId,
+        dropoffTripStopId: finalDropoffStopId,
+
+        tickets: seatDetails.map((detail) => ({
+          seatCode: detail.seatCode,
+          passengerName: data.passengerName, // Simple update uses same name for all
+          passengerPhone: data.passengerPhone,
+          price: detail.price,
+        })),
       });
     },
     onSuccess: () => {
@@ -177,15 +245,15 @@ export const BookingEditDialog = ({ booking, open, onOpenChange }: BookingEditDi
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl h-[90vh] flex flex-col p-0 gap-0">
+      <DialogContent className="sm:max-w-7xl w-[90vw] h-[90vh] flex flex-col p-0 gap-0">
         <DialogHeader className="px-6 py-4 border-b">
           <DialogTitle>Chỉnh sửa đặt vé #{booking.code}</DialogTitle>
           <DialogDescription>Thay đổi thông tin hành khách hoặc chọn ghế mới</DialogDescription>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 px-6 py-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div>
+        <div className="flex-1 overflow-y-auto px-6 py-4">
+          <div className="flex flex-col lg:flex-row gap-8">
+            <div className="lg:w-[350px] xl:w-[400px] shrink-0 space-y-8">
               <form
                 id="update-booking-form"
                 onSubmit={form.handleSubmit((d) => updateBookingMutation(d))}
@@ -256,22 +324,29 @@ export const BookingEditDialog = ({ booking, open, onOpenChange }: BookingEditDi
                           className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                           value={field.value || ''}
                           onChange={field.onChange}
+                          disabled={isLoadingTrip || !trip}
                           aria-invalid={fieldState.invalid}
                         >
-                          <option value={trip?.route.originStation.id}>
-                            {trip?.route.originStation.name} (Xuất phát)
-                          </option>
-                          {trip?.route.stops
-                            ?.filter(
-                              (s) =>
-                                s.station && (s.stopType === 'PICKUP' || s.stopType === 'BOTH'),
-                            )
-                            .sort((a, b) => a.stopOrder - b.stopOrder)
-                            .map((stop) => (
-                              <option key={stop.id} value={stop.station!.id}>
-                                {stop.station!.name} ({stop.durationMinutesFromOrigin}m)
+                          {isLoadingTrip ? (
+                            <option>Đang tải danh sách...</option>
+                          ) : (
+                            <>
+                              <option value="ORIGIN">
+                                {trip?.route.originStation.name} (Xuất phát)
                               </option>
-                            ))}
+                              {trip?.route.stops
+                                ?.filter(
+                                  (s) =>
+                                    s.station && (s.stopType === 'PICKUP' || s.stopType === 'BOTH'),
+                                )
+                                .sort((a, b) => a.stopOrder - b.stopOrder)
+                                .map((stop) => (
+                                  <option key={stop.id} value={stop.id}>
+                                    {stop.station!.name} ({stop.durationMinutesFromOrigin}m)
+                                  </option>
+                                ))}
+                            </>
+                          )}
                         </select>
                         {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                       </Field>
@@ -290,22 +365,30 @@ export const BookingEditDialog = ({ booking, open, onOpenChange }: BookingEditDi
                           className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                           value={field.value || ''}
                           onChange={field.onChange}
+                          disabled={isLoadingTrip || !trip}
                           aria-invalid={fieldState.invalid}
                         >
-                          <option value={trip?.route.destinationStation.id}>
-                            {trip?.route.destinationStation.name} (Điểm cuối)
-                          </option>
-                          {trip?.route.stops
-                            ?.filter(
-                              (s) =>
-                                s.station && (s.stopType === 'DROPOFF' || s.stopType === 'BOTH'),
-                            )
-                            .sort((a, b) => a.stopOrder - b.stopOrder)
-                            .map((stop) => (
-                              <option key={stop.id} value={stop.station!.id}>
-                                {stop.station!.name} ({stop.durationMinutesFromOrigin}m)
+                          {isLoadingTrip ? (
+                            <option>Đang tải danh sách...</option>
+                          ) : (
+                            <>
+                              <option value="DESTINATION">
+                                {trip?.route.destinationStation.name} (Điểm cuối)
                               </option>
-                            ))}
+                              {trip?.route.stops
+                                ?.filter(
+                                  (s) =>
+                                    s.station &&
+                                    (s.stopType === 'DROPOFF' || s.stopType === 'BOTH'),
+                                )
+                                .sort((a, b) => a.stopOrder - b.stopOrder)
+                                .map((stop) => (
+                                  <option key={stop.id} value={stop.id}>
+                                    {stop.station!.name} ({stop.durationMinutesFromOrigin}m)
+                                  </option>
+                                ))}
+                            </>
+                          )}
                         </select>
                         {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                       </Field>
@@ -314,9 +397,9 @@ export const BookingEditDialog = ({ booking, open, onOpenChange }: BookingEditDi
                 </FieldGroup>
               </form>
 
-              <div className="mt-8">
+              <div>
                 <h4 className="font-medium mb-4">Ghế đã chọn</h4>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-2 mb-4">
                   {localSelectedSeats.map((seat) => (
                     <div
                       key={seat}
@@ -329,10 +412,21 @@ export const BookingEditDialog = ({ booking, open, onOpenChange }: BookingEditDi
                     <p className="text-muted-foreground text-sm italic">Chưa chọn ghế nào</p>
                   )}
                 </div>
+
+                {/* Price Display */}
+                <div className="bg-muted p-4 rounded-lg flex justify-between items-center">
+                  <span className="font-medium">Tổng tạm tính:</span>
+                  <span className="text-xl font-bold text-primary">
+                    {new Intl.NumberFormat('vi-VN', {
+                      style: 'currency',
+                      currency: 'VND',
+                    }).format(totalPrice)}
+                  </span>
+                </div>
               </div>
             </div>
 
-            <div className="border rounded-lg p-4 bg-muted/10 h-[500px]">
+            <div className="flex-1 border rounded-lg p-4 bg-muted/10 flex flex-col justify-start">
               {booking.trip.bus.busLayoutId ? (
                 <BookingSeatMap
                   busLayoutId={booking.trip.bus.busLayoutId}
@@ -347,7 +441,7 @@ export const BookingEditDialog = ({ booking, open, onOpenChange }: BookingEditDi
               )}
             </div>
           </div>
-        </ScrollArea>
+        </div>
 
         <DialogFooter className="px-6 py-4 border-t bg-muted/5 flex justify-between sm:justify-between">
           {canCancel && (

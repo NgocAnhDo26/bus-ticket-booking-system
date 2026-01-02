@@ -33,14 +33,31 @@ export const BookingDetailsDialog = ({
     }
   };
 
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case 'CONFIRMED':
+        return 'Đã xác nhận';
+      case 'PENDING':
+        return 'Chờ thanh toán';
+      case 'CANCELLED':
+        return 'Đã hủy';
+      case 'REFUNDED':
+        return 'Đã hoàn tiền';
+      default:
+        return status;
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center justify-between">
-            <span>Chi tiết đặt vé</span>
-            <Badge className={getStatusColor(booking.status)}>{booking.status}</Badge>
-          </DialogTitle>
+        <DialogHeader className="pr-8">
+          <div className="flex items-center justify-between gap-4">
+            <DialogTitle>Chi tiết đặt vé</DialogTitle>
+            <Badge className={getStatusColor(booking.status)}>
+              {getStatusLabel(booking.status)}
+            </Badge>
+          </div>
         </DialogHeader>
 
         <div className="space-y-6">

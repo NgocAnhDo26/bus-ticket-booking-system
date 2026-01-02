@@ -211,6 +211,7 @@ public class TripGenerationScheduler {
 
     @lombok.Data
     @lombok.NoArgsConstructor
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
     private static class PricingDto {
         private SeatType seatType;
         private BigDecimal price;

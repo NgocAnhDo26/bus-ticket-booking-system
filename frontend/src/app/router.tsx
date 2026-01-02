@@ -28,6 +28,8 @@ import {
 } from '@/features/catalog';
 import { UserDashboardPage } from '@/features/dashboard';
 import { AdminDashboardPage } from '@/features/dashboard-admin';
+import { AboutPage } from '@/features/home/pages/AboutPage';
+import { ContactPage } from '@/features/home/pages/ContactPage';
 import { HomePage } from '@/features/home/pages/HomePage';
 import { SearchResultsPage } from '@/features/search/pages/SearchResultsPage';
 import { TripDetailsPage } from '@/features/search/pages/TripDetailsPage';
@@ -92,6 +94,14 @@ export const router = createBrowserRouter([
       {
         path: '/booking/lookup',
         element: <BookingLookupPage />,
+      },
+      {
+        path: '/about',
+        element: <AboutPage />,
+      },
+      {
+        path: '/contact',
+        element: <ContactPage />,
       },
       {
         element: <ProtectedRoute allowedRoles={['PASSENGER']} />,

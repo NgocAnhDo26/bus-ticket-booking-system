@@ -97,6 +97,10 @@ export type UpdateBookingRequest = {
   passengerIdNumber?: string;
   passengerEmail?: string;
   tickets?: (TicketRequest & { passengerIdNumber?: string })[];
+  pickupStationId?: string;
+  dropoffStationId?: string;
+  pickupTripStopId?: string;
+  dropoffTripStopId?: string;
 };
 
 export type PassengerInfo = {
