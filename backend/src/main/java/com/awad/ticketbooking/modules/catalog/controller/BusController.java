@@ -39,4 +39,9 @@ public class BusController {
             org.springframework.data.domain.Pageable pageable) {
         return ResponseEntity.ok(busService.getAllBuses(pageable));
     }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Bus> getBusById(@PathVariable UUID id) {
+        return ResponseEntity.ok(busService.getBusById(id));
+    }
 }

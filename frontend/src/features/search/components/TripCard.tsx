@@ -1,12 +1,13 @@
 import { Link } from 'react-router-dom';
 
 import { differenceInMinutes, format } from 'date-fns';
-import { Bus, Coffee, MapPin, StarIcon, Wifi, Wind } from 'lucide-react';
+import { Bus, Coffee, Image as ImageIcon, MapPin, StarIcon, Wifi, Wind } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import type { Trip } from '@/features/catalog/types';
+import { getImageUrl } from '@/lib/image-upload';
 
 interface TripCardProps {
   trip: Trip;
@@ -22,14 +23,23 @@ export const TripCard = ({ trip, onSelect }: TripCardProps) => {
 
   const prices = trip.tripPricings.map((p) => p.price);
   const minPrice = prices.length > 0 ? Math.min(...prices) : 0;
+  const firstPhoto = trip.bus.photos?.[0];
+  const imageUrl = firstPhoto ? getImageUrl(firstPhoto) : null;
 
   return (
     <Card className="hover:shadow-md transition-shadow py-4">
       <CardContent className="flex px-6 py-2">
-        <img
-          className="aspect-square object-cover rounded-lg object-center shadow-sm mr-4"
-          alt="Cover image"
-        />
+        {imageUrl ? (
+          <img
+            src={imageUrl}
+            className="aspect-square object-cover rounded-lg object-center shadow-sm mr-4 max-h-36 max-w-36"
+            alt={`${trip.bus.operator.name} bus`}
+          />
+        ) : (
+          <div className="aspect-square bg-muted rounded-lg flex items-center justify-center shadow-sm mr-4">
+            <ImageIcon className="h-8 w-8 text-muted-foreground opacity-50" />
+          </div>
+        )}
         <div className="flex flex-col md:flex-row gap-6 flex-1">
           {/* Left: Time & Route */}
           <div className="flex-1 flex flex-col gap-6">

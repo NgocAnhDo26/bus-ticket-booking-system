@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Controller, useForm } from 'react-hook-form';
+import { Controller, useForm, useWatch } from 'react-hook-form';
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -133,8 +133,8 @@ export const BookingEditDialog = ({ booking, open, onOpenChange }: BookingEditDi
     enabled: !!trip?.bus?.busLayoutId,
   });
 
-  const pickupStationId = form.watch('pickupStationId');
-  const dropoffStationId = form.watch('dropoffStationId');
+  const pickupStationId = useWatch({ control: form.control, name: 'pickupStationId' });
+  const dropoffStationId = useWatch({ control: form.control, name: 'dropoffStationId' });
 
   // Calculate estimated price
   const { totalPrice, seatDetails } = useMemo(() => {

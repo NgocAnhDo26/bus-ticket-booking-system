@@ -18,6 +18,7 @@ import { BookingLookupPage, BookingPage, PassengerInfoPage } from '@/features/bo
 import { BookingConfirmationPage } from '@/features/booking/pages/BookingConfirmationPage';
 import { BusLayoutCreatePage, BusLayoutManagementPage } from '@/features/bus-layout';
 import {
+  BusFormPage,
   BusManagementPage,
   OperatorManagementPage,
   RouteFormPage,
@@ -155,6 +156,14 @@ export const router = createBrowserRouter([
             element: <OperatorManagementPage />,
           },
           { path: '/admin/catalog/buses', element: <BusManagementPage /> },
+          {
+            path: '/admin/catalog/buses/create',
+            element: <BusFormPage />,
+          },
+          {
+            path: '/admin/catalog/buses/edit/:id',
+            element: <BusFormPage />,
+          },
           {
             path: '/admin/catalog/routes',
             element: <RouteManagementPage />,

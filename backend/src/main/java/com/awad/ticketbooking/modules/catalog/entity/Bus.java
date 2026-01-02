@@ -6,6 +6,7 @@ import lombok.Setter;
 import org.hibernate.annotations.UuidGenerator;
 
 import com.awad.ticketbooking.common.converter.StringListConverter;
+import java.util.ArrayList;
 import java.util.List;
 import java.time.Instant;
 import java.util.UUID;
@@ -41,6 +42,10 @@ public class Bus {
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
+
+    @OneToMany(mappedBy = "bus", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @OrderBy("displayOrder ASC")
+    private List<BusPhoto> photos = new ArrayList<>();
 
     @PrePersist
     public void onCreate() {

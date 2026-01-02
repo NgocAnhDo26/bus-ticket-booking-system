@@ -37,7 +37,8 @@ export function validateImageFile(file: File): ValidationError | null {
     return { message: 'File is required' };
   }
 
-  if (!ALLOWED_TYPES.includes(file.type.toLowerCase())) {
+  // Defensive check for file.type (may be undefined if File was spread into a new object)
+  if (!file.type || !ALLOWED_TYPES.includes(file.type.toLowerCase())) {
     return {
       message: `Invalid file type. Allowed types: ${ALLOWED_TYPES.join(', ')}`,
       fileName: file.name,
@@ -172,10 +173,15 @@ export function getImageUrl(publicId: string, transformations?: string): string 
     return publicId;
   }
 
+  // Get cloud name from environment variable
+  const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
+  if (!cloudName) {
+    console.warn('VITE_CLOUDINARY_CLOUD_NAME is not set, falling back to publicId as URL');
+    return publicId;
+  }
+
   // Construct Cloudinary URL with transformations
-  const baseUrl = `https://res.cloudinary.com`;
-  // Note: This is a simplified version. In production, you'd want to use
-  // the actual cloud name from your Cloudinary config
+  const baseUrl = `https://res.cloudinary.com/${cloudName}`;
   if (transformations) {
     return `${baseUrl}/image/upload/${transformations}/${publicId}`;
   }

@@ -60,6 +60,7 @@ export type Bus = {
   plateNumber: string;
   busLayout: BusLayout;
   amenities: string[];
+  photos?: string[];
   isActive: boolean;
   createdAt: string;
 };
@@ -69,6 +70,7 @@ export type CreateBusRequest = {
   busLayoutId: string;
   plateNumber: string;
   amenities: string[];
+  photos?: string[];
   isActive?: boolean;
 };
 
@@ -162,6 +164,7 @@ export type BusInfo = {
   totalSeats: number;
   busLayoutId: string;
   amenities: string[];
+  photos?: string[];
 };
 
 export type Trip = {

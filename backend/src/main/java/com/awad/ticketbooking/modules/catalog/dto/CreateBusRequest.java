@@ -19,4 +19,6 @@ public class CreateBusRequest {
     private String plateNumber;
 
     private List<String> amenities;
+
+    private List<String> photos;
 }

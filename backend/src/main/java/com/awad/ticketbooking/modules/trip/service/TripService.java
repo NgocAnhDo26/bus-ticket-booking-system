@@ -444,6 +444,11 @@ public class TripService {
                         .totalSeats(trip.getBus().getBusLayout().getTotalSeats())
                         .busLayoutId(trip.getBus().getBusLayout().getId())
                         .amenities(trip.getBus().getAmenities())
+                        .photos(trip.getBus().getPhotos() != null
+                                ? trip.getBus().getPhotos().stream()
+                                        .map(photo -> photo.getPublicId())
+                                        .collect(Collectors.toList())
+                                : null)
                         .build())
                 .departureTime(trip.getDepartureTime())
                 .arrivalTime(trip.getArrivalTime())

@@ -64,6 +64,7 @@ public class TripResponse {
         private Integer totalSeats;
         private UUID busLayoutId;
         private List<String> amenities;
+        private List<String> photos;
     }
 
     @Data
