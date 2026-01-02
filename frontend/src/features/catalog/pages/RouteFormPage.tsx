@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -41,7 +41,7 @@ export const RouteFormPage = () => {
     register,
     handleSubmit,
     reset,
-    watch,
+    control,
     formState: { errors },
   } = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -108,7 +108,7 @@ export const RouteFormPage = () => {
   };
 
   // Watch form values for dynamic preview in RouteStopsManager (in create mode)
-  const watchedValues = watch();
+  const watchedValues = useWatch({ control });
 
   // Construct a partial/preview route object for the Manager
   const previewRoute: Route =

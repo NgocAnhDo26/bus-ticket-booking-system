@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useFieldArray, useForm } from 'react-hook-form';
+import { useFieldArray, useForm, useWatch } from 'react-hook-form';
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQueryClient } from '@tanstack/react-query';
@@ -176,7 +176,6 @@ export const TripFormDialog = ({
     register,
     control,
     handleSubmit,
-    watch,
     setValue,
     reset,
     getValues, // Added getValues
@@ -202,8 +201,8 @@ export const TripFormDialog = ({
     name: 'stops',
   });
 
-  const routeId = watch('routeId');
-  const tripType = watch('tripType');
+  const routeId = useWatch({ control, name: 'routeId' });
+  const tripType = useWatch({ control, name: 'tripType' });
 
   // Load route details when route changes
   useEffect(() => {
@@ -255,8 +254,11 @@ export const TripFormDialog = ({
   }, [routeId, routes, buses, editingTrip, replaceStops, getValues]);
 
   // Auto-calculate stop arrival times
-  const depDate = watch('departureDate');
-  const depTime = watch('departureTime');
+  const depDate = useWatch({ control, name: 'departureDate' });
+  const depTime = useWatch({ control, name: 'departureTime' });
+  const startDate = useWatch({ control, name: 'startDate' });
+  const endDate = useWatch({ control, name: 'endDate' });
+  const weeklyDays = useWatch({ control, name: 'weeklyDays' }) || [];
 
   useEffect(() => {
     const currentStops = getValues('stops') || [];
@@ -488,7 +490,7 @@ export const TripFormDialog = ({
                   <FieldLabel required>Tuyến đường</FieldLabel>
                   <Select
                     onValueChange={(value) => setValue('routeId', value)}
-                    defaultValue={watch('routeId')}
+                    defaultValue={routeId}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Chọn tuyến đường" />
@@ -508,7 +510,7 @@ export const TripFormDialog = ({
                   <FieldLabel required>Xe</FieldLabel>
                   <Select
                     onValueChange={(value) => setValue('busId', value)}
-                    defaultValue={watch('busId')}
+                    defaultValue={useWatch({ control, name: 'busId' })}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Chọn xe" />
@@ -532,7 +534,7 @@ export const TripFormDialog = ({
                   {pricingFields.map((field, index) => (
                     <Field key={field.id}>
                       <FieldLabel className="capitalize">
-                        {watch(`pricings.${index}.seatType`) === 'NORMAL'
+                        {getValues(`pricings.${index}.seatType`) === 'NORMAL'
                           ? 'Ghế thường'
                           : 'Ghế VIP'}
                       </FieldLabel>
@@ -595,21 +597,17 @@ export const TripFormDialog = ({
                         variant={'outline'}
                         className={cn(
                           'w-full justify-start text-left font-normal',
-                          !watch('departureDate') && 'text-muted-foreground',
+                          !depDate && 'text-muted-foreground',
                         )}
                       >
                         <Calendar className="mr-2 h-4 w-4" />
-                        {watch('departureDate') ? (
-                          format(watch('departureDate')!, 'PP HH:mm')
-                        ) : (
-                          <span>Chọn ngày giờ</span>
-                        )}
+                        {depDate ? format(depDate, 'PP HH:mm') : <span>Chọn ngày giờ</span>}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
                       <CalendarComponent
                         mode="single"
-                        selected={watch('departureDate')}
+                        selected={depDate}
                         onSelect={(date) => {
                           if (date) {
                             // Keep time if previously selected or defaut to now?
@@ -621,7 +619,7 @@ export const TripFormDialog = ({
                             // or just use 2 inputs: Date and Time.
                             // Logic here assumes date only.
                             // Let's use simple check: if date is set, keep existing time or set to current time.
-                            const currentTime = watch('departureDate') || new Date();
+                            const currentTime = getValues('departureDate') || new Date();
                             date.setHours(currentTime.getHours());
                             date.setMinutes(currentTime.getMinutes());
                             setValue('departureDate', date);
@@ -636,14 +634,12 @@ export const TripFormDialog = ({
                           className="mt-2"
                           onChange={(e) => {
                             const [h, m] = e.target.value.split(':').map(Number);
-                            const d = watch('departureDate') || new Date();
+                            const d = getValues('departureDate') || new Date();
                             d.setHours(h);
                             d.setMinutes(m);
                             setValue('departureDate', new Date(d));
                           }}
-                          value={
-                            watch('departureDate') ? format(watch('departureDate')!, 'HH:mm') : ''
-                          }
+                          value={depDate ? format(depDate, 'HH:mm') : ''}
                         />
                       </div>
                     </PopoverContent>
@@ -673,26 +669,21 @@ export const TripFormDialog = ({
                             variant={'outline'}
                             className={cn(
                               'w-full pl-3 text-left font-normal',
-                              !watch('startDate') && 'text-muted-foreground',
+                              !startDate && 'text-muted-foreground',
                             )}
                             disabled={isRecurrenceDisabled}
                           >
-                            {watch('startDate') ? (
-                              format(watch('startDate')!, 'PPP')
-                            ) : (
-                              <span>Chọn ngày</span>
-                            )}
+                            {startDate ? format(startDate, 'PPP') : <span>Chọn ngày</span>}
                             <Calendar className="ml-auto h-4 w-4 opacity-50" />
                           </Button>
                         </PopoverTrigger>
                         <PopoverContent className="w-auto p-0" align="start">
                           <CalendarComponent
                             mode="single"
-                            selected={watch('startDate')}
+                            selected={startDate}
                             onSelect={(date) => setValue('startDate', date)}
                             disabled={(date) =>
-                              date < new Date() ||
-                              (watch('endDate') ? date > watch('endDate')! : false)
+                              date < new Date() || (endDate ? date > endDate : false)
                             }
                             initialFocus
                           />
@@ -709,26 +700,20 @@ export const TripFormDialog = ({
                             variant={'outline'}
                             className={cn(
                               'w-full pl-3 text-left font-normal',
-                              !watch('endDate') && 'text-muted-foreground',
+                              !endDate && 'text-muted-foreground',
                             )}
                             disabled={isRecurrenceDisabled}
                           >
-                            {watch('endDate') ? (
-                              format(watch('endDate')!, 'PPP')
-                            ) : (
-                              <span>Chọn ngày</span>
-                            )}
+                            {endDate ? format(endDate, 'PPP') : <span>Chọn ngày</span>}
                             <Calendar className="ml-auto h-4 w-4 opacity-50" />
                           </Button>
                         </PopoverTrigger>
                         <PopoverContent className="w-auto p-0" align="start">
                           <CalendarComponent
                             mode="single"
-                            selected={watch('endDate')}
+                            selected={endDate}
                             onSelect={(date) => setValue('endDate', date)}
-                            disabled={(date) =>
-                              watch('startDate') ? date < watch('startDate')! : date < new Date()
-                            }
+                            disabled={(date) => (startDate ? date < startDate : date < new Date())}
                             initialFocus
                           />
                         </PopoverContent>
@@ -748,7 +733,7 @@ export const TripFormDialog = ({
                         size="sm"
                         className="h-auto py-0 px-2 text-primary hover:text-primary/80"
                         onClick={() => {
-                          const current = watch('weeklyDays') || [];
+                          const current = getValues('weeklyDays') || [];
                           const allDays = WEEKDAYS.map((d) => d.value);
                           if (current.length === allDays.length) {
                             setValue('weeklyDays', []);
@@ -758,7 +743,7 @@ export const TripFormDialog = ({
                         }}
                         disabled={isRecurrenceDisabled}
                       >
-                        {(watch('weeklyDays')?.length || 0) === WEEKDAYS.length
+                        {(weeklyDays?.length || 0) === WEEKDAYS.length
                           ? 'Bỏ chọn tất cả'
                           : 'Chọn tất cả (Hằng ngày)'}
                       </Button>
@@ -768,9 +753,9 @@ export const TripFormDialog = ({
                         <div key={day.value} className="flex items-center space-x-2">
                           <Checkbox
                             id={`day-${day.value}`}
-                            checked={watch('weeklyDays')?.includes(day.value)}
+                            checked={weeklyDays?.includes(day.value)}
                             onCheckedChange={(checked) => {
-                              const current = watch('weeklyDays') || [];
+                              const current = getValues('weeklyDays') || [];
                               if (checked) setValue('weeklyDays', [...current, day.value]);
                               else
                                 setValue(
@@ -883,7 +868,7 @@ export const TripFormDialog = ({
                           variant="ghost"
                           size="icon"
                           onClick={() => {
-                            const currentStops = watch('stops') || [];
+                            const currentStops = getValues('stops') || [];
                             const newStops = currentStops.filter((_, i) => i !== index);
                             replaceStops(newStops);
                           }}

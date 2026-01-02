@@ -225,13 +225,16 @@ export const TripDetailsPage = () => {
               </TabsContent>
 
               <TabsContent value="images" className="mt-4 space-y-4">
-                <BusImagesGallery />
+                <BusImagesGallery images={(bus as { photos?: string[] })?.photos} />
               </TabsContent>
 
               <TabsContent value="reviews" className="mt-4">
-                <Item className="flex items-center gap-2 p-0 mb-4">
-                  <Stars className="h-5 w-5 text-primary" />
-                  <p className="font-medium text-lg">Đánh giá nhà xe {bus?.operator?.name}</p>
+                <Item className="flex flex-col items-start gap-2 p-0 mb-4">
+                  <div className="flex items-center gap-2">
+                    <Stars className="h-5 w-5 text-primary" />
+                    <p className="font-medium text-lg">Đánh giá nhà xe {bus?.operator?.name}</p>
+                  </div>
+
                   <p className="text-sm text-muted-foreground">
                     Xem đánh giá từ khách hàng đã sử dụng dịch vụ của nhà xe này
                   </p>

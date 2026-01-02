@@ -132,15 +132,29 @@ const toApiBusLayoutSummary = (bl: ApiBusLayout | undefined): Bus['busLayout'] =
   description: bl?.description,
 });
 
-const toBus = (b: ApiBus | undefined): Bus => ({
-  id: b?.id ?? '',
-  operator: toOperator(b?.operator),
-  plateNumber: b?.plateNumber ?? '',
-  busLayout: toApiBusLayoutSummary(b?.busLayout),
-  amenities: (b?.amenities ?? []) as string[],
-  isActive: Boolean(b?.isActive ?? true),
-  createdAt: b?.createdAt ?? '',
-});
+interface ApiBusWithPhotos extends ApiBus {
+  photos?: Array<{ publicId?: string }>;
+}
+
+const toBus = (b: ApiBus | undefined): Bus => {
+  // Extract photos from BusPhoto entities if they exist
+  const photos = (b as ApiBusWithPhotos | undefined)?.photos
+    ? ((b as ApiBusWithPhotos).photos as Array<{ publicId?: string }>)
+        .map((photo) => photo.publicId)
+        .filter((id): id is string => !!id)
+    : undefined;
+
+  return {
+    id: b?.id ?? '',
+    operator: toOperator(b?.operator),
+    plateNumber: b?.plateNumber ?? '',
+    busLayout: toApiBusLayoutSummary(b?.busLayout),
+    amenities: (b?.amenities ?? []) as string[],
+    photos,
+    isActive: Boolean(b?.isActive ?? true),
+    createdAt: b?.createdAt ?? '',
+  };
+};
 
 const toTripPricing = (p: TripPricingInfo | undefined) => ({
   id: p?.id ?? '',
@@ -189,6 +203,7 @@ const toTrip = (t: TripResponse | undefined): Trip => ({
     totalSeats: t?.bus?.totalSeats ?? 0,
     busLayoutId: t?.bus?.busLayoutId ?? '',
     amenities: (t?.bus?.amenities ?? []) as string[],
+    photos: t?.bus?.photos as string[] | undefined,
   },
   departureTime: t?.departureTime ?? '',
   arrivalTime: t?.arrivalTime ?? '',
@@ -266,6 +281,11 @@ export const updateBus = async (id: string, data: CreateBusRequest): Promise<Bus
 
 export const deleteBus = async (id: string, force?: boolean): Promise<void> => {
   await orvalDeleteBus(id, force ? { force } : undefined);
+};
+
+export const getBusById = async (id: string): Promise<Bus> => {
+  const response = await apiClient.get<ApiBus>(`/api/buses/${id}`);
+  return toBus(response.data);
 };
 
 // Routes

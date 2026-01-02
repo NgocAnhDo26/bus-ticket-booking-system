@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { type ReactNode, useEffect, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 
 import { Bot, MessageCircle, Send, X } from 'lucide-react';
@@ -112,13 +112,21 @@ export const ChatWidget = () => {
                       <ReactMarkdown
                         remarkPlugins={[remarkGfm]}
                         components={{
-                          p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
-                          ul: ({ children }) => <ul className="list-disc pl-4 mb-2">{children}</ul>,
-                          ol: ({ children }) => (
+                          p: ({ children }: { children?: ReactNode }) => (
+                            <p className="mb-2 last:mb-0">{children}</p>
+                          ),
+                          ul: ({ children }: { children?: ReactNode }) => (
+                            <ul className="list-disc pl-4 mb-2">{children}</ul>
+                          ),
+                          ol: ({ children }: { children?: ReactNode }) => (
                             <ol className="list-decimal pl-4 mb-2">{children}</ol>
                           ),
-                          li: ({ children }) => <li className="mb-1">{children}</li>,
-                          strong: ({ children }) => <span className="font-bold">{children}</span>,
+                          li: ({ children }: { children?: ReactNode }) => (
+                            <li className="mb-1">{children}</li>
+                          ),
+                          strong: ({ children }: { children?: ReactNode }) => (
+                            <span className="font-bold">{children}</span>
+                          ),
                         }}
                       >
                         {msg.text}

@@ -149,8 +149,9 @@ export const useUpdateBus = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: CreateBusRequest }) => updateBus(id, data),
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['buses'] });
+      queryClient.invalidateQueries({ queryKey: ['bus', variables.id] });
     },
   });
 };
@@ -162,6 +163,14 @@ export const useDeleteBus = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['buses'] });
     },
+  });
+};
+
+export const useBusById = (id: string | undefined) => {
+  return useQuery({
+    queryKey: ['bus', id],
+    queryFn: () => import('./api').then((mod) => mod.getBusById(id!)),
+    enabled: !!id,
   });
 };
 

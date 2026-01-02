@@ -14,4 +14,5 @@ export interface BusInfo {
   totalSeats?: number;
   busLayoutId?: string;
   amenities?: string[];
+  photos?: string[];
 }
