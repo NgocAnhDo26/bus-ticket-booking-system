@@ -34,6 +34,7 @@ import { ContactPage } from '@/features/home/pages/ContactPage';
 import { HomePage } from '@/features/home/pages/HomePage';
 import { SearchResultsPage } from '@/features/search/pages/SearchResultsPage';
 import { TripDetailsPage } from '@/features/search/pages/TripDetailsPage';
+import { AdminManagementPage, CustomerManagementPage } from '@/features/user-management';
 import { getDashboardPath } from '@/lib/navigation';
 import { useAuthStore } from '@/store/auth-store';
 
@@ -147,6 +148,18 @@ export const router = createBrowserRouter([
         children: [
           { path: '/admin/dashboard', element: <AdminDashboardPage /> },
           { path: '/admin/bookings', element: <BookingManagementPage /> },
+          {
+            path: '/admin/bookings/transactions',
+            element: <Navigate to="/admin/bookings" replace />,
+          },
+          {
+            path: '/admin/users/staffs',
+            element: <AdminManagementPage />,
+          },
+          {
+            path: '/admin/users/customers',
+            element: <CustomerManagementPage />,
+          },
           {
             path: '/admin/catalog/stations',
             element: <StationManagementPage />,
