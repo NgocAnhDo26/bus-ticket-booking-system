@@ -81,7 +81,7 @@ const allAdminNavItems: AdminNavItem[] = [
     // Both ADMIN and STAFF can see transport
   },
   {
-    title: 'Đặt vé',
+    title: 'Quản lý vé',
     url: '#',
     icon: Ticket,
     isCollapsible: true,
@@ -89,6 +89,10 @@ const allAdminNavItems: AdminNavItem[] = [
       {
         title: 'Danh sách đặt chỗ',
         url: '/admin/bookings',
+      },
+      {
+        title: 'Quét vé Check-in',
+        url: '/admin/check-in',
       },
       {
         title: 'Giao dịch thanh toán',
