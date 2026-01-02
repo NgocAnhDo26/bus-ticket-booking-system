@@ -10,72 +10,99 @@
 @custom-variant data-ending-style (&[data-ending-style]);
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
+  /* JoyRide Light Theme (Cream & Mint) */
+  --background: oklch(0.98 0.02 80); /* Cream Puff (Orange-50 equivalent) */
+  --foreground: oklch(0.24 0.05 160); /* Deep Forest (Emerald-950 equivalent) */
+
+  --card: oklch(1 0 0); /* White cards to pop against cream bg */
+  --card-foreground: oklch(0.24 0.05 160);
+
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.6 0.13 163);
-  --primary-foreground: oklch(0.98 0.02 166);
-  --secondary: oklch(0.967 0.001 286.375);
-  --secondary-foreground: oklch(0.21 0.006 285.885);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.58 0.22 27);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.85 0.13 165);
-  --chart-2: oklch(0.77 0.15 163);
-  --chart-3: oklch(0.7 0.15 162);
-  --chart-4: oklch(0.6 0.13 163);
-  --chart-5: oklch(0.51 0.1 166);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.6 0.13 163);
-  --sidebar-primary-foreground: oklch(0.98 0.02 166);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --popover-foreground: oklch(0.24 0.05 160);
+
+  /* The Key Color: Mint Matcha (Emerald-400) */
+  --primary: oklch(0.79 0.16 162);
+  --primary-foreground: oklch(0.24 0.05 160); /* Deep text on mint button */
+
+  /* Secondary: Soft Orange/Cream accents */
+  --secondary: oklch(0.95 0.04 80);
+  --secondary-foreground: oklch(0.35 0.05 35);
+
+  /* Muted: Soft Emeralds */
+  --muted: oklch(0.93 0.06 160); /* Emerald-100 */
+  --muted-foreground: oklch(0.4 0.08 160); /* Emerald-700/800 */
+
+  --accent: oklch(0.93 0.06 160); /* Emerald-100 (Ghost hover state) */
+  --accent-foreground: oklch(0.24 0.05 160);
+
+  --destructive: oklch(0.6 0.15 25);
+
+  --border: oklch(0.9 0.05 160); /* Emerald-100/200 borders */
+  --input: oklch(0.9 0.05 160);
+  --ring: oklch(0.79 0.16 162); /* Focus ring = Mint */
+
+  --radius: 1rem; /* More rounded (16px/rounded-2xl) for friendly feel */
+
+  --chart-1: oklch(0.79 0.16 162); /* Emerald */
+  --chart-2: oklch(0.65 0.18 150); /* Teal */
+  --chart-3: oklch(0.85 0.15 85); /* Orange */
+  --chart-4: oklch(0.7 0.15 180); /* Cyan */
+  --chart-5: oklch(0.9 0.1 85); /* Light Orange */
+
+  --sidebar: oklch(0.98 0.02 80);
+  --sidebar-foreground: oklch(0.24 0.05 160);
+  --sidebar-primary: oklch(0.79 0.16 162);
+  --sidebar-primary-foreground: oklch(0.24 0.05 160);
+  --sidebar-accent: oklch(0.93 0.06 160);
+  --sidebar-accent-foreground: oklch(0.24 0.05 160);
+  --sidebar-border: oklch(0.9 0.05 160);
+  --sidebar-ring: oklch(0.79 0.16 162);
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.7 0.15 162);
-  --primary-foreground: oklch(0.26 0.05 173);
-  --secondary: oklch(0.274 0.006 286.033);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.371 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.85 0.13 165);
-  --chart-2: oklch(0.77 0.15 163);
-  --chart-3: oklch(0.7 0.15 162);
-  --chart-4: oklch(0.6 0.13 163);
-  --chart-5: oklch(0.51 0.1 166);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.77 0.15 163);
-  --sidebar-primary-foreground: oklch(0.26 0.05 173);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  /* JoyRide Dark Theme (Deep Forest & Mint Cream) */
+  --background: oklch(0.24 0.05 160); /* Deep Forest (Emerald-950) */
+  --foreground: oklch(0.97 0.02 160); /* Mint Cream (Emerald-50) */
+
+  --card: oklch(0.28 0.06 160); /* Slightly lighter forest green */
+  --card-foreground: oklch(0.97 0.02 160);
+
+  --popover: oklch(0.28 0.06 160);
+  --popover-foreground: oklch(0.97 0.02 160);
+
+  /* Primary stays bright for contrast */
+  --primary: oklch(0.79 0.16 162);
+  --primary-foreground: oklch(0.24 0.05 160);
+
+  --secondary: oklch(0.35 0.07 160); /* Emerald-800 */
+  --secondary-foreground: oklch(0.97 0.02 160);
+
+  --muted: oklch(0.35 0.07 160);
+  --muted-foreground: oklch(0.65 0.1 160); /* Emerald-400 text */
+
+  --accent: oklch(0.35 0.07 160);
+  --accent-foreground: oklch(0.97 0.02 160);
+
+  --destructive: oklch(0.5 0.2 25); /* Darker Red */
+
+  --border: oklch(0.35 0.07 160); /* Emerald-800 borders */
+  --input: oklch(0.35 0.07 160);
+  --ring: oklch(0.79 0.16 162);
+
+  --chart-1: oklch(0.79 0.16 162);
+  --chart-2: oklch(0.65 0.18 150);
+  --chart-3: oklch(0.85 0.15 85);
+  --chart-4: oklch(0.7 0.15 180);
+  --chart-5: oklch(0.9 0.1 85);
+
+  --sidebar: oklch(0.28 0.06 160);
+  --sidebar-foreground: oklch(0.97 0.02 160);
+  --sidebar-primary: oklch(0.79 0.16 162);
+  --sidebar-primary-foreground: oklch(0.24 0.05 160);
+  --sidebar-accent: oklch(0.35 0.07 160);
+  --sidebar-accent-foreground: oklch(0.97 0.02 160);
+  --sidebar-border: oklch(0.35 0.07 160);
+  --sidebar-ring: oklch(0.79 0.16 162);
 }
 
 @theme inline {
@@ -130,27 +157,9 @@
   html {
     @apply font-sans;
   }
-  :root {
-    --chart-1: oklch(0.646 0.222 41.116);
-    --chart-2: oklch(0.6 0.118 184.704);
-    --chart-3: oklch(0.398 0.07 227.392);
-    --chart-4: oklch(0.828 0.189 84.429);
-    --chart-5: oklch(0.769 0.188 70.08);
-  }
-
-  .dark {
-    --chart-1: oklch(0.488 0.243 264.376);
-    --chart-2: oklch(0.696 0.17 162.48);
-    --chart-3: oklch(0.769 0.188 70.08);
-    --chart-4: oklch(0.627 0.265 303.9);
-    --chart-5: oklch(0.645 0.246 16.439);
-  }
 
   /*
     UI state attribute overrides
-    - cmdk uses data-selected="false"/"true". Tailwind's `data-selected:*` matches attribute presence,
-      which can unintentionally style every item if the attribute is always present.
-    - Some components may also emit "inactive" states that should not look selected.
   */
   [data-slot='command-item'][data-selected='false'] {
     background-color: transparent !important;
@@ -159,7 +168,6 @@
     color: inherit !important;
   }
 
-  /* Tabs: if an always-present boolean-ish attribute is used, ensure inactive triggers stay unselected */
   [data-slot='tabs-trigger'][data-active='false'],
   [data-slot='tabs-trigger'][data-state='inactive'] {
     background-color: transparent !important;
