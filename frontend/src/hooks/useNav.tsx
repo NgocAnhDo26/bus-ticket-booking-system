@@ -8,6 +8,7 @@ import {
   Settings2,
   Sparkles,
   Ticket,
+  User,
   Users,
 } from 'lucide-react';
 
@@ -120,6 +121,13 @@ const allAdminNavItems: AdminNavItem[] = [
     icon: Sparkles,
     isCollapsible: false,
     // Both ADMIN and STAFF can see feedbacks
+  },
+  {
+    title: 'Hồ sơ cá nhân',
+    url: '/admin/profile',
+    icon: User,
+    isCollapsible: false,
+    // All roles can see their profile
   },
   {
     title: 'Cấu hình',

@@ -36,8 +36,14 @@ export function NavUser({
 }) {
   const { isMobile } = useSidebar();
   const clearAuth = useAuthStore((state) => state.clearAuth);
+  const currentUser = useAuthStore((state) => state.user);
   const theme = useTheme();
   const navigate = useNavigate();
+
+  const handleNavigateToProfile = () => {
+    const profilePath = currentUser?.role === 'ADMIN' ? '/admin/profile' : '/dashboard?tab=profile';
+    navigate(profilePath);
+  };
 
   const handleLogout = async () => {
     try {
@@ -99,17 +105,17 @@ export function NavUser({
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={handleNavigateToProfile}>
                 <BadgeCheck />
-                Account
+                Tài khoản
               </DropdownMenuItem>
               <DropdownMenuItem>
                 <CreditCard />
-                Billing
+                Thanh toán
               </DropdownMenuItem>
               <DropdownMenuItem>
                 <Bell />
-                Notifications
+                Thông báo
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
