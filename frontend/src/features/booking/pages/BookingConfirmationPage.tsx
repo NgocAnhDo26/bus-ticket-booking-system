@@ -113,11 +113,13 @@ export const BookingConfirmationPage = () => {
           if (res.status === 'SUCCESS') {
             toast.success('Thanh toán thành công!', {
               description: 'Đặt vé của bạn đã được xác nhận.',
+              id: 'payment-success',
             });
           } else {
             // Handle cancelled/failed returned from verification
             toast.error('Thanh toán không thành công', {
               description: 'Giao dịch đã bị hủy hoặc thất bại.',
+              id: 'payment-verify-failed',
             });
           }
           // Clean URL params
@@ -126,6 +128,7 @@ export const BookingConfirmationPage = () => {
           console.error('Verify payment failed:', err);
           toast.error('Lỗi xác nhận thanh toán', {
             description: 'Không thể xác nhận thanh toán. Vui lòng liên hệ hỗ trợ.',
+            id: 'payment-verify-error',
           });
         } finally {
           setIsVerifying(false);
@@ -137,12 +140,14 @@ export const BookingConfirmationPage = () => {
     } else if (status === 'CANCELLED' || searchParams.get('cancel') === 'true') {
       toast.error('Thanh toán bị hủy', {
         description: 'Bạn đã hủy thanh toán. Vui lòng thử lại nếu muốn tiếp tục đặt vé.',
+        id: 'payment-cancelled',
       });
       // Clean URL params
       window.history.replaceState({}, '', window.location.pathname);
     } else if (status === 'EXPIRED') {
       toast.error('Thanh toán hết hạn', {
         description: 'Phiên thanh toán đã hết hạn. Vui lòng tạo thanh toán mới.',
+        id: 'payment-expired',
       });
       // Clean URL params
       window.history.replaceState({}, '', window.location.pathname);
@@ -156,6 +161,7 @@ export const BookingConfirmationPage = () => {
       };
       toast.error('Thanh toán thất bại', {
         description: errorMessages[code] || `Lỗi thanh toán (mã: ${code}). Vui lòng thử lại.`,
+        id: 'payment-failed',
       });
       // Clean URL params
       window.history.replaceState({}, '', window.location.pathname);
@@ -178,6 +184,7 @@ export const BookingConfirmationPage = () => {
     } catch {
       toast.error('Tạo thanh toán thất bại', {
         description: 'Có lỗi xảy ra, vui lòng thử lại.',
+        id: 'payment-create-error',
       });
     }
   };
@@ -188,10 +195,12 @@ export const BookingConfirmationPage = () => {
       await cancelMutation.mutateAsync(bookingId);
       toast.success('Hủy vé thành công', {
         description: 'Đặt vé của bạn đã được hủy.',
+        id: 'booking-cancel-success',
       });
     } catch {
       toast.error('Hủy vé thất bại', {
         description: 'Có lỗi xảy ra, vui lòng thử lại.',
+        id: 'booking-cancel-error',
       });
     }
   };

@@ -6,6 +6,8 @@ import com.awad.ticketbooking.modules.ai.dto.ChatResponse;
 import com.awad.ticketbooking.modules.booking.dto.CreateBookingRequest;
 import com.awad.ticketbooking.modules.booking.dto.TicketRequest;
 import com.awad.ticketbooking.modules.booking.service.BookingService;
+import com.awad.ticketbooking.modules.catalog.dto.BusLayoutPayload;
+import com.awad.ticketbooking.modules.catalog.service.BusLayoutService;
 import com.awad.ticketbooking.modules.trip.service.TripService;
 import com.awad.ticketbooking.modules.trip.dto.TripResponse;
 import com.google.genai.Client;
@@ -28,11 +30,32 @@ public class AiChatService {
 
         private final TripService tripService;
         private final BookingService bookingService;
+        private final BusLayoutService busLayoutService;
         private final UserRepository userRepository;
         private final ObjectMapper objectMapper;
 
         private static final String SYSTEM_PROMPT = """
                         You are "SwiftRide assistant" (Trợ lý ảo SwiftRide), a comprehensive Customer Support & Booking Agent.
+
+                        ====================
+                        RESPONSE FORMATTING (CRITICAL)
+                        ====================
+                        - ALWAYS format your responses with proper line breaks for readability.
+                        - Use bullet points (•) or numbered lists when listing multiple items.
+                        - Separate paragraphs with blank lines.
+                        - Keep responses concise but well-structured.
+                        - Example format:
+                          "Tôi tìm thấy 2 chuyến xe:
+
+                          1. **Chuyến 08:00** - Nhà xe ABC
+                             • Giá: 200,000đ
+                             • Còn 20 ghế trống
+
+                          2. **Chuyến 14:00** - Nhà xe XYZ
+                             • Giá: 250,000đ
+                             • Còn 15 ghế trống
+
+                          Bạn muốn đặt chuyến nào?"
 
                         ====================
                         BUSINESS CONTEXT
@@ -64,10 +87,14 @@ public class AiChatService {
                             - AUTO-FILL info (Name, Email) from context. Ask Phone if missing.
                           - IF "Đặt hộ / Cho người khác":
                             - Ask for **Người đi** info: Name, Phone, Email (to receive ticket).
+                        - SCENARIO B: GUEST
+                          - DETECTED: "GUEST"
+                          - ACTION: Ask for **Người đi** info.
+                          - EXPLAIN: "Vì bạn chưa đăng nhập, vui lòng cung cấp Email để nhận vé, và Họ tên/SĐT người đi để nhà xe liên hệ."
 
                         3. City Name Normalization (IMPORTANT)
                         - Users often type lazily (e.g., "hanoi", "saigon", "dn").
-                        - You ALWAYs convert them to standard full city names before calling `search_trips`.
+                        - You ALWAYS convert them to standard full city names before calling `search_trips`.
                         - Examples:
                           - "hanoi", "hn" -> "Hà Nội" (or "Ha Noi")
                           - "saigon", "hcm", "hồ chí minh" -> "Hồ Chí Minh"
@@ -75,36 +102,30 @@ public class AiChatService {
                           - "buon me thuot", "bmt" -> "Buôn Ma Thuột"
                         - Try to use the Accented version first, or the version you think matches the database best.
 
-                        4. Booking Logic (CRITICAL)
-                        - CHECK "User Context" at the start of the message.
-                        - SCENARIO A: USER LOGGED IN
-                          - DETECTED: "GUEST"
-                          - ACTION: Ask for **Người đi** info.
-                          - EXPLAIN: "Vì bạn chưa đăng nhập, vui lòng cung cấp Email để nhận vé, và Họ tên/SĐT người đi để nhà xe liên hệ."
-
-                        3. Process
+                        4. Booking Process
                         - Step 1: CONSULT & SEARCH. Understand need -> `search_trips`.
                         - Step 2: ADVISE. Show trip details, available seats.
                         - Step 3: SELECT SEATS. User picks seats (e.g. A01, A02).
-                        - Step 4: INFO COLLECTION (Apply Logic above).
+                        - Step 4: INFO COLLECTION (Apply Booking Logic above).
                         - Step 5: CONFIRM & BOOK. Show summary -> Call `create_booking`.
                         - Step 6: PAYMENT. "Vé [Code] đang chờ thanh toán. Bạn hãy thanh toán ngay để giữ chỗ."
 
-                        4. Knowledge Base (FAQs)
+                        5. Knowledge Base (FAQs)
                         - Cancellation: "Hủy vé tại 'Lịch sử đặt vé' trước 24h."
                         - Payment: "PayOS (QR Code, Visa/Mastercard)."
                         - Account: "Đăng nhập giúp tự động điền thông tin và quản lý vé."
 
-                        5. Tools
+                        6. Tools
                         - `search_trips`: Flexible.
                         - `get_trip_details`: Check seats.
                         - `create_booking`: Making the reservation.
                         """;
 
-        public AiChatService(TripService tripService, BookingService bookingService, UserRepository userRepository,
-                        ObjectMapper objectMapper) {
+        public AiChatService(TripService tripService, BookingService bookingService, BusLayoutService busLayoutService,
+                        UserRepository userRepository, ObjectMapper objectMapper) {
                 this.tripService = tripService;
                 this.bookingService = bookingService;
+                this.busLayoutService = busLayoutService;
                 this.userRepository = userRepository;
                 this.objectMapper = objectMapper;
         }
@@ -356,8 +377,8 @@ public class AiChatService {
                                 map.put("route", t.getRoute().getOriginStation().getCity() + " - "
                                                 + t.getRoute().getDestinationStation().getCity());
                                 map.put("time", t.getDepartureTime().toString());
-                                map.put("price", t.getTripPricings().isEmpty() ? "LH"
-                                                : t.getTripPricings().get(0).getPrice());
+                                map.put("price", t.getTripPricings().isEmpty() ? "Liên hệ"
+                                                : String.format("%,.0f VNĐ", t.getTripPricings().get(0).getPrice()));
                                 map.put("bus", t.getBus().getOperator().getName() + " (" + t.getBus().getPlateNumber()
                                                 + ")");
                                 return map;
@@ -389,6 +410,12 @@ public class AiChatService {
                         TripResponse trip = tripService.getTripById(tripId);
                         List<String> bookedSeats = bookingService.getBookedSeatsForTrip(tripId);
 
+                        // Build price map by seat type
+                        Map<String, BigDecimal> priceMap = new HashMap<>();
+                        for (var pricing : trip.getTripPricings()) {
+                                priceMap.put(pricing.getSeatType().name(), pricing.getPrice());
+                        }
+
                         Map<String, Object> details = new HashMap<>();
                         details.put("tripId", trip.getId());
                         details.put("route", trip.getRoute().getOriginStation().getCity() + " -> "
@@ -399,6 +426,36 @@ public class AiChatService {
                         details.put("prices", trip.getTripPricings()); // List of {seatType, price}
                         details.put("operator", trip.getBus().getOperator().getName());
 
+                        // Add seat layout info if available
+                        if (trip.getBus().getBusLayoutId() != null) {
+                                try {
+                                        BusLayoutPayload.BusLayoutResponse layout = busLayoutService
+                                                        .getLayout(trip.getBus().getBusLayoutId());
+                                        List<Map<String, Object>> seatList = new ArrayList<>();
+                                        for (var seat : layout.getSeats()) {
+                                                Map<String, Object> seatInfo = new HashMap<>();
+                                                seatInfo.put("code", seat.getSeatCode());
+                                                seatInfo.put("type", seat.getType()); // VIP or NORMAL
+                                                seatInfo.put("floor", seat.getFloor());
+                                                // Add price based on seat type
+                                                BigDecimal seatPrice = priceMap.getOrDefault(seat.getType(),
+                                                                BigDecimal.ZERO);
+                                                seatInfo.put("price", seatPrice);
+                                                // Mark if booked
+                                                seatInfo.put("booked", bookedSeats.contains(seat.getSeatCode()));
+                                                seatList.add(seatInfo);
+                                        }
+                                        details.put("seats", seatList);
+                                        details.put("availableSeats", seatList.stream()
+                                                        .filter(s -> !(Boolean) s.get("booked"))
+                                                        .map(s -> s.get("code") + " (" + s.get("type") + " - "
+                                                                        + s.get("price") + " VNĐ)")
+                                                        .collect(Collectors.toList()));
+                                } catch (Exception layoutEx) {
+                                        // Layout not found, continue without seat details
+                                }
+                        }
+
                         return objectMapper.writeValueAsString(details);
                 } catch (Exception e) {
                         return "Lỗi lấy chi tiết: " + e.getMessage();
@@ -408,44 +465,97 @@ public class AiChatService {
         private String executeCreateBooking(String tripIdStr, List<String> seatCodes, String name, String phone,
                         String email, String pickupId, String dropoffId, UUID userId) {
                 try {
-                        UUID tripId = UUID.fromString(tripIdStr);
-
-                        // Fetch trip to get price
-                        TripResponse trip = tripService.getTripById(tripId);
-                        BigDecimal pricePerSeat = BigDecimal.ZERO;
-                        if (!trip.getTripPricings().isEmpty()) {
-                                pricePerSeat = trip.getTripPricings().get(0).getPrice(); // Simple assumption
+                        if (seatCodes == null || seatCodes.isEmpty()) {
+                                return "Lỗi: Vui lòng chọn ít nhất một ghế.";
+                        }
+                        if (name == null || name.isBlank()) {
+                                return "Lỗi: Vui lòng cung cấp họ tên hành khách.";
+                        }
+                        if (phone == null || phone.isBlank()) {
+                                return "Lỗi: Vui lòng cung cấp số điện thoại.";
+                        }
+                        if (email == null || email.isBlank()) {
+                                return "Lỗi: Vui lòng cung cấp email để nhận vé.";
                         }
 
-                        BigDecimal total = pricePerSeat.multiply(BigDecimal.valueOf(seatCodes.size()));
+                        UUID tripId = UUID.fromString(tripIdStr);
+
+                        // Fetch trip to get pricing info
+                        TripResponse trip = tripService.getTripById(tripId);
+
+                        // Build price map by seat type (NORMAL, VIP)
+                        Map<String, BigDecimal> priceMap = new HashMap<>();
+                        for (var pricing : trip.getTripPricings()) {
+                                priceMap.put(pricing.getSeatType().name(), pricing.getPrice());
+                        }
+
+                        // Default price fallback
+                        BigDecimal defaultPrice = priceMap.getOrDefault("NORMAL",
+                                        priceMap.values().stream().findFirst().orElse(BigDecimal.ZERO));
+
+                        // Build seat type map from layout for accurate pricing
+                        Map<String, String> seatTypeMap = new HashMap<>(); // seatCode -> type
+                        if (trip.getBus().getBusLayoutId() != null) {
+                                try {
+                                        BusLayoutPayload.BusLayoutResponse layout = busLayoutService
+                                                        .getLayout(trip.getBus().getBusLayoutId());
+                                        for (var seat : layout.getSeats()) {
+                                                seatTypeMap.put(seat.getSeatCode(), seat.getType());
+                                        }
+                                } catch (Exception e) {
+                                        // Layout not found, will use default price
+                                }
+                        }
 
                         CreateBookingRequest req = new CreateBookingRequest();
                         req.setTripId(tripId);
                         req.setUserId(userId);
-                        req.setPassengerName(name);
-                        req.setPassengerPhone(phone);
-                        req.setPassengerEmail(email);
-                        req.setTotalPrice(total);
-                        if (pickupId != null)
-                                req.setPickupStationId(UUID.fromString(pickupId));
-                        if (dropoffId != null)
-                                req.setDropoffStationId(UUID.fromString(dropoffId));
+                        req.setPassengerName(name.trim());
+                        req.setPassengerPhone(phone.trim());
+                        req.setPassengerEmail(email.trim());
 
-                        List<TicketRequest> tickets = new ArrayList<>();
-                        for (String code : seatCodes) {
-                                TicketRequest t = new TicketRequest();
-                                t.setSeatCode(code);
-                                t.setPassengerName(name);
-                                t.setPassengerPhone(phone);
-                                t.setPrice(pricePerSeat);
-                                tickets.add(t);
+                        if (pickupId != null && !pickupId.isBlank()) {
+                                req.setPickupStationId(UUID.fromString(pickupId));
                         }
+                        if (dropoffId != null && !dropoffId.isBlank()) {
+                                req.setDropoffStationId(UUID.fromString(dropoffId));
+                        }
+
+                        // Create tickets with correct price based on seat type
+                        List<TicketRequest> tickets = new ArrayList<>();
+                        BigDecimal total = BigDecimal.ZERO;
+                        for (String code : seatCodes) {
+                                if (code == null || code.isBlank())
+                                        continue;
+                                String normalizedCode = code.trim().toUpperCase();
+                                String seatType = seatTypeMap.getOrDefault(normalizedCode, "NORMAL");
+                                BigDecimal seatPrice = priceMap.getOrDefault(seatType, defaultPrice);
+
+                                TicketRequest t = new TicketRequest();
+                                t.setSeatCode(normalizedCode);
+                                t.setPassengerName(name.trim());
+                                t.setPassengerPhone(phone.trim());
+                                t.setPrice(seatPrice);
+                                tickets.add(t);
+                                total = total.add(seatPrice);
+                        }
+
+                        if (tickets.isEmpty()) {
+                                return "Lỗi: Không có ghế hợp lệ được chọn.";
+                        }
+
                         req.setTickets(tickets);
+                        req.setTotalPrice(total);
 
                         var booking = bookingService.createBooking(req);
-                        return "Đặt vé thành công! Mã vé: " + booking.getCode() + ". Trạng thái: " + booking.getStatus()
-                                        + ". Vui lòng thanh toán.";
+                        return "Đặt vé thành công!\n\n" +
+                                        "• Mã vé: " + booking.getCode() + "\n" +
+                                        "• Trạng thái: " + booking.getStatus() + "\n" +
+                                        "• Tổng tiền: " + booking.getTotalPrice() + " VNĐ\n\n" +
+                                        "Vui lòng thanh toán trong vòng 15 phút để giữ chỗ.";
 
+                } catch (IllegalArgumentException e) {
+                        return "Lỗi: ID không hợp lệ - " + e.getMessage();
                 } catch (Exception e) {
                         return "Lỗi đặt vé: " + e.getMessage();
                 }

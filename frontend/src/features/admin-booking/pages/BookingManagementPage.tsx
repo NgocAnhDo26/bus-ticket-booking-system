@@ -51,9 +51,9 @@ export const BookingManagementPage = () => {
       ) {
         try {
           await refundMutation.mutateAsync(booking.id);
-          toast.success('Hoàn vé thành công');
+          toast.success('Hoàn vé thành công', { id: 'admin-refund-success' });
         } catch (error) {
-          toast.error('Hoàn vé thất bại');
+          toast.error('Hoàn vé thất bại', { id: 'admin-refund-error' });
           console.error(error);
         }
       }
@@ -66,9 +66,9 @@ export const BookingManagementPage = () => {
       if (confirm(`Bạn có chắc chắn muốn hủy vé ${booking.code}?`)) {
         try {
           await cancelMutation.mutateAsync(booking.id);
-          toast.success('Hủy vé thành công');
+          toast.success('Hủy vé thành công', { id: 'admin-cancel-success' });
         } catch (error) {
-          toast.error('Hủy vé thất bại');
+          toast.error('Hủy vé thất bại', { id: 'admin-cancel-error' });
           console.error(error);
         }
       }

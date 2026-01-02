@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQueryClient } from '@tanstack/react-query';
@@ -19,6 +19,15 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
+import { Combobox } from '@/components/ui/combobox';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -28,15 +37,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from '@/components/ui/sheet';
 
+import { VIETNAM_PROVINCES } from '../constants';
 import { useCreateStation, useDeleteStation, useStations, useUpdateStation } from '../hooks';
 import type { Station } from '../types';
 
@@ -58,6 +60,7 @@ export const StationManagementPage = () => {
 
   const {
     register,
+    control,
     handleSubmit,
     reset,
     formState: { errors },
@@ -253,7 +256,7 @@ export const StationManagementPage = () => {
             Danh sách các bến xe được cấu hình trong hệ thống.
           </p>
         </div>
-        <Sheet
+        <Dialog
           open={isOpen}
           onOpenChange={(open) => {
             setIsOpen(open);
@@ -267,16 +270,16 @@ export const StationManagementPage = () => {
             }
           }}
         >
-          <SheetTrigger asChild>
+          <DialogTrigger asChild>
             <Button>
               <Plus className="mr-2 h-4 w-4" /> Thêm Bến xe
             </Button>
-          </SheetTrigger>
-          <SheetContent>
-            <SheetHeader>
-              <SheetTitle>{editingStation ? 'Cập nhật Bến xe' : 'Thêm Bến xe mới'}</SheetTitle>
-              <SheetDescription>Nhập thông tin chi tiết về bến xe mới.</SheetDescription>
-            </SheetHeader>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>{editingStation ? 'Cập nhật Bến xe' : 'Thêm Bến xe mới'}</DialogTitle>
+              <DialogDescription>Nhập thông tin chi tiết về bến xe mới.</DialogDescription>
+            </DialogHeader>
             <div className="py-4">
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                 <Field data-invalid={!!errors.name}>
@@ -286,12 +289,19 @@ export const StationManagementPage = () => {
                 </Field>
                 <Field data-invalid={!!errors.city}>
                   <FieldLabel>Thành phố</FieldLabel>
-                  <Input list="cities" placeholder="Hồ Chí Minh" {...register('city')} />
-                  <datalist id="cities">
-                    {Array.from(new Set(stations?.map((s) => s.city))).map((city) => (
-                      <option key={city} value={city} />
-                    ))}
-                  </datalist>
+                  <Controller
+                    control={control}
+                    name="city"
+                    render={({ field }) => (
+                      <Combobox
+                        options={VIETNAM_PROVINCES}
+                        value={field.value}
+                        onSelect={(val) => field.onChange(val)}
+                        placeholder="Chọn tỉnh/thành phố..."
+                        emptyText="Không tìm thấy thành phố."
+                      />
+                    )}
+                  />
                   <FieldError>{errors.city?.message}</FieldError>
                 </Field>
                 <Field data-invalid={!!errors.address}>
@@ -312,8 +322,8 @@ export const StationManagementPage = () => {
                 </Button>
               </form>
             </div>
-          </SheetContent>
-        </Sheet>
+          </DialogContent>
+        </Dialog>
       </div>
 
       <GenericTable<Station>

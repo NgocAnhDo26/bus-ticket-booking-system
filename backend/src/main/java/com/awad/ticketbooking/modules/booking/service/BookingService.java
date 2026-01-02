@@ -438,8 +438,9 @@ public class BookingService {
                                 .map(Ticket::getSeatCode)
                                 .collect(Collectors.toList());
 
-                ticketRepository.deleteAll(booking.getTickets());
-                booking.getTickets().clear();
+                // Tickets are preserved for history using the new repository filter logic
+                // ticketRepository.deleteAll(booking.getTickets());
+                // booking.getTickets().clear();
 
                 // Release Redis locks
                 seatLockService.unlockSeatsForBooking(booking.getTrip().getId(), seatCodes);
@@ -476,8 +477,9 @@ public class BookingService {
                                         .map(Ticket::getSeatCode)
                                         .collect(Collectors.toList());
 
-                        ticketRepository.deleteAll(booking.getTickets());
-                        booking.getTickets().clear();
+                        // Tickets are preserved for history using the new repository filter logic
+                        // ticketRepository.deleteAll(booking.getTickets());
+                        // booking.getTickets().clear();
 
                         if (booking.getTrip() != null) {
                                 seatLockService.unlockSeatsForBooking(booking.getTrip().getId(), seatCodes);

@@ -65,34 +65,65 @@ export const BookingPage = () => {
       // Clear any previous session state before initializing new booking
       useBookingStore.getState().clearSelection();
       initialize(tripId);
+      // Default to destination for dropoff
+      setDropoffStationId('DESTINATION');
     }
-  }, [tripId, initialize]);
+  }, [tripId, initialize, setDropoffStationId]);
 
   // Calculate selected seats and price
   const mySelectedSeats = selectedSeats;
 
-  // Calculate total price based on seat types
+  // Calculate total price based on seat types, pickup, and dropoff
   const { totalPrice, seatDetails } = useMemo(() => {
     if (!layout?.seats || !trip?.tripPricings) {
       return { totalPrice: 0, seatDetails: [] };
     }
 
-    const priceMap: Record<string, number> = {};
+    // 1. Base prices (full route)
+    const basePrices: Record<string, number> = {};
     trip.tripPricings.forEach((p: { seatType: string; price: number }) => {
-      priceMap[p.seatType] = p.price;
+      basePrices[p.seatType] = p.price;
     });
+
+    // 2. Identify Pickup Prices (Cost from Origin -> Pickup)
+    // Default 0 if Origin or not selected
+    const pickupPrices = { NORMAL: 0, VIP: 0 };
+    if (pickupStationId && pickupStationId !== 'ORIGIN' && pickupStationId !== 'DESTINATION') {
+      const stop = trip.route.stops?.find((s) => s.id === pickupStationId);
+      if (stop) {
+        if (stop.normalPrice) pickupPrices['NORMAL'] = stop.normalPrice;
+        if (stop.vipPrice) pickupPrices['VIP'] = stop.vipPrice;
+      }
+    }
+
+    // 3. Identify Dropoff Prices (Cost from Origin -> Dropoff)
+    // Default Base Prices if Destination or not selected (assuming user goes full way if not specified)
+    const dropoffPrices = { ...basePrices };
+    if (dropoffStationId && dropoffStationId !== 'DESTINATION' && dropoffStationId !== 'ORIGIN') {
+      const stop = trip.route.stops?.find((s) => s.id === dropoffStationId);
+      if (stop) {
+        if (stop.normalPrice) dropoffPrices['NORMAL'] = stop.normalPrice;
+        if (stop.vipPrice) dropoffPrices['VIP'] = stop.vipPrice;
+      }
+    }
+
+    // 4. Effective Prices = Dropoff - Pickup
+    const effectivePrices: Record<string, number> = {
+      NORMAL: Math.max(0, dropoffPrices.NORMAL - pickupPrices.NORMAL),
+      VIP: Math.max(0, dropoffPrices.VIP - pickupPrices.VIP),
+    };
 
     const seats = layout.seats || [];
     const details = mySelectedSeats.map((seatCode) => {
       const seat = seats.find((s: { seatCode: string; type: string }) => s.seatCode === seatCode);
       const seatType = seat?.type || 'NORMAL';
-      const price = priceMap[seatType] || 0;
+      const price = effectivePrices[seatType] || 0;
       return { seatCode, seatType, price };
     });
 
     const total = details.reduce((sum, d) => sum + d.price, 0);
     return { totalPrice: total, seatDetails: details };
-  }, [mySelectedSeats, layout, trip]);
+  }, [mySelectedSeats, layout, trip, dropoffStationId, pickupStationId]);
 
   const handleContinue = () => {
     if (!tripId) return;
@@ -214,8 +245,7 @@ export const BookingPage = () => {
                     .sort((a, b) => a.stopOrder - b.stopOrder)
                     .map((s) => (
                       <option key={s.id} value={s.id}>
-                        {s.station ? s.station.name : s.customName} (+{s.durationMinutesFromOrigin}
-                        m)
+                        {s.station ? s.station.name : s.customName}
                       </option>
                     ))}
                 </select>
@@ -246,8 +276,7 @@ export const BookingPage = () => {
                     .sort((a, b) => a.stopOrder - b.stopOrder)
                     .map((s) => (
                       <option key={s.id} value={s.id}>
-                        {s.station ? s.station.name : s.customName} (+{s.durationMinutesFromOrigin}
-                        m)
+                        {s.station ? s.station.name : s.customName}
                       </option>
                     ))}
                   <option value="DESTINATION">

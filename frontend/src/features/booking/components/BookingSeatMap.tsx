@@ -148,10 +148,11 @@ export const BookingSeatMap = ({
           <TabsContent
             key={floor}
             value={`floor-${floor}`}
-            className="mt-4 flex items-center justify-center"
+            className="mt-4"
           >
-            <SeatGrid
-              rows={rows}
+            <div className="flex justify-center">
+              <SeatGrid
+                rows={rows}
               cols={cols}
               floor={floor}
               seats={seats}
@@ -200,6 +201,7 @@ export const BookingSeatMap = ({
                 );
               }}
             />
+            </div>
           </TabsContent>
         ))}
       </Tabs>

@@ -29,6 +29,8 @@ import {
 import { UserDashboardPage } from '@/features/dashboard';
 import { AdminDashboardPage } from '@/features/dashboard-admin';
 import { HomePage } from '@/features/home/pages/HomePage';
+import { AboutPage } from '@/features/home/pages/AboutPage';
+import { ContactPage } from '@/features/home/pages/ContactPage';
 import { SearchResultsPage } from '@/features/search/pages/SearchResultsPage';
 import { TripDetailsPage } from '@/features/search/pages/TripDetailsPage';
 import { getDashboardPath } from '@/lib/navigation';
@@ -92,6 +94,14 @@ export const router = createBrowserRouter([
       {
         path: '/booking/lookup',
         element: <BookingLookupPage />,
+      },
+      {
+        path: '/about',
+        element: <AboutPage />,
+      },
+      {
+        path: '/contact',
+        element: <ContactPage />,
       },
       {
         element: <ProtectedRoute allowedRoles={['PASSENGER']} />,
