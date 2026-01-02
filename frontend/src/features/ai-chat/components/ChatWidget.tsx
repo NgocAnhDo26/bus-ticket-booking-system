@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
+import ReactMarkdown from 'react-markdown';
 
 import { Bot, MessageCircle, Send, X } from 'lucide-react';
-import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { toast } from 'sonner';
 
@@ -113,11 +113,13 @@ export const ChatWidget = () => {
                         remarkPlugins={[remarkGfm]}
                         components={{
                           p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
-                        ul: ({ children }) => <ul className="list-disc pl-4 mb-2">{children}</ul>,
-                        ol: ({ children }) => <ol className="list-decimal pl-4 mb-2">{children}</ol>,
-                        li: ({ children }) => <li className="mb-1">{children}</li>,
-                        strong: ({ children }) => <span className="font-bold">{children}</span>,
-                      }}
+                          ul: ({ children }) => <ul className="list-disc pl-4 mb-2">{children}</ul>,
+                          ol: ({ children }) => (
+                            <ol className="list-decimal pl-4 mb-2">{children}</ol>
+                          ),
+                          li: ({ children }) => <li className="mb-1">{children}</li>,
+                          strong: ({ children }) => <span className="font-bold">{children}</span>,
+                        }}
                       >
                         {msg.text}
                       </ReactMarkdown>

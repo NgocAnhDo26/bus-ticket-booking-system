@@ -54,7 +54,9 @@ export const BookingDetailsDialog = ({
         <DialogHeader className="pr-8">
           <div className="flex items-center justify-between gap-4">
             <DialogTitle>Chi tiết đặt vé</DialogTitle>
-            <Badge className={getStatusColor(booking.status)}>{getStatusLabel(booking.status)}</Badge>
+            <Badge className={getStatusColor(booking.status)}>
+              {getStatusLabel(booking.status)}
+            </Badge>
           </div>
         </DialogHeader>
 

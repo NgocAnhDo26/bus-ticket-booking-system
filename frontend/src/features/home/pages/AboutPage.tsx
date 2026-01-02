@@ -23,9 +23,9 @@ export const AboutPage = () => {
         <section className="space-y-6">
           <h2 className="text-3xl font-bold text-center">SwiftRide là gì?</h2>
           <p className="text-lg text-muted-foreground text-center max-w-3xl mx-auto">
-            SwiftRide là nền tảng đặt vé xe khách trực tuyến hàng đầu Việt Nam, kết nối hành khách 
-            với hàng trăm nhà xe uy tín trên toàn quốc. Chúng tôi cam kết mang đến trải nghiệm 
-            đặt vé nhanh chóng, tiện lợi và an toàn nhất.
+            SwiftRide là nền tảng đặt vé xe khách trực tuyến hàng đầu Việt Nam, kết nối hành khách
+            với hàng trăm nhà xe uy tín trên toàn quốc. Chúng tôi cam kết mang đến trải nghiệm đặt
+            vé nhanh chóng, tiện lợi và an toàn nhất.
           </p>
         </section>
 
@@ -107,9 +107,9 @@ export const AboutPage = () => {
             </div>
             <h2 className="text-3xl font-bold">Sứ mệnh của chúng tôi</h2>
             <p className="text-lg text-muted-foreground">
-              "Kết nối mọi hành trình - Mang đến trải nghiệm di chuyển tiện lợi, an toàn và 
-              đáng tin cậy cho hàng triệu người Việt. Chúng tôi tin rằng mỗi chuyến đi đều 
-              là một trải nghiệm đáng nhớ."
+              "Kết nối mọi hành trình - Mang đến trải nghiệm di chuyển tiện lợi, an toàn và đáng tin
+              cậy cho hàng triệu người Việt. Chúng tôi tin rằng mỗi chuyến đi đều là một trải nghiệm
+              đáng nhớ."
             </p>
           </div>
         </section>
@@ -118,9 +118,24 @@ export const AboutPage = () => {
         <section className="space-y-8">
           <h2 className="text-3xl font-bold text-center">Phủ sóng toàn quốc</h2>
           <div className="flex flex-wrap justify-center gap-4">
-            {['Hà Nội', 'TP. Hồ Chí Minh', 'Đà Nẵng', 'Cần Thơ', 'Hải Phòng', 'Nha Trang', 
-              'Đà Lạt', 'Huế', 'Quy Nhơn', 'Vũng Tàu', 'Phan Thiết', 'Buôn Ma Thuột'].map((city) => (
-              <span key={city} className="flex items-center gap-2 px-4 py-2 bg-muted rounded-full text-sm">
+            {[
+              'Hà Nội',
+              'TP. Hồ Chí Minh',
+              'Đà Nẵng',
+              'Cần Thơ',
+              'Hải Phòng',
+              'Nha Trang',
+              'Đà Lạt',
+              'Huế',
+              'Quy Nhơn',
+              'Vũng Tàu',
+              'Phan Thiết',
+              'Buôn Ma Thuột',
+            ].map((city) => (
+              <span
+                key={city}
+                className="flex items-center gap-2 px-4 py-2 bg-muted rounded-full text-sm"
+              >
                 <MapPin className="h-4 w-4 text-primary" />
                 {city}
               </span>

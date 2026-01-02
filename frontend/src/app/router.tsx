@@ -28,9 +28,9 @@ import {
 } from '@/features/catalog';
 import { UserDashboardPage } from '@/features/dashboard';
 import { AdminDashboardPage } from '@/features/dashboard-admin';
-import { HomePage } from '@/features/home/pages/HomePage';
 import { AboutPage } from '@/features/home/pages/AboutPage';
 import { ContactPage } from '@/features/home/pages/ContactPage';
+import { HomePage } from '@/features/home/pages/HomePage';
 import { SearchResultsPage } from '@/features/search/pages/SearchResultsPage';
 import { TripDetailsPage } from '@/features/search/pages/TripDetailsPage';
 import { getDashboardPath } from '@/lib/navigation';

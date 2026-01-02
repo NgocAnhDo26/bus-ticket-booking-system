@@ -1,5 +1,6 @@
-import { Clock, Mail, MapPin, Phone, Send } from 'lucide-react';
 import { useState } from 'react';
+
+import { Clock, Mail, MapPin, Phone, Send } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
@@ -21,14 +22,14 @@ export const ContactPage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    
+
     // Simulate form submission
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
     toast.success('Gửi tin nhắn thành công!', {
       description: 'Chúng tôi sẽ phản hồi trong thời gian sớm nhất.',
     });
-    
+
     setFormData({ name: '', email: '', phone: '', subject: '', message: '' });
     setIsSubmitting(false);
   };
@@ -42,9 +43,7 @@ export const ContactPage = () => {
           <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-primary">
             Liên hệ
           </h1>
-          <p className="text-lg text-muted-foreground">
-            Chúng tôi luôn sẵn sàng hỗ trợ bạn
-          </p>
+          <p className="text-lg text-muted-foreground">Chúng tôi luôn sẵn sàng hỗ trợ bạn</p>
         </div>
       </div>
 
@@ -61,8 +60,10 @@ export const ContactPage = () => {
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-                  123 Đường Nguyễn Văn Linh<br />
-                  Quận 7, TP. Hồ Chí Minh<br />
+                  123 Đường Nguyễn Văn Linh
+                  <br />
+                  Quận 7, TP. Hồ Chí Minh
+                  <br />
                   Việt Nam
                 </p>
               </CardContent>
@@ -94,10 +95,12 @@ export const ContactPage = () => {
               </CardHeader>
               <CardContent className="space-y-2">
                 <p className="text-muted-foreground">
-                  Hỗ trợ: <span className="font-semibold text-foreground">support@swiftride.vn</span>
+                  Hỗ trợ:{' '}
+                  <span className="font-semibold text-foreground">support@swiftride.vn</span>
                 </p>
                 <p className="text-muted-foreground">
-                  Hợp tác: <span className="font-semibold text-foreground">partner@swiftride.vn</span>
+                  Hợp tác:{' '}
+                  <span className="font-semibold text-foreground">partner@swiftride.vn</span>
                 </p>
               </CardContent>
             </Card>
@@ -111,8 +114,11 @@ export const ContactPage = () => {
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-                  <span className="font-semibold text-foreground">Thứ 2 - Thứ 6:</span> 8:00 - 18:00<br />
-                  <span className="font-semibold text-foreground">Thứ 7 - Chủ nhật:</span> 8:00 - 12:00<br />
+                  <span className="font-semibold text-foreground">Thứ 2 - Thứ 6:</span> 8:00 - 18:00
+                  <br />
+                  <span className="font-semibold text-foreground">Thứ 7 - Chủ nhật:</span> 8:00 -
+                  12:00
+                  <br />
                   <span className="text-sm text-primary mt-2 block">Hotline hỗ trợ 24/7</span>
                 </p>
               </CardContent>

@@ -145,62 +145,58 @@ export const BookingSeatMap = ({
         </div>
 
         {floors.map((floor) => (
-          <TabsContent
-            key={floor}
-            value={`floor-${floor}`}
-            className="mt-4"
-          >
+          <TabsContent key={floor} value={`floor-${floor}`} className="mt-4">
             <div className="flex justify-center">
               <SeatGrid
                 rows={rows}
-              cols={cols}
-              floor={floor}
-              seats={seats}
-              renderCell={(_row, col, _floor, seat) => {
-                if (!seat) {
+                cols={cols}
+                floor={floor}
+                seats={seats}
+                renderCell={(_row, col, _floor, seat) => {
+                  if (!seat) {
+                    return (
+                      // <div
+                      //   key={`${floor}-${row}-${col}`}
+                      //   className={cn(
+                      //     "flex items-center justify-center h-14 w-full max-w-14 relative rounded-md border",
+                      //     col === 0
+                      //       ? "mr-auto"
+                      //       : col === cols - 1
+                      //         ? "ml-auto"
+                      //         : "mx-auto",
+                      //   )}
+                      // >
+                      //   <X className="text-muted-foreground/30" />
+                      // </div>
+                      <div
+                        key={`empty-${_row}-${col}`}
+                        className="h-14 w-full max-w-14 mx-auto relative"
+                      />
+                    );
+                  }
+
+                  const status = getSeatStatus(seat.seatCode);
+                  const style = getSeatStyle(status, seat.type);
+
                   return (
-                    // <div
-                    //   key={`${floor}-${row}-${col}`}
-                    //   className={cn(
-                    //     "flex items-center justify-center h-14 w-full max-w-14 relative rounded-md border",
-                    //     col === 0
-                    //       ? "mr-auto"
-                    //       : col === cols - 1
-                    //         ? "ml-auto"
-                    //         : "mx-auto",
-                    //   )}
-                    // >
-                    //   <X className="text-muted-foreground/30" />
-                    // </div>
-                    <div
-                      key={`empty-${_row}-${col}`}
-                      className="h-14 w-full max-w-14 mx-auto relative"
-                    />
+                    <button
+                      key={seat.id}
+                      type="button"
+                      onClick={() => handleSeatClick(seat.seatCode, status)}
+                      disabled={status === 'BOOKED' || status === 'LOCKED'}
+                      className={cn(
+                        'flex h-14 w-full max-w-14 flex-col items-center justify-center rounded-md border text-xs transition-colors',
+                        col === 0 ? 'mr-auto' : col === cols - 1 ? 'ml-auto' : 'mx-auto',
+                        'relative',
+                        style,
+                      )}
+                    >
+                      <span className="font-semibold">{seat.seatCode}</span>
+                      {status === 'SELECTED' && <User className="h-3 w-3 absolute top-1 right-1" />}
+                    </button>
                   );
-                }
-
-                const status = getSeatStatus(seat.seatCode);
-                const style = getSeatStyle(status, seat.type);
-
-                return (
-                  <button
-                    key={seat.id}
-                    type="button"
-                    onClick={() => handleSeatClick(seat.seatCode, status)}
-                    disabled={status === 'BOOKED' || status === 'LOCKED'}
-                    className={cn(
-                      'flex h-14 w-full max-w-14 flex-col items-center justify-center rounded-md border text-xs transition-colors',
-                      col === 0 ? 'mr-auto' : col === cols - 1 ? 'ml-auto' : 'mx-auto',
-                      'relative',
-                      style,
-                    )}
-                  >
-                    <span className="font-semibold">{seat.seatCode}</span>
-                    {status === 'SELECTED' && <User className="h-3 w-3 absolute top-1 right-1" />}
-                  </button>
-                );
-              }}
-            />
+                }}
+              />
             </div>
           </TabsContent>
         ))}

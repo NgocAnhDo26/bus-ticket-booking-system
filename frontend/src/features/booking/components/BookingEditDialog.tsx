@@ -120,7 +120,6 @@ export const BookingEditDialog = ({ booking, open, onOpenChange }: BookingEditDi
     }
   };
 
-
   const { data: trip, isLoading: isLoadingTrip } = useQuery({
     queryKey: ['trip', booking.trip.id],
     queryFn: () => bookingApi.getTrip(booking.trip.id),
@@ -197,35 +196,35 @@ export const BookingEditDialog = ({ booking, open, onOpenChange }: BookingEditDi
       let finalPickupStopId: string | undefined;
 
       if (!data.pickupStationId || data.pickupStationId === 'ORIGIN') {
-         finalPickupId = trip?.route.originStation.id;
+        finalPickupId = trip?.route.originStation.id;
       } else if (data.pickupStationId === 'DESTINATION') {
-         finalPickupId = trip?.route.destinationStation.id; // Should not happen logically for pickup
+        finalPickupId = trip?.route.destinationStation.id; // Should not happen logically for pickup
       } else {
-         finalPickupStopId = data.pickupStationId;
+        finalPickupStopId = data.pickupStationId;
       }
 
       let finalDropoffId: string | undefined;
       let finalDropoffStopId: string | undefined;
 
-       if (!data.dropoffStationId || data.dropoffStationId === 'DESTINATION') {
-         finalDropoffId = trip?.route.destinationStation.id;
+      if (!data.dropoffStationId || data.dropoffStationId === 'DESTINATION') {
+        finalDropoffId = trip?.route.destinationStation.id;
       } else if (data.dropoffStationId === 'ORIGIN') {
-         finalDropoffId = trip?.route.originStation.id; // Should not happen logically for dropoff
+        finalDropoffId = trip?.route.originStation.id; // Should not happen logically for dropoff
       } else {
-         finalDropoffStopId = data.dropoffStationId;
+        finalDropoffStopId = data.dropoffStationId;
       }
 
       return updateBooking(booking.id, {
         passengerName: data.passengerName,
         passengerPhone: data.passengerPhone,
         passengerEmail: data.passengerEmail || undefined,
-        
+
         pickupStationId: finalPickupId,
         pickupTripStopId: finalPickupStopId,
-        
+
         dropoffStationId: finalDropoffId,
         dropoffTripStopId: finalDropoffStopId,
-        
+
         tickets: seatDetails.map((detail) => ({
           seatCode: detail.seatCode,
           passengerName: data.passengerName, // Simple update uses same name for all
@@ -320,7 +319,7 @@ export const BookingEditDialog = ({ booking, open, onOpenChange }: BookingEditDi
                         <FieldLabel htmlFor="update-booking-form-pickupStationId">
                           Điểm đón
                         </FieldLabel>
-                         <select
+                        <select
                           id="update-booking-form-pickupStationId"
                           className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                           value={field.value || ''}
@@ -369,7 +368,7 @@ export const BookingEditDialog = ({ booking, open, onOpenChange }: BookingEditDi
                           disabled={isLoadingTrip || !trip}
                           aria-invalid={fieldState.invalid}
                         >
-                           {isLoadingTrip ? (
+                          {isLoadingTrip ? (
                             <option>Đang tải danh sách...</option>
                           ) : (
                             <>
@@ -379,7 +378,8 @@ export const BookingEditDialog = ({ booking, open, onOpenChange }: BookingEditDi
                               {trip?.route.stops
                                 ?.filter(
                                   (s) =>
-                                    s.station && (s.stopType === 'DROPOFF' || s.stopType === 'BOTH'),
+                                    s.station &&
+                                    (s.stopType === 'DROPOFF' || s.stopType === 'BOTH'),
                                 )
                                 .sort((a, b) => a.stopOrder - b.stopOrder)
                                 .map((stop) => (
@@ -412,17 +412,17 @@ export const BookingEditDialog = ({ booking, open, onOpenChange }: BookingEditDi
                     <p className="text-muted-foreground text-sm italic">Chưa chọn ghế nào</p>
                   )}
                 </div>
-                
-                 {/* Price Display */}
-                 <div className="bg-muted p-4 rounded-lg flex justify-between items-center">
-                    <span className="font-medium">Tổng tạm tính:</span>
-                    <span className="text-xl font-bold text-primary">
-                      {new Intl.NumberFormat('vi-VN', {
-                        style: 'currency',
-                        currency: 'VND',
-                      }).format(totalPrice)}
-                    </span>
-                 </div>
+
+                {/* Price Display */}
+                <div className="bg-muted p-4 rounded-lg flex justify-between items-center">
+                  <span className="font-medium">Tổng tạm tính:</span>
+                  <span className="text-xl font-bold text-primary">
+                    {new Intl.NumberFormat('vi-VN', {
+                      style: 'currency',
+                      currency: 'VND',
+                    }).format(totalPrice)}
+                  </span>
+                </div>
               </div>
             </div>
 
