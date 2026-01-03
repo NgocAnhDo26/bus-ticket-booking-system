@@ -16,6 +16,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { logout } from '@/features/auth/api';
 import { useAuthStore } from '@/store/auth-store';
 
 export const PublicHeader = () => {
@@ -23,10 +24,16 @@ export const PublicHeader = () => {
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false); // Renamed from mobileMenuOpen to match new style
 
-  const handleLogout = () => {
-    clearAuth();
-    navigate('/login');
-    setIsOpen(false);
+  const handleLogout = async () => {
+    try {
+      await logout(); // Clear refresh token cookie on server
+    } catch (error) {
+      console.error('Logout failed:', error);
+    } finally {
+      clearAuth();
+      navigate('/login');
+      setIsOpen(false);
+    }
   };
 
   // Common link styles from the new design

@@ -155,7 +155,7 @@ export const PublicFooter = () => {
       <div className="border-t border-emerald-800/50">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-sm opacity-60">
-            <p>© {currentYear} SwiftRide Vietnam. Making travel neat & green.</p>
+            <p>© {currentYear} SwiftRide Vietnam. Hành trình xanh & tiện lợi.</p>
             <p>
               Được phát triển bởi <span className="font-medium">AWAD Team</span>
             </p>

@@ -37,6 +37,7 @@ public class PaymentService {
     private final EmailService emailService;
     private final com.awad.ticketbooking.modules.booking.repository.TicketRepository ticketRepository;
     private final com.awad.ticketbooking.modules.booking.service.SeatLockService seatLockService;
+    private final org.springframework.messaging.simp.SimpMessageSendingOperations messagingTemplate;
 
     @Transactional
     public PaymentResponse createPayment(CreatePaymentRequest request) {
@@ -153,6 +154,9 @@ public class PaymentService {
                 paymentTransactionRepository.save(transaction);
                 bookingRepository.save(booking);
 
+                // Broadcast payment success
+                broadcastPaymentSuccess(booking);
+
                 // Send confirmation email
                 try {
                     String recipientEmail = booking.getPassengerEmail() != null
@@ -245,6 +249,9 @@ public class PaymentService {
 
                 log.info("Payment verified and confirmed for booking {}", booking.getCode());
 
+                // Broadcast payment success
+                broadcastPaymentSuccess(booking);
+
                 // Send confirmation email
                 try {
                     String recipientEmail = booking.getPassengerEmail() != null
@@ -313,5 +320,28 @@ public class PaymentService {
                 .createdAt(transaction.getCreatedAt())
                 .updatedAt(transaction.getUpdatedAt())
                 .build();
+    }
+
+    private void broadcastPaymentSuccess(Booking booking) {
+        try {
+            // Define message payload (can be simple map or dedicated DTO)
+            // Using a simple map for flexibility here
+            java.util.Map<String, Object> message = new java.util.HashMap<>();
+            message.put("bookingCode", booking.getCode());
+            message.put("status", "CONFIRMED");
+            message.put("bookingId", booking.getId());
+            message.put("timestamp", java.time.Instant.now().toString());
+
+            // Broadcast to specific booking topic
+            // Frontend should subscribe to: /topic/booking/{bookingCode}
+            // Use 3-argument version with empty headers to avoid ambiguous method call
+            // error
+            String destination = "/topic/booking/" + booking.getCode();
+            messagingTemplate.convertAndSend(destination, message, java.util.Collections.emptyMap());
+
+            log.info("Broadcasted payment success event for booking {}", booking.getCode());
+        } catch (Exception e) {
+            log.error("Failed to broadcast payment success for booking {}: {}", booking.getCode(), e.getMessage());
+        }
     }
 }

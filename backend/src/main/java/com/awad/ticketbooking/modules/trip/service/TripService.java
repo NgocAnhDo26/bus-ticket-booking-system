@@ -266,8 +266,12 @@ public class TripService {
         }
 
         // Soft Delete: Set status to CANCELLED instead of deleting record
+        TripStatus oldStatus = trip.getStatus();
         trip.setStatus(TripStatus.CANCELLED);
-        tripRepository.save(trip);
+        Trip savedTrip = tripRepository.save(trip);
+
+        // Broadcast trip status update
+        broadcastTripStatusUpdate(savedTrip, TripStatus.CANCELLED, oldStatus);
     }
 
     @Transactional
@@ -551,37 +555,34 @@ public class TripService {
     private void broadcastTripStatusUpdate(Trip trip, TripStatus newStatus, TripStatus oldStatus) {
         try {
             String statusMessage = buildStatusMessage(newStatus, oldStatus, trip);
-            
+
             TripStatusMessage message = new TripStatusMessage(
-                trip.getId(),
-                newStatus.name(),
-                statusMessage,
-                java.time.Instant.now(),
-                newStatus == TripStatus.DELAYED ? trip.getDepartureTime() : null
-            );
-            
+                    trip.getId(),
+                    newStatus.name(),
+                    statusMessage,
+                    java.time.Instant.now(),
+                    newStatus == TripStatus.DELAYED ? trip.getDepartureTime() : null);
+
             // Broadcast to trip-specific channel (for users viewing trip details)
             messagingTemplate.convertAndSend("/topic/trip/" + trip.getId() + "/status", message);
             log.info("Broadcasted trip status update to /topic/trip/{}/status", trip.getId());
-            
-            // Broadcast to users with confirmed bookings on this trip
-            List<Booking> bookings = bookingRepository.findByTripIdAndStatus(
-                trip.getId(), 
-                BookingStatus.CONFIRMED
-            );
-            
+
+            // Broadcast to users with CONFIRMED or PENDING bookings
+            List<Booking> bookings = bookingRepository.findByTripId(trip.getId()).stream()
+                    .filter(b -> b.getStatus() == BookingStatus.CONFIRMED || b.getStatus() == BookingStatus.PENDING)
+                    .collect(Collectors.toList());
+
             for (Booking booking : bookings) {
                 if (booking.getUser() != null) {
                     messagingTemplate.convertAndSend(
-                        "/topic/user/" + booking.getUser().getId() + "/trips",
-                        message
-                    );
+                            "/topic/user/" + booking.getUser().getId() + "/trips",
+                            message);
                     log.debug("Broadcasted trip status update to user {}", booking.getUser().getId());
                 }
             }
-            
-            log.info("Trip {} status changed from {} to {}. Notified {} users.", 
-                trip.getId(), oldStatus, newStatus, bookings.size());
+
+            log.info("Trip {} status changed from {} to {}. Notified {} users.",
+                    trip.getId(), oldStatus, newStatus, bookings.size());
         } catch (Exception e) {
             log.error("Failed to broadcast trip status update: {}", e.getMessage(), e);
             // Don't fail the status update if broadcast fails

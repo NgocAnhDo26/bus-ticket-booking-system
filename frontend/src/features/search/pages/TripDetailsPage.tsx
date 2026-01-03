@@ -154,7 +154,6 @@ export const TripDetailsPage = () => {
                   route={route}
                   departure={departure}
                   arrival={arrival}
-                  sortedStops={sortedStops}
                   hours={hours}
                   minutes={minutes}
                 />

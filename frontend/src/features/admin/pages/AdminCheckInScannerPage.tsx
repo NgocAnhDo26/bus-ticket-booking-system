@@ -142,9 +142,19 @@ export const AdminCheckInScannerPage = () => {
       const html5QrCode = new Html5Qrcode(scannerContainerId);
       scannerRef.current = html5QrCode;
 
+      // Better config for mobile scanning
       const config = {
-        fps: 10,
-        qrbox: { width: 250, height: 250 },
+        fps: 20, // Increased from 10
+        qrbox: (viewfinderWidth: number, viewfinderHeight: number) => {
+          // Use 70% of the smaller dimension for the scanning box
+          const minEdgePercentage = 0.7;
+          const minDimension = Math.min(viewfinderWidth, viewfinderHeight);
+          const qrboxSize = Math.floor(minDimension * minEdgePercentage);
+          return {
+            width: qrboxSize,
+            height: qrboxSize,
+          };
+        },
         aspectRatio: 1.0,
       };
 
@@ -158,6 +168,7 @@ export const AdminCheckInScannerPage = () => {
         },
         () => {
           // error - ignored for individual frames
+          // console.log(errorMessage);
         },
       );
 

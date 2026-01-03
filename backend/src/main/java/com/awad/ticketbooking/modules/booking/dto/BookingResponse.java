@@ -71,5 +71,6 @@ public class BookingResponse {
         private String passengerName;
         private String passengerPhone;
         private BigDecimal price;
+        private boolean boarded;
     }
 }

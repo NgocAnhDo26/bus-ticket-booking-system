@@ -19,7 +19,7 @@ type ActivityListProps = {
 export const ActivityList = ({ data }: ActivityListProps) => (
   <Card className="h-full">
     <CardHeader>
-      <CardTitle>Recent activity</CardTitle>
+      <CardTitle>Hoạt động gần đây</CardTitle>
     </CardHeader>
     <CardContent className="space-y-4">
       {data.map((item) => (

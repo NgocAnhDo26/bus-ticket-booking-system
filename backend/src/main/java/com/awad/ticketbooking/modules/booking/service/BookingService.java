@@ -45,6 +45,7 @@ public class BookingService {
         private final StationRepository stationRepository;
         private final EmailService emailService;
         private final SeatLockService seatLockService;
+        private final org.springframework.messaging.simp.SimpMessageSendingOperations messagingTemplate;
 
         @Transactional
         public BookingResponse createBooking(CreateBookingRequest request) {
@@ -748,6 +749,7 @@ public class BookingService {
                                                                 .passengerName(ticket.getPassengerName())
                                                                 .passengerPhone(ticket.getPassengerPhone())
                                                                 .price(ticket.getPrice())
+                                                                .boarded(ticket.isBoarded())
                                                                 .build())
                                                 .collect(Collectors.toList()))
                                 .pickupStation(booking.getPickupStation() != null
@@ -804,6 +806,27 @@ public class BookingService {
                 }
                 ticketRepository.saveAll(booking.getTickets());
 
+                broadcastCheckInSuccess(booking);
+
                 return toBookingResponse(booking);
+        }
+
+        private void broadcastCheckInSuccess(Booking booking) {
+                try {
+                        java.util.Map<String, Object> message = new java.util.HashMap<>();
+                        message.put("bookingCode", booking.getCode());
+                        message.put("status", "CHECKED_IN");
+                        message.put("bookingId", booking.getId());
+                        message.put("timestamp", java.time.Instant.now().toString());
+
+                        // Broadcast to specific booking topic
+                        // Use 3-argument version with empty headers to avoid ambiguous method call
+                        // error
+                        String destination = "/topic/booking/" + booking.getCode();
+                        messagingTemplate.convertAndSend(destination, message, java.util.Collections.emptyMap());
+                } catch (Exception e) {
+                        // Log error but don't fail the request
+                        System.err.println("Failed to broadcast check-in success: " + e.getMessage());
+                }
         }
 }

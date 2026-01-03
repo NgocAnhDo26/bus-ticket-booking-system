@@ -92,6 +92,12 @@ public class AiChatService {
                           - ACTION: Ask for **Người đi** info.
                           - EXPLAIN: "Vì bạn chưa đăng nhập, vui lòng cung cấp Email để nhận vé, và Họ tên/SĐT người đi để nhà xe liên hệ."
 
+                        - SPECIAL RULE: MULTIPLE SEATS
+                          - IF user selects MULTIPLE seats (e.g., "2 seats"):
+                            - DO NOT assume all seats are for one person without checking.
+                            - ASK: "Bạn đặt các ghế này cho bạn và người thân, hay đặt hộ hoàn toàn?" (Are you booking for yourself + others, or just others?)
+                            - Explain that we need the **Primary Passenger** (Người đại diện) contact info for the booking record.
+
                         3. City Name Normalization (IMPORTANT)
                         - Users often type lazily (e.g., "hanoi", "saigon", "dn").
                         - You ALWAYS convert them to standard full city names before calling `search_trips`.
@@ -108,7 +114,11 @@ public class AiChatService {
                         - Step 3: SELECT SEATS. User picks seats (e.g. A01, A02).
                         - Step 4: INFO COLLECTION (Apply Booking Logic above).
                         - Step 5: CONFIRM & BOOK. Show summary -> Call `create_booking`.
-                        - Step 6: PAYMENT. "Vé [Code] đang chờ thanh toán. Bạn hãy thanh toán ngay để giữ chỗ."
+                        - Step 6: PAYMENT & POST-BOOKING GUIDANCE.
+                          - "Vé [Code] đang chờ thanh toán..."
+                          - **CRITICAL**: Tell them WHERE to check their ticket:
+                            - IF GUEST: "Bạn vui lòng truy cập trang 'Tra cứu vé' (Lookup) và nhập mã vé để kiểm tra."
+                            - IF LOGGED_IN: "Bạn có thể xem lại vé tại trang 'Lịch sử đặt vé' (Booking History) hoặc 'Tra cứu vé'."
 
                         5. Knowledge Base (FAQs)
                         - Cancellation: "Hủy vé tại 'Lịch sử đặt vé' trước 24h."

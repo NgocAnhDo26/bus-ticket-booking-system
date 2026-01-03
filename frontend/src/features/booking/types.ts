@@ -12,6 +12,7 @@ export type TicketInfo = {
   passengerName: string;
   passengerPhone: string;
   price: number;
+  boarded?: boolean;
 };
 
 export type StationInfo = {

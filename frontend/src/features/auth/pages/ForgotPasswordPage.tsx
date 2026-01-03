@@ -66,7 +66,7 @@ export const ForgotPasswordPage = () => {
               <Input
                 id="email"
                 type="email"
-                placeholder="name@example.com"
+                placeholder="email@example.com"
                 {...form.register('email')}
               />
               {form.formState.errors.email && (

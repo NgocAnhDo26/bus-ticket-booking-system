@@ -1,17 +1,14 @@
 import { format } from 'date-fns';
 import { Clock, MapPin } from 'lucide-react';
 
-import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import type { RouteInfo } from '@/model/routeInfo';
-import type { RouteStopInfo } from '@/model/routeStopInfo';
 
 interface RouteInfoCardProps {
   route: RouteInfo | undefined;
   departure: Date | null;
   arrival: Date | null;
-  sortedStops: RouteStopInfo[];
   hours: number;
   minutes: number;
 }
@@ -20,7 +17,6 @@ export const RouteInfoCard = ({
   route,
   departure,
   arrival,
-  sortedStops,
   hours,
   minutes,
 }: RouteInfoCardProps) => {
@@ -56,27 +52,6 @@ export const RouteInfoCard = ({
                   </div>
                 )}
               </div>
-
-              {sortedStops.map((stop, index) => (
-                <div key={stop.id || index}>
-                  <h4 className="text-base font-medium text-foreground">{stop.station?.name}</h4>
-                  <p className="text-sm text-muted-foreground">{stop.station?.city}</p>
-                  {stop.durationMinutesFromOrigin && (
-                    <div className="flex items-center gap-2 mt-1">
-                      <Clock className="h-3 w-3 text-muted-foreground" />
-                      <span className="text-xs text-muted-foreground">
-                        {Math.floor(stop.durationMinutesFromOrigin / 60)}h{' '}
-                        {stop.durationMinutesFromOrigin % 60}m từ điểm xuất phát
-                      </span>
-                    </div>
-                  )}
-                  {stop.stopType && (
-                    <Badge variant="outline" className="mt-1 text-xs">
-                      {stop.stopType}
-                    </Badge>
-                  )}
-                </div>
-              ))}
 
               <div>
                 <h3 className="text-lg font-semibold text-foreground">

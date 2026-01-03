@@ -165,16 +165,16 @@ const getUserNavItems = (userRole: UserRole | null): UserNavItem[] => {
   const sectionPrefix = isAdmin ? '/admin' : '/dashboard';
 
   return [
-    { to: dashboardPath, label: 'Dashboard', icon: LayoutDashboard },
+    { to: dashboardPath, label: 'Tổng quan', icon: LayoutDashboard },
     {
       to: `${sectionPrefix}/trips`,
-      label: 'Trips',
+      label: 'Chuyến đi',
       icon: Search,
       disabled: true,
     },
     {
       to: `${sectionPrefix}/bookings`,
-      label: 'Bookings',
+      label: 'Đặt chỗ',
       icon: Ticket,
       disabled: true,
     },

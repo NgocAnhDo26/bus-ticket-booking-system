@@ -9,6 +9,13 @@ import { useShallow } from 'zustand/react/shallow';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { getBusLayout } from '@/features/bus-layout/api';
 
@@ -69,6 +76,26 @@ export const BookingPage = () => {
       setDropoffStationId('DESTINATION');
     }
   }, [tripId, initialize, setDropoffStationId]);
+
+  // Handle Real-time Trip Status Updates
+  const tripStatus = useBookingStore(useShallow((state) => state.tripStatus));
+
+  useEffect(() => {
+    if (tripStatus && tripStatus.tripId === tripId) {
+      if (tripStatus.status === 'CANCELLED') {
+        toast.error('Chuyến xe đã bị hủy', {
+          description: 'Xin lỗi, chuyến xe này vừa bị hủy bởi nhà xe.',
+          duration: 5000,
+        });
+        navigate('/');
+      } else if (tripStatus.status === 'DELAYED') {
+        toast.warning('Chuyến xe bị hoãn', {
+          description: tripStatus.message,
+          duration: 5000,
+        });
+      }
+    }
+  }, [tripStatus, tripId, navigate]);
 
   // Calculate selected seats and price
   const mySelectedSeats = selectedSeats;
@@ -229,60 +256,64 @@ export const BookingPage = () => {
                 <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                   Điểm đón
                 </label>
-                <select
-                  className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                  value={pickupStationId || ''}
-                  onChange={(e) => {
-                    setPickupStationId(e.target.value);
-                    // Reset dropoff if invalid?
-                    // For now just set it.
-                  }}
+                <Select
+                  value={pickupStationId || undefined}
+                  onValueChange={(value) => setPickupStationId(value)}
                 >
-                  <option value="">Chọn điểm đón...</option>
-                  <option value="ORIGIN">{trip.route.originStation.name} (Điểm đầu)</option>
-                  {trip.route.stops
-                    ?.filter((s) => s.stopType === 'PICKUP' || s.stopType === 'BOTH')
-                    .sort((a, b) => a.stopOrder - b.stopOrder)
-                    .map((s) => (
-                      <option key={s.id} value={s.id}>
-                        {s.station ? s.station.name : s.customName}
-                      </option>
-                    ))}
-                </select>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Chọn điểm đón..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ORIGIN">
+                      {trip.route.originStation.name} (Điểm đầu)
+                    </SelectItem>
+                    {trip.route.stops
+                      ?.filter((s) => s.stopType === 'PICKUP' || s.stopType === 'BOTH')
+                      .sort((a, b) => a.stopOrder - b.stopOrder)
+                      .map((s) => (
+                        <SelectItem key={s.id} value={s.id}>
+                          {s.station ? s.station.name : s.customName}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-2">
                 <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                   Điểm trả
                 </label>
-                <select
-                  className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                  value={dropoffStationId || ''}
-                  onChange={(e) => setDropoffStationId(e.target.value)}
+                <Select
+                  value={dropoffStationId || undefined}
+                  onValueChange={(value) => setDropoffStationId(value)}
                 >
-                  <option value="">Chọn điểm trả...</option>
-                  {trip.route.stops
-                    ?.filter((s) => s.stopType === 'DROPOFF' || s.stopType === 'BOTH')
-                    .filter((s) => {
-                      // Filter based on pickup order
-                      if (!pickupStationId || pickupStationId === 'ORIGIN') return true;
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Chọn điểm trả..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {trip.route.stops
+                      ?.filter((s) => s.stopType === 'DROPOFF' || s.stopType === 'BOTH')
+                      .filter((s) => {
+                        // Filter based on pickup order
+                        if (!pickupStationId || pickupStationId === 'ORIGIN') return true;
 
-                      // Find pickup stop order
-                      const pickupStop = trip.route.stops?.find((p) => p.id === pickupStationId);
-                      const pickupOrder = pickupStop ? pickupStop.stopOrder : -1;
+                        // Find pickup stop order
+                        const pickupStop = trip.route.stops?.find((p) => p.id === pickupStationId);
+                        const pickupOrder = pickupStop ? pickupStop.stopOrder : -1;
 
-                      return s.stopOrder > pickupOrder;
-                    })
-                    .sort((a, b) => a.stopOrder - b.stopOrder)
-                    .map((s) => (
-                      <option key={s.id} value={s.id}>
-                        {s.station ? s.station.name : s.customName}
-                      </option>
-                    ))}
-                  <option value="DESTINATION">
-                    {trip.route.destinationStation.name} (Điểm cuối)
-                  </option>
-                </select>
+                        return s.stopOrder > pickupOrder;
+                      })
+                      .sort((a, b) => a.stopOrder - b.stopOrder)
+                      .map((s) => (
+                        <SelectItem key={s.id} value={s.id}>
+                          {s.station ? s.station.name : s.customName}
+                        </SelectItem>
+                      ))}
+                    <SelectItem value="DESTINATION">
+                      {trip.route.destinationStation.name} (Điểm cuối)
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </CardContent>
           </Card>

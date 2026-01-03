@@ -1,14 +1,27 @@
-import { Link, NavLink } from 'react-router-dom';
+import { Link, NavLink, useNavigate } from 'react-router-dom';
 
 import { Bus, LogOut } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
+import { logout } from '@/features/auth/api';
 import { useNav } from '@/hooks/useNav';
 import { useAuthStore } from '@/store/auth-store';
 
 export const SidebarNav = () => {
   const clearAuth = useAuthStore((state) => state.clearAuth);
   const { userNavItems, user } = useNav();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      await logout(); // Clear refresh token cookie on server
+    } catch (error) {
+      console.error('Logout failed:', error);
+    } finally {
+      clearAuth();
+      navigate('/login');
+    }
+  };
 
   return (
     <aside className="hidden w-64 border-r border-border/60 bg-surface/80 px-6 py-8 lg:block">
@@ -22,7 +35,7 @@ export const SidebarNav = () => {
           </span>
         </Link>
         <p className="text-sm text-text-muted pt-2">
-          {user?.role === 'ADMIN' ? 'Admin' : 'Passenger'} view
+          {user?.role === 'ADMIN' ? 'Quản trị viên' : 'Hành khách'}
         </p>
       </div>
       <nav className="space-y-2">
@@ -45,9 +58,9 @@ export const SidebarNav = () => {
         ))}
       </nav>
       <div className="mt-10">
-        <Button variant="outline" size="lg" className="w-full" onClick={clearAuth}>
+        <Button variant="outline" size="lg" className="w-full" onClick={handleLogout}>
           <LogOut className="mr-2 h-4 w-4" />
-          Sign out
+          Đăng xuất
         </Button>
       </div>
     </aside>

@@ -10,8 +10,8 @@ export const TopBar = () => {
   return (
     <header className="sticky top-0 z-10 flex items-center justify-between border-b border-border/50 bg-background/80 px-6 py-4 backdrop-blur">
       <div>
-        <p className="text-sm text-text-muted">Welcome back</p>
-        <p className="text-lg font-semibold text-text-base">{user?.fullName ?? 'Passenger'}</p>
+        <p className="text-sm text-text-muted">Chào mừng trở lại</p>
+        <p className="text-lg font-semibold text-text-base">{user?.fullName ?? 'Hành khách'}</p>
       </div>
       <div className="flex items-center gap-3">
         <Button variant="ghost" size="icon" className="rounded-full">

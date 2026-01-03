@@ -44,20 +44,20 @@ export const BookingTable = ({
       <table className="w-full text-sm">
         <thead className="bg-muted/50 border-b">
           <tr>
-            <th className="h-12 px-4 text-left font-medium text-muted-foreground">Code</th>
-            <th className="h-12 px-4 text-left font-medium text-muted-foreground">Passenger</th>
-            <th className="h-12 px-4 text-left font-medium text-muted-foreground">Trip</th>
-            <th className="h-12 px-4 text-left font-medium text-muted-foreground">Date</th>
-            <th className="h-12 px-4 text-left font-medium text-muted-foreground">Status</th>
-            <th className="h-12 px-4 text-right font-medium text-muted-foreground">Amount</th>
-            <th className="h-12 px-4 text-right font-medium text-muted-foreground">Actions</th>
+            <th className="h-12 px-4 text-left font-medium text-muted-foreground">Mã</th>
+            <th className="h-12 px-4 text-left font-medium text-muted-foreground">Hành khách</th>
+            <th className="h-12 px-4 text-left font-medium text-muted-foreground">Chuyến</th>
+            <th className="h-12 px-4 text-left font-medium text-muted-foreground">Ngày</th>
+            <th className="h-12 px-4 text-left font-medium text-muted-foreground">Trạng thái</th>
+            <th className="h-12 px-4 text-right font-medium text-muted-foreground">Số tiền</th>
+            <th className="h-12 px-4 text-right font-medium text-muted-foreground">Thao tác</th>
           </tr>
         </thead>
         <tbody>
           {bookings.length === 0 ? (
             <tr>
               <td colSpan={7} className="p-8 text-center text-muted-foreground">
-                No bookings found.
+                Không có đặt vé nào.
               </td>
             </tr>
           ) : (
@@ -105,7 +105,7 @@ export const BookingTable = ({
                             <Eye className="h-4 w-4" />
                           </Button>
                         </TooltipTrigger>
-                        <TooltipContent>View Details</TooltipContent>
+                        <TooltipContent>Xem chi tiết</TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
 
@@ -123,7 +123,7 @@ export const BookingTable = ({
                               <RotateCcw className="h-4 w-4" />
                             </Button>
                           </TooltipTrigger>
-                          <TooltipContent>Refund Booking</TooltipContent>
+                          <TooltipContent>Hoàn vé</TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
                     )}
@@ -141,7 +141,7 @@ export const BookingTable = ({
                               <XCircle className="h-4 w-4" />
                             </Button>
                           </TooltipTrigger>
-                          <TooltipContent>Cancel Booking</TooltipContent>
+                          <TooltipContent>Hủy vé</TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
                     )}

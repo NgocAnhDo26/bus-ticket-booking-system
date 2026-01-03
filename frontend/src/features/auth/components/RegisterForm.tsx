@@ -47,14 +47,14 @@ export function RegisterForm({
 
       <Field data-invalid={!!errors.fullName}>
         <FieldLabel>Họ và tên</FieldLabel>
-        <Input placeholder="Jane Doe" {...register('fullName')} />
+        <Input placeholder="Nguyễn Văn A" {...register('fullName')} />
         <FieldError>{errors.fullName?.message}</FieldError>
       </Field>
       <Field data-invalid={!!errors.email}>
         <FieldLabel>Email</FieldLabel>
         <Input
           type="email"
-          placeholder="you@example.com"
+          placeholder="email@example.com"
           autoComplete="email"
           {...register('email')}
         />
