@@ -178,7 +178,7 @@ export function GenericTable<TData>({
                   value={String(pageSize)}
                   onValueChange={(val) => onPageSizeChange(Number(val))}
                 >
-                  <SelectTrigger className="h-8 w-full">
+                  <SelectTrigger className="h-8 w-20">
                     <SelectValue placeholder={String(pageSize)} />
                   </SelectTrigger>
                   <SelectContent side="top">

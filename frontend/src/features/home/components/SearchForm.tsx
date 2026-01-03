@@ -9,9 +9,7 @@ import * as z from 'zod';
 
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
-import { Card, CardContent } from '@/components/ui/card';
 import { Combobox } from '@/components/ui/combobox';
-import { Label } from '@/components/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useSearchStations } from '@/features/catalog/hooks';
 
@@ -74,102 +72,105 @@ export const SearchForm = () => {
     navigate(`/search?${searchParams.toString()}`);
   };
 
+  const labelStyles =
+    'block text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase mb-2 ml-2';
+
   return (
-    <Card className="w-full max-w-4xl mx-auto supports-backdrop-filter:bg-card/80">
-      <CardContent className="px-6 pt-2 py-3">
-        <form
-          onSubmit={handleSubmit(onSubmit)}
-          className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end"
-        >
-          <div className="space-y-2">
-            <Label className="flex items-center gap-2">
-              <MapPin className="w-4 h-4 text-primary" /> Điểm đi
-            </Label>
-            <div className="relative">
-              <Combobox
-                options={originCityOptions}
-                value={origin}
-                onSelect={(value) => setValue('origin', value, { shouldValidate: true })}
-                onSearchChange={setOriginSearch}
-                placeholder="Nhập để tìm điểm đi"
-                emptyText={isLoadingOrigin ? 'Đang tìm...' : 'Không tìm thấy tỉnh/thành'}
-                isLoading={isLoadingOrigin}
-                className="w-full pr-2"
-              />
-              {errors.origin && (
-                <p className="absolute -bottom-5 left-1 text-xs text-destructive">
-                  {errors.origin.message}
-                </p>
-              )}
-            </div>
+    <div className="w-full">
+      <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 md:grid-cols-12 gap-4">
+        {/* --- Origin Field --- */}
+        <div className="md:col-span-3">
+          <label className={labelStyles}>Điểm đi</label>
+          <div className="relative">
+            <Combobox
+              options={originCityOptions}
+              value={origin}
+              onSelect={(value) => setValue('origin', value, { shouldValidate: true })}
+              onSearchChange={setOriginSearch}
+              placeholder="Chọn điểm đi"
+              emptyText={isLoadingOrigin ? 'Đang tìm...' : 'Không tìm thấy'}
+              isLoading={isLoadingOrigin}
+              icon={<MapPin size={18} />}
+            />
+            {errors.origin && (
+              <p className="absolute -bottom-5 left-1 text-xs text-red-500 font-medium">
+                {errors.origin.message}
+              </p>
+            )}
           </div>
+        </div>
 
-          <div className="space-y-2">
-            <Label className="flex items-center gap-2">
-              <MapPin className="w-4 h-4 text-primary" /> Điểm đến
-            </Label>
-            <div className="relative">
-              <Combobox
-                options={destinationCityOptions}
-                value={destination}
-                onSelect={(value) => setValue('destination', value, { shouldValidate: true })}
-                onSearchChange={setDestinationSearch}
-                placeholder="Nhập để tìm điểm đến"
-                emptyText={isLoadingDestination ? 'Đang tìm...' : 'Không tìm thấy tỉnh/thành'}
-                isLoading={isLoadingDestination}
-                className="w-full pr-2"
-              />
-              {errors.destination && (
-                <p className="absolute -bottom-5 left-1 text-xs text-destructive">
-                  {errors.destination.message}
-                </p>
-              )}
-            </div>
+        {/* --- Destination Field --- */}
+        <div className="md:col-span-3">
+          <label className={labelStyles}>Điểm đến</label>
+          <div className="relative">
+            <Combobox
+              options={destinationCityOptions}
+              value={destination}
+              onSelect={(value) => setValue('destination', value, { shouldValidate: true })}
+              onSearchChange={setDestinationSearch}
+              placeholder="Chọn điểm đến"
+              emptyText={isLoadingDestination ? 'Đang tìm...' : 'Không tìm thấy'}
+              isLoading={isLoadingDestination}
+              icon={<MapPin size={18} />}
+            />
+            {errors.destination && (
+              <p className="absolute -bottom-5 left-1 text-xs text-red-500 font-medium">
+                {errors.destination.message}
+              </p>
+            )}
           </div>
+        </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="date" className="flex items-center gap-2">
-              <CalendarIcon className="w-4 h-4 text-primary" /> Ngày đi
-            </Label>
-            <div className="relative">
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    data-empty={!date}
-                    className="data-[empty=true]:text-muted-foreground w-full justify-between text-left font-normal pr-3"
-                  >
-                    {date ? format(new Date(date), 'PPP') : <span>Chọn ngày đi</span>}
-                    <CalendarIcon />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    className="rounded-md border-none w-full"
-                    mode="single"
-                    selected={date ? new Date(date) : undefined}
-                    onSelect={(selectedDate: Date | undefined) => {
-                      if (!selectedDate) return;
-                      setValue('date', format(selectedDate, 'yyyy-MM-dd'), {
-                        shouldValidate: true,
-                      });
-                    }}
-                  />
-                </PopoverContent>
-              </Popover>
-              {errors.date && (
-                <p className="absolute -bottom-5 left-0 text-xs text-destructive">
-                  {errors.date.message}
-                </p>
-              )}
-            </div>
+        {/* --- Date Field --- */}
+        <div className="md:col-span-3">
+          <label className={labelStyles}>Ngày đi</label>
+          <div className="relative">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  data-empty={!date}
+                  className="w-full justify-between h-auto py-3 px-4 text-base font-normal bg-white dark:bg-emerald-900/50 border-2 border-emerald-100 dark:border-emerald-800 rounded-2xl text-emerald-900 dark:text-emerald-50 hover:bg-white hover:border-emerald-400 hover:translate-y-0 hover:shadow-sm focus:ring-4 focus:ring-emerald-100 focus:border-emerald-400 data-[empty=true]:text-emerald-300 dark:data-[empty=true]:text-emerald-600"
+                >
+                  <span className="flex items-center gap-2">
+                    <CalendarIcon size={18} className="shrink-0 text-emerald-500" />
+                    <span className="truncate">
+                      {date ? format(new Date(date), 'dd/MM/yyyy') : 'Chọn ngày'}
+                    </span>
+                  </span>
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0 rounded-2xl border-emerald-100 dark:border-emerald-800 shadow-xl shadow-emerald-900/5 dark:shadow-black/20">
+                <Calendar
+                  className="rounded-2xl border-none w-full"
+                  mode="single"
+                  selected={date ? new Date(date) : undefined}
+                  onSelect={(selectedDate: Date | undefined) => {
+                    if (!selectedDate) return;
+                    setValue('date', format(selectedDate, 'yyyy-MM-dd'), {
+                      shouldValidate: true,
+                    });
+                  }}
+                  disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                />
+              </PopoverContent>
+            </Popover>
+            {errors.date && (
+              <p className="absolute -bottom-5 left-1 text-xs text-red-500 font-medium">
+                {errors.date.message}
+              </p>
+            )}
           </div>
+        </div>
 
-          <Button type="submit">
-            <Search /> Tìm chuyến
+        {/* --- Submit Button --- */}
+        <div className="md:col-span-3 flex items-end">
+          <Button size="lg" type="submit" className="w-full">
+            <Search size={20} strokeWidth={3} /> Tìm chuyến
           </Button>
-        </form>
-      </CardContent>
-    </Card>
+        </div>
+      </form>
+    </div>
   );
 };

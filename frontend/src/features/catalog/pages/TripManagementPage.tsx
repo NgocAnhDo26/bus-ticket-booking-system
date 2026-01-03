@@ -29,7 +29,6 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -270,10 +269,10 @@ export const TripManagementPage = () => {
 
   return (
     <div className="flex flex-col gap-8 p-4">
-      <div className="mb-6 flex items-center justify-between">
-        <div>
+      <div className="flex items-center justify-between">
+        <div className="space-y-1">
           <h1 className="text-2xl font-bold tracking-tight">Quản lý Chuyến xe</h1>
-          <p className="text-muted-foreground">
+          <p className="text-sm text-muted-foreground">
             Quản lý lịch trình, giá vé và thông tin chuyến xe.
           </p>
         </div>
@@ -283,38 +282,31 @@ export const TripManagementPage = () => {
         </Button>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Danh sách Chuyến đi</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <GenericTable<Trip>
-            data={sortedPaged.data}
-            columns={columns}
-            isLoading={isLoadingTrips}
-            meta={meta}
-            pageIndex={meta.page}
-            pageSize={pageSize}
-            sorting={sorting}
-            onPageChange={setPageIndex}
-            onPageSizeChange={(size) => {
-              setPageSize(size);
-              setPageIndex(1);
-            }}
-            onSort={(key) =>
-              setSorting((prev) =>
-                prev.key === key
-                  ? {
-                      key,
-                      direction: prev.direction === 'asc' ? 'desc' : 'asc',
-                    }
-                  : { key, direction: 'asc' },
-              )
-            }
-            getRowId={(trip) => trip.id}
-          />
-        </CardContent>
-      </Card>
+      <GenericTable<Trip>
+        data={sortedPaged.data}
+        columns={columns}
+        isLoading={isLoadingTrips}
+        meta={meta}
+        pageIndex={meta.page}
+        pageSize={pageSize}
+        sorting={sorting}
+        onPageChange={setPageIndex}
+        onPageSizeChange={(size) => {
+          setPageSize(size);
+          setPageIndex(1);
+        }}
+        onSort={(key) =>
+          setSorting((prev) =>
+            prev.key === key
+              ? {
+                  key,
+                  direction: prev.direction === 'asc' ? 'desc' : 'asc',
+                }
+              : { key, direction: 'asc' },
+          )
+        }
+        getRowId={(trip) => trip.id}
+      />
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>

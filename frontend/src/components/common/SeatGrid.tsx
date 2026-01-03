@@ -33,21 +33,21 @@ export const SeatGrid = ({ rows, cols, floor, seats, renderCell, renderLegend }:
   }, [seats, floor]);
 
   return (
-    <div className="space-y-3 md:mt-4">
+    <div className="space-y-2">
       {renderLegend && <div className="flex justify-between">{renderLegend()}</div>}
 
       <div
-        className="grid gap-2 rounded-lg border bg-background p-6 shadow-sm min-w-[320px]"
+        className="grid gap-1.5 rounded-lg border bg-background p-3 shadow-sm"
         style={{
-          gridTemplateColumns: `repeat(${cols}, minmax(52px, 1fr))`,
+          gridTemplateColumns: `repeat(${cols}, minmax(36px, 1fr))`,
         }}
       >
-        <div className="flex items-center justify-between mb-3" style={{ gridColumn: '1 / -1' }}>
-          <div className="flex items-center justify-center ml-3">
-            <LifeBuoy className="rotate-90" /> {/* Steering wheel */}
+        <div className="flex items-center justify-between mb-2" style={{ gridColumn: '1 / -1' }}>
+          <div className="flex items-center justify-center ml-2">
+            <LifeBuoy className="h-5 w-5 rotate-90 text-muted-foreground" /> {/* Steering wheel */}
           </div>
           <div className="flex items-center justify-center">
-            <Badge className="bg-primary/10 text-primary">
+            <Badge variant="secondary" className="text-xs px-2 py-0.5">
               {seats.filter((s) => s.floor === floor).length} ghế
             </Badge>
           </div>

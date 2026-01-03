@@ -6,7 +6,7 @@ import { AxiosError } from 'axios';
 import { Bus as BusIcon, MoreHorizontal, Pencil, Plus, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 
-import { type ColumnDef, GenericTable } from '@/components/common/GenericTable';
+import { type ColumnDef, GenericTable } from '@/components/common';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,7 +19,6 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -160,7 +159,7 @@ export const BusManagementPage = () => {
         cell: (bus) => (
           <div className="flex flex-wrap gap-1">
             {bus.amenities?.map((amenity, index) => (
-              <Badge key={index} className="text-xs">
+              <Badge key={index} className="text-xs" variant="outline">
                 {amenity}
               </Badge>
             ))}
@@ -214,45 +213,42 @@ export const BusManagementPage = () => {
   return (
     <div className="flex flex-col gap-8 p-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold tracking-tight">Quản lý Xe</h1>
+        <div className="space-y-1">
+          <h1 className="text-2xl font-bold tracking-tight">Quản lý Xe</h1>
+          <p className="text-sm text-muted-foreground">
+            Danh sách các xe được cấu hình trong hệ thống.
+          </p>
+        </div>
         <Button onClick={() => navigate('/admin/catalog/buses/create')}>
           <Plus className="mr-2 h-4 w-4" /> Thêm Xe
         </Button>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Danh sách Xe</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <GenericTable<Bus>
-            data={sortedPaged.data}
-            columns={columns}
-            isLoading={isLoadingBuses}
-            meta={meta}
-            pageIndex={meta.page}
-            pageSize={pageSize}
-            sorting={sorting}
-            onPageChange={(page) => setPageIndex(page)}
-            onPageSizeChange={(size) => {
-              setPageSize(size);
-              setPageIndex(1);
-            }}
-            onSort={(key) =>
-              setSorting((prev) => {
-                if (prev.key === key) {
-                  return {
-                    key,
-                    direction: prev.direction === 'asc' ? 'desc' : 'asc',
-                  };
+      <GenericTable<Bus>
+        data={sortedPaged.data}
+        columns={columns}
+        isLoading={isLoadingBuses}
+        meta={meta}
+        pageIndex={meta.page}
+        pageSize={pageSize}
+        sorting={sorting}
+        onPageChange={setPageIndex}
+        onPageSizeChange={(size) => {
+          setPageSize(size);
+          setPageIndex(1);
+        }}
+        onSort={(key) =>
+          setSorting((prev) =>
+            prev.key === key
+              ? {
+                  key,
+                  direction: prev.direction === 'asc' ? 'desc' : 'asc',
                 }
-                return { key, direction: 'asc' };
-              })
-            }
-            getRowId={(bus) => bus.id}
-          />
-        </CardContent>
-      </Card>
+              : { key, direction: 'asc' },
+          )
+        }
+        getRowId={(bus) => bus.id}
+      />
 
       <AlertDialog
         open={!!deletingBus}

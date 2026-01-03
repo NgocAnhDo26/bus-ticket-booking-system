@@ -23,6 +23,7 @@ interface ComboboxProps {
   emptyText?: string;
   className?: string;
   isLoading?: boolean;
+  icon?: React.ReactNode;
 }
 
 export function Combobox({
@@ -34,6 +35,7 @@ export function Combobox({
   emptyText = 'No option found.',
   className,
   isLoading = false,
+  icon,
 }: ComboboxProps) {
   const [open, setOpen] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState('');
@@ -46,7 +48,7 @@ export function Combobox({
       if (searchQuery) {
         onSearchChange(searchQuery);
       }
-    }, 300); // 300ms debounce
+    }, 300);
 
     return () => clearTimeout(timer);
   }, [searchQuery, onSearchChange]);
@@ -62,16 +64,34 @@ export function Combobox({
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
-          variant="outline"
+          variant="outline" // Base variant
           role="combobox"
           aria-expanded={open}
-          className={cn('w-full justify-between', !value && 'text-muted-foreground', className)}
+          className={cn(
+            // --- JoyRide Input Mimicry ---
+            'w-full justify-between h-auto py-3 px-4 text-base font-normal',
+            'bg-white dark:bg-emerald-900/50',
+            'border-2 border-emerald-100 dark:border-emerald-800',
+            'rounded-2xl',
+            'text-emerald-900 dark:text-emerald-50',
+            'hover:bg-white hover:border-emerald-400 hover:translate-y-0 hover:shadow-sm', // Override standard button hover
+            'focus:ring-4 focus:ring-emerald-100 focus:border-emerald-400',
+            !value && 'text-emerald-300 dark:text-emerald-600',
+            className,
+          )}
         >
-          {value ? (options.find((option) => option.value === value)?.label ?? value) : placeholder}
-          <ChevronsUpDown className="opacity-50" />
+          {icon && <span className="shrink-0 text-emerald-500">{icon}</span>}
+          <span className="flex-1 text-left truncate">
+            {value
+              ? (options.find((option) => option.value === value)?.label ?? value)
+              : placeholder}
+          </span>
+          <ChevronsUpDown className="ml-2 size-4 shrink-0 text-emerald-400 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[--radix-popover-trigger-width] p-0 z-[200]">
+
+      {/* Popover Content (Dropdown) */}
+      <PopoverContent className="w-[--radix-popover-trigger-width] p-0 z-[200] rounded-2xl border-emerald-100 dark:border-emerald-800 shadow-xl shadow-emerald-900/5 dark:shadow-black/20">
         <Command shouldFilter={!onSearchChange}>
           <CommandInput
             placeholder={placeholder}
@@ -80,7 +100,7 @@ export function Combobox({
           />
           <CommandList>
             {isLoading ? (
-              <div className="flex items-center justify-center gap-2 p-4 text-sm text-muted-foreground">
+              <div className="flex items-center justify-center gap-2 p-4 text-sm text-emerald-500">
                 <Loader2 className="h-4 w-4 animate-spin" />
                 Đang tìm...
               </div>
@@ -93,7 +113,6 @@ export function Combobox({
                       key={option.value}
                       value={option.label}
                       onSelect={(currentValue) => {
-                        // cmdk returns lowercased value
                         const selectedOption = options.find(
                           (option) => option.label.toLowerCase() === currentValue.toLowerCase(),
                         );
@@ -105,7 +124,7 @@ export function Combobox({
                       {option.label}
                       <Check
                         className={cn(
-                          'ml-auto',
+                          'ml-auto text-emerald-600 dark:text-emerald-400',
                           value === option.value ? 'opacity-100' : 'opacity-0',
                         )}
                       />

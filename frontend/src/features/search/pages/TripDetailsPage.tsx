@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { differenceInMinutes, format } from 'date-fns';
-import { ArrowLeft, Bus, Stars } from 'lucide-react';
+import { ArrowLeft, Bus, Star, Stars } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,7 +14,7 @@ import { BookingSeatMap } from '@/features/booking/components/BookingSeatMap';
 import { useBookedSeats } from '@/features/booking/hooks';
 import { useSearchTrips } from '@/features/catalog/hooks';
 import { ReviewList } from '@/features/reviews/components/ReviewList';
-import { useReviewsByOperator } from '@/features/reviews/hooks';
+import { useOperatorStats, useReviewsByOperator } from '@/features/reviews/hooks';
 import { TripPricingInfoSeatType } from '@/model/tripPricingInfoSeatType';
 import type { TripResponse } from '@/model/tripResponse';
 
@@ -64,6 +64,7 @@ export const TripDetailsPage = () => {
     reviewsPage,
     10,
   );
+  const { data: operatorStats } = useOperatorStats(operatorId);
 
   if (isLoading) {
     return (
@@ -233,6 +234,19 @@ export const TripDetailsPage = () => {
                   <div className="flex items-center gap-2">
                     <Stars className="h-5 w-5 text-primary" />
                     <p className="font-medium text-lg">Đánh giá nhà xe {bus?.operator?.name}</p>
+                    {/* {operatorStats && operatorStats.totalReviews > 0 && ( */}
+                    <div className="flex items-center gap-1 text-yellow-600 bg-yellow-50 dark:bg-yellow-900/20 px-2 py-1 rounded-md border border-yellow-100 dark:border-yellow-900/50">
+                      <Star className="w-3.5 h-3.5 fill-current" />
+                      <span className="font-bold text-sm">
+                        {operatorStats?.averageRating
+                          ? operatorStats?.averageRating?.toFixed(1)
+                          : '0.0'}
+                      </span>
+                      <span className="text-xs text-muted-foreground opacity-70">
+                        ({operatorStats?.totalReviews ? operatorStats?.totalReviews : 0} đánh giá)
+                      </span>
+                    </div>
+                    {/* )} */}
                   </div>
 
                   <p className="text-sm text-muted-foreground">

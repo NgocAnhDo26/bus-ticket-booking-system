@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { createReview, getReviewByBookingId, getReviewsByOperator } from './api';
+import { createReview, getOperatorStats, getReviewByBookingId, getReviewsByOperator } from './api';
 import type { CreateReviewRequest } from './api';
 
 export const useReviewsByOperator = (operatorId: string | undefined, page = 0, size = 10) => {
@@ -8,6 +8,15 @@ export const useReviewsByOperator = (operatorId: string | undefined, page = 0, s
     queryKey: ['reviews', 'operator', operatorId, page, size],
     queryFn: () => getReviewsByOperator(operatorId!, page, size),
     enabled: !!operatorId,
+  });
+};
+
+export const useOperatorStats = (operatorId: string | undefined) => {
+  return useQuery({
+    queryKey: ['reviews', 'operator', operatorId, 'stats'],
+    queryFn: () => getOperatorStats(operatorId!),
+    enabled: !!operatorId,
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes to reduce API calls
   });
 };
 

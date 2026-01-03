@@ -2,12 +2,14 @@ import { useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
 import { Button } from '@/components/ui/button';
+import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Label } from '@/components/ui/label';
+import { Field, FieldGroup, FieldLabel, FieldTitle } from '@/components/ui/field';
 import { Slider } from '@/components/ui/slider';
 import { useOperators } from '@/features/catalog/hooks';
+import { cn } from '@/lib/utils';
 
-export const FilterSidebar = () => {
+export const FilterSidebar = ({ className }: { className?: string }) => {
   const [searchParams, setSearchParams] = useSearchParams();
   const { data: operators } = useOperators();
 
@@ -102,67 +104,75 @@ export const FilterSidebar = () => {
   ];
 
   return (
-    <div className="w-full md:w-64 space-y-6">
-      <div className="bg-card p-4 rounded-lg shadow-sm border">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="font-semibold text-foreground">Bộ lọc tìm kiếm</h3>
-          <Button variant="ghost" size="sm" onClick={handleApplyFilters}>
-            Áp dụng
-          </Button>
-        </div>
+    <div className={cn('w-full md:w-1/4', className)}>
+      <Card>
+        <CardHeader>
+          <CardTitle>Bộ lọc tìm kiếm</CardTitle>
+          <CardAction>
+            <Button variant="ghost" size="sm" onClick={handleApplyFilters}>
+              Áp dụng
+            </Button>
+          </CardAction>
+        </CardHeader>
 
-        <div className="space-y-6">
-          {/* Price Filter */}
-          <div className="space-y-4">
-            <h4 className="text-sm font-medium text-foreground">Giá vé</h4>
-            <Slider
-              defaultValue={[0, 2000000]}
-              max={2000000}
-              step={50000}
-              value={priceRange}
-              onValueChange={setPriceRange}
-            />
-            <div className="flex items-center justify-between text-xs text-muted-foreground">
-              <span>{new Intl.NumberFormat('vi-VN').format(priceRange[0])}đ</span>
-              <span>{new Intl.NumberFormat('vi-VN').format(priceRange[1])}đ</span>
-            </div>
-          </div>
-
-          {/* Time Filter */}
-          <div className="space-y-3">
-            <h4 className="text-sm font-medium text-foreground">Giờ đi</h4>
-            {timeRanges.map((time) => (
-              <div key={time.id} className="flex items-center space-x-2">
-                <Checkbox
-                  id={time.id}
-                  checked={selectedTimes.includes(time.id)}
-                  onCheckedChange={(checked) => handleTimeChange(time.id, checked as boolean)}
-                />
-                <Label htmlFor={time.id} className="text-sm font-normal">
-                  {time.label}
-                </Label>
+        <CardContent>
+          <FieldGroup>
+            {/* Price Filter */}
+            <Field>
+              <FieldTitle>Giá vé</FieldTitle>
+              <Slider
+                defaultValue={[0, 2000000]}
+                max={2000000}
+                step={50000}
+                value={priceRange}
+                onValueChange={setPriceRange}
+              />
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <span>{new Intl.NumberFormat('vi-VN').format(priceRange[0])}đ</span>
+                <span>{new Intl.NumberFormat('vi-VN').format(priceRange[1])}đ</span>
               </div>
-            ))}
-          </div>
+            </Field>
 
-          {/* Operator Filter */}
-          <div className="space-y-3">
-            <h4 className="text-sm font-medium text-foreground">Nhà xe</h4>
-            {operators?.map((op) => (
-              <div key={op.id} className="flex items-center space-x-2">
-                <Checkbox
-                  id={op.id}
-                  checked={selectedOperators.includes(op.id)}
-                  onCheckedChange={(checked) => handleOperatorChange(op.id, checked as boolean)}
-                />
-                <Label htmlFor={op.id} className="text-sm font-normal">
-                  {op.name}
-                </Label>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
+            {/* Time Filter */}
+            <Field>
+              <FieldTitle>Giờ đi</FieldTitle>
+              <FieldGroup className="gap-4">
+                {timeRanges.map((time) => (
+                  <Field key={time.id} orientation="horizontal">
+                    <Checkbox
+                      id={time.id}
+                      checked={selectedTimes.includes(time.id)}
+                      onCheckedChange={(checked) => handleTimeChange(time.id, checked as boolean)}
+                    />
+                    <FieldLabel htmlFor={time.id} className="font-normal">
+                      {time.label}
+                    </FieldLabel>
+                  </Field>
+                ))}
+              </FieldGroup>
+            </Field>
+
+            {/* Operator Filter */}
+            <Field>
+              <FieldTitle>Nhà xe</FieldTitle>
+              <FieldGroup className="gap-4">
+                {operators?.map((op) => (
+                  <Field key={op.id} orientation="horizontal">
+                    <Checkbox
+                      id={op.id}
+                      checked={selectedOperators.includes(op.id)}
+                      onCheckedChange={(checked) => handleOperatorChange(op.id, checked as boolean)}
+                    />
+                    <FieldLabel htmlFor={op.id} className="font-normal">
+                      {op.name}
+                    </FieldLabel>
+                  </Field>
+                ))}
+              </FieldGroup>
+            </Field>
+          </FieldGroup>
+        </CardContent>
+      </Card>
     </div>
   );
 };
