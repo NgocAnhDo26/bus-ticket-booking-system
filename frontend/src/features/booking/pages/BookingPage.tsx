@@ -70,6 +70,26 @@ export const BookingPage = () => {
     }
   }, [tripId, initialize, setDropoffStationId]);
 
+  // Handle Real-time Trip Status Updates
+  const tripStatus = useBookingStore(useShallow((state) => state.tripStatus));
+
+  useEffect(() => {
+    if (tripStatus && tripStatus.tripId === tripId) {
+      if (tripStatus.status === 'CANCELLED') {
+        toast.error('Chuyến xe đã bị hủy', {
+          description: 'Xin lỗi, chuyến xe này vừa bị hủy bởi nhà xe.',
+          duration: 5000,
+        });
+        navigate('/');
+      } else if (tripStatus.status === 'DELAYED') {
+        toast.warning('Chuyến xe bị hoãn', {
+          description: tripStatus.message,
+          duration: 5000,
+        });
+      }
+    }
+  }, [tripStatus, tripId, navigate]);
+
   // Calculate selected seats and price
   const mySelectedSeats = selectedSeats;
 

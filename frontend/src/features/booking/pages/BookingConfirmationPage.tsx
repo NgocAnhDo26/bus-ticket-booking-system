@@ -1,9 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 
 import { useQueryClient } from '@tanstack/react-query';
+import { Client } from '@stomp/stompjs';
 import { format } from 'date-fns';
-import { AlertCircle, CheckCircle2, Clock, Download, Home, XCircle } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Clock, Download, Home, UserCheck, XCircle } from 'lucide-react';
+import QRCode from 'qrcode';
+import SockJS from 'sockjs-client';
 import { toast } from 'sonner';
 
 import {
@@ -67,6 +70,12 @@ const statusConfig = {
     className: 'bg-green-100 text-green-700 border-green-200',
     iconClassName: 'text-green-600',
   },
+  CHECKED_IN: {
+    label: 'Đã lên xe',
+    icon: UserCheck,
+    className: 'bg-blue-100 text-blue-700 border-blue-200',
+    iconClassName: 'text-blue-600',
+  },
   CANCELLED: {
     label: 'Đã hủy',
     icon: XCircle,
@@ -81,6 +90,11 @@ const statusConfig = {
   },
 };
 
+const getBaseUrl = () => {
+    const apiUrl = import.meta.env.VITE_API_URL ?? 'http://localhost:8080';
+    return apiUrl.replace(/\/api\/?$/, '');
+};
+
 export const BookingConfirmationPage = () => {
   const { bookingId } = useParams<{ bookingId: string }>();
   const navigate = useNavigate();
@@ -92,6 +106,7 @@ export const BookingConfirmationPage = () => {
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [refundData, setRefundData] = useState<RefundCalculation | null>(null);
   const [loadingEstimate, setLoadingEstimate] = useState(false);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   // Check if user is authenticated
   const user = useAuthStore((state) => state.user);
@@ -100,8 +115,6 @@ export const BookingConfirmationPage = () => {
   const { data: existingReview } = useReviewByBookingId(bookingId);
 
   // Check if review form should be shown
-  // Note: We check if trip departure time has passed as a heuristic for completed trips
-  // The backend will validate that trip is actually COMPLETED
   const tripDepartureTime = booking?.trip?.departureTime
     ? new Date(booking.trip.departureTime)
     : null;
@@ -109,6 +122,82 @@ export const BookingConfirmationPage = () => {
 
   const shouldShowReviewForm =
     user && booking && booking.status === 'CONFIRMED' && isTripLikelyCompleted && !existingReview;
+
+  // Generate QR Code when booking is confirmed
+  useEffect(() => {
+    if (booking?.status === 'CONFIRMED' && booking?.code && canvasRef.current) {
+        QRCode.toCanvas(
+            canvasRef.current,
+            booking.code,
+            {
+                width: 250,
+                margin: 2,
+                color: {
+                    dark: '#000000',
+                    light: '#ffffff',
+                },
+                errorCorrectionLevel: 'H',
+            },
+            (error) => {
+                if (error) console.error('QR Gen Error:', error);
+            }
+        );
+    }
+  }, [booking?.status, booking?.code]);
+
+  // WebSocket Subscription for Real-time Status Update
+  useEffect(() => {
+      // Connect for both PENDING (payment) and CONFIRMED (check-in) statuses
+      if (!booking || (booking.status !== 'PENDING' && booking.status !== 'CONFIRMED')) return;
+
+      let stompClient: Client | null = null;
+      
+      const connectWebSocket = () => {
+          if (typeof window !== 'undefined' && !(window as any).global) {
+              (window as any).global = window;
+          }
+
+          const socketUrl = `${getBaseUrl()}/ws`;
+          stompClient = new Client({
+              webSocketFactory: () => new SockJS(socketUrl),
+              reconnectDelay: 5000,
+              onConnect: () => {
+                  console.log('Connected to WS for Payment Updates');
+                  stompClient?.subscribe(`/topic/booking/${booking.code}`, (message) => {
+                      try {
+                          const body = JSON.parse(message.body);
+                          if (body.status === 'CONFIRMED') {
+                              toast.success('Thanh toán thành công!', {
+                                  description: 'Hệ thống đã nhận được thanh toán.',
+                                  id: 'payment-realtime-success',
+                              });
+                              // Invalidate query to refresh UI
+                              queryClient.invalidateQueries({ queryKey: ['booking', bookingId] });
+                          } else if (body.status === 'CHECKED_IN') {
+                              toast.success('Check-in thành công!', {
+                                  description: 'Chúc quý khách thượng lộ bình an!',
+                                  id: 'checkin-realtime-success',
+                                  duration: 5000,
+                              });
+                              queryClient.invalidateQueries({ queryKey: ['booking', bookingId] });
+                          }
+                      } catch (e) {
+                          console.error('Error parsing WS message', e);
+                      }
+                  });
+              },
+          });
+          stompClient.activate();
+      };
+
+      connectWebSocket();
+
+      return () => {
+          if (stompClient) {
+              stompClient.deactivate();
+          }
+      };
+  }, [booking?.code, booking?.status, bookingId, queryClient]);
 
   // Auto-verify payment when returning from PayOS (localhost webhook workaround)
   useEffect(() => {
@@ -266,11 +355,19 @@ export const BookingConfirmationPage = () => {
     );
   }
 
-  const status = statusConfig[booking.status as keyof typeof statusConfig] || statusConfig.PENDING;
+  let status = statusConfig[booking.status as keyof typeof statusConfig] || statusConfig.PENDING;
+
+  // Derive Check-in status from tickets
+  // Note: Java field 'isBoarded' is serialized as 'boarded' by Jackson
+  const isCheckedIn = booking.tickets?.length > 0 && booking.tickets.every((t: any) => t.boarded);
+
+  if (isCheckedIn && booking.status === 'CONFIRMED') {
+      status = statusConfig.CHECKED_IN;
+  }
+
   const StatusIcon = status.icon;
   const canPay = booking.status === 'PENDING';
   const isPaid = booking.status === 'CONFIRMED';
-
   const canCancel =
     booking.status !== 'CANCELLED' && new Date(booking.trip.departureTime) > new Date();
 
@@ -290,12 +387,13 @@ export const BookingConfirmationPage = () => {
             <p className="text-xs text-muted-foreground">Mã đặt vé</p>
 
             {isPaid && (
-              <div className="mt-4 flex justify-center">
-                <img
-                  src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${booking.code}`}
-                  alt="QR Code"
-                  className="border p-2 rounded-lg"
+              <div className="mt-4 flex flex-col items-center justify-center gap-2">
+                <canvas 
+                    ref={canvasRef} 
+                    className="border p-1 rounded-lg shadow-sm"
+                    style={{ width: '200px', height: '200px' }} // Fallback size, real size controlled by canvas attr
                 />
+                <p className="text-xs text-muted-foreground">Quét mã để lên xe</p>
               </div>
             )}
           </CardHeader>
