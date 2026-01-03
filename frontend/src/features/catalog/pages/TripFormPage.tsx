@@ -33,6 +33,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
+import { getFriendlyErrorMessage } from '@/utils/error-utils';
 
 import {
   useBuses,
@@ -387,12 +388,16 @@ export const TripFormPage = () => {
       // @ts-expect-error - Mutation inputs for Create/Update slightly differ but payload is compatible
       mutation.mutate(isEditing ? { id: id!, data: tripPayload } : tripPayload, {
         onSuccess: () => {
-          toast.success(isEditing ? 'Cập nhật chuyến đi thành công' : 'Tạo chuyến đi thành công');
+          toast.success(
+            isEditing ? 'Cập nhật chuyến đi thành công' : 'Đã tạo chuyến đi thành công',
+          );
           queryClient.invalidateQueries({ queryKey: ['trips'] });
           navigate('/admin/catalog/trips');
         },
         onError: (error) => {
-          toast.error(`Lỗi: ${(error as Error).message || 'Không thể lưu chuyến đi'}`);
+          toast.error(isEditing ? 'Cập nhật thất bại' : 'Tạo thất bại', {
+            description: getFriendlyErrorMessage(error),
+          });
         },
       });
     } catch (error) {

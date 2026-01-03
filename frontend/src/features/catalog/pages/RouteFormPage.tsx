@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
+import { getFriendlyErrorMessage } from '@/utils/error-utils';
 
 import { RouteStopsManager } from '../components/RouteStopsManager';
 import { useCreateRoute, useRouteById, useStations, useUpdateRoute } from '../hooks';
@@ -73,11 +74,13 @@ export const RouteFormPage = () => {
         { id, data: values },
         {
           onSuccess: () => {
-            toast.success('Cập nhật tuyến đường thành công!');
+            toast.success('Cập nhật tuyến đường thành công');
             navigate('/admin/catalog/routes');
           },
           onError: (error) => {
-            toast.error('Cập nhật thất bại: ' + error.message);
+            toast.error('Cập nhật thất bại', {
+              description: getFriendlyErrorMessage(error),
+            });
           },
         },
       );
@@ -97,11 +100,13 @@ export const RouteFormPage = () => {
 
       createRoute.mutate(payload, {
         onSuccess: () => {
-          toast.success('Tạo tuyến đường và các điểm dừng thành công!');
+          toast.success('Tạo tuyến đường thành công');
           navigate('/admin/catalog/routes');
         },
         onError: (error) => {
-          toast.error('Tạo thất bại: ' + error.message);
+          toast.error('Tạo thất bại', {
+            description: getFriendlyErrorMessage(error),
+          });
         },
       });
     }

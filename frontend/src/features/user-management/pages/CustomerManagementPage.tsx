@@ -13,6 +13,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { getFriendlyErrorMessage } from '@/utils/error-utils';
 
 import { useSetUserStatus, useUsers } from '../api';
 import type { AdminUser } from '../types';
@@ -40,6 +41,11 @@ export const CustomerManagementPage = () => {
       {
         onSuccess: () => {
           toast.success(`Đã ${newStatus ? 'kích hoạt' : 'vô hiệu hóa'} tài khoản ${user.email}`);
+        },
+        onError: (error) => {
+          toast.error(`${newStatus ? 'Kích hoạt' : 'Vô hiệu hóa'} thất bại`, {
+            description: getFriendlyErrorMessage(error),
+          });
         },
       },
     );

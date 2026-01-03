@@ -18,6 +18,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { AuthLayout } from '@/features/auth/components/AuthLayout';
+import { getFriendlyErrorMessage } from '@/utils/error-utils';
 
 import { resetPassword } from '../api';
 
@@ -50,15 +51,12 @@ export const ResetPasswordPage = () => {
     mutationFn: (values: ResetPasswordFormValues) =>
       resetPassword({ token: token || '', newPassword: values.password }),
     onSuccess: () => {
-      toast.success('Đặt lại mật khẩu thành công', {
-        description: 'Bạn có thể đăng nhập bằng mật khẩu mới.',
-      });
+      toast.success('Đặt lại mật khẩu thành công. Bạn có thể đăng nhập ngay.');
       navigate('/login');
     },
-    onError: () => {
-      toast.error('Đặt lại mật khẩu thất bại', {
-        description: 'Liên kết có thể đã hết hạn hoặc không hợp lệ.',
-      });
+    onError: (error) => {
+      const msg = getFriendlyErrorMessage(error);
+      toast.error(msg);
     },
   });
 

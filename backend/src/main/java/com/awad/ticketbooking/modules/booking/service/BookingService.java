@@ -4,6 +4,7 @@ import com.awad.ticketbooking.common.enums.BookingStatus;
 import com.awad.ticketbooking.common.service.EmailService;
 import com.awad.ticketbooking.modules.auth.entity.User;
 import com.awad.ticketbooking.modules.auth.repository.UserRepository;
+import com.awad.ticketbooking.common.exception.ResourceNotFoundException;
 import com.awad.ticketbooking.modules.booking.dto.BookingResponse;
 import com.awad.ticketbooking.modules.booking.dto.CreateBookingRequest;
 import com.awad.ticketbooking.modules.booking.dto.TicketRequest;
@@ -782,7 +783,7 @@ public class BookingService {
         @Transactional
         public BookingResponse checkInBooking(String code) {
                 Booking booking = bookingRepository.findByCode(code)
-                                .orElseThrow(() -> new RuntimeException("Booking not found"));
+                                .orElseThrow(() -> new ResourceNotFoundException("Booking not found"));
 
                 if (booking.getStatus() != BookingStatus.CONFIRMED) {
                         throw new RuntimeException(

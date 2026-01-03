@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
 import { ArrowRight, MoreHorizontal, Pencil, Plus, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 import { type ColumnDef, GenericTable } from '@/components/common';
 import {
@@ -25,6 +26,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { getFriendlyErrorMessage } from '@/utils/error-utils';
 
 import { useDeleteRoute, useRoutes } from '../hooks';
 import type { Route } from '../types';
@@ -46,12 +48,17 @@ export const RouteManagementPage = () => {
         {
           onSuccess: () => {
             setDeletingRoute(null);
+            toast.success('Đã xóa tuyến đường thành công');
           },
           onError: (error: Error) => {
             const axiosError = error as AxiosError;
             if (axiosError.response?.status === 409) {
               setForceDeleteId(deletingRoute.id);
               setDeletingRoute(null);
+            } else {
+              toast.error('Xóa thất bại', {
+                description: getFriendlyErrorMessage(error),
+              });
             }
           },
         },

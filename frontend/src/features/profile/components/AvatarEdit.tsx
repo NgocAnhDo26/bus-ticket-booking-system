@@ -1,5 +1,4 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import type { AxiosError } from 'axios';
 import { X } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -9,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { type UpdateAvatarRequest, updateAvatar } from '@/features/api/users/users';
 import { getMeQueryKey } from '@/features/api/users/users';
 import type { ImageUploadResponse } from '@/lib/image-upload';
+import { getFriendlyErrorMessage } from '@/utils/error-utils';
 
 type AvatarEditProps = {
   onCancel: () => void;
@@ -24,10 +24,9 @@ export function AvatarEdit({ onCancel }: AvatarEditProps) {
       toast.success('Cập nhật ảnh đại diện thành công');
       onCancel(); // Return to preview mode after successful save
     },
-    onError: (error: AxiosError<{ message?: string }>) => {
-      const message = error?.response?.data?.message || error?.message || 'Có lỗi xảy ra';
+    onError: (error) => {
       toast.error('Cập nhật ảnh đại diện thất bại', {
-        description: message,
+        description: getFriendlyErrorMessage(error),
       });
     },
   });
