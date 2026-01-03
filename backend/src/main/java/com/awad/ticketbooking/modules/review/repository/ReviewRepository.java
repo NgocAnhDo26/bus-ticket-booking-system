@@ -16,6 +16,20 @@ public interface ReviewRepository extends JpaRepository<Review, UUID> {
 
     Optional<Review> findByBookingId(UUID bookingId);
 
+    @Query("SELECT AVG(r.rating) FROM Review r " +
+           "JOIN r.booking b " +
+           "JOIN b.trip t " +
+           "JOIN t.bus bus " +
+           "WHERE bus.operator.id = :operatorId")
+    Double findAverageRatingByOperatorId(@Param("operatorId") UUID operatorId);
+
+    @Query("SELECT COUNT(r) FROM Review r " +
+           "JOIN r.booking b " +
+           "JOIN b.trip t " +
+           "JOIN t.bus bus " +
+           "WHERE bus.operator.id = :operatorId")
+    Long countByOperatorId(@Param("operatorId") UUID operatorId);
+
     @Query("SELECT r FROM Review r " +
            "JOIN FETCH r.booking b " +
            "JOIN FETCH b.trip t " +

@@ -1,6 +1,6 @@
-import { NavLink } from 'react-router-dom';
+import { Link, NavLink } from 'react-router-dom';
 
-import { LogOut } from 'lucide-react';
+import { Bus, LogOut } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { useNav } from '@/hooks/useNav';
@@ -13,8 +13,15 @@ export const SidebarNav = () => {
   return (
     <aside className="hidden w-64 border-r border-border/60 bg-surface/80 px-6 py-8 lg:block">
       <div className="mb-8 space-y-1">
-        <p className="type-h3">SwiftRide</p>
-        <p className="text-sm text-text-muted">
+        <Link to="/" className="flex items-center gap-2 group">
+          <div className="bg-emerald-400 p-2 rounded-sm text-emerald-950 rotate-3 group-hover:rotate-12 transition-transform duration-300 shadow-lg shadow-emerald-400/20">
+            <Bus size={20} strokeWidth={2.5} />
+          </div>
+          <span className="text-xl font-black text-emerald-950 dark:text-emerald-50 tracking-tight">
+            SwiftRide<span className="text-emerald-400">.</span>
+          </span>
+        </Link>
+        <p className="text-sm text-text-muted pt-2">
           {user?.role === 'ADMIN' ? 'Admin' : 'Passenger'} view
         </p>
       </div>

@@ -1,7 +1,7 @@
 import * as React from 'react';
 
+import * as SelectPrimitive from '@radix-ui/react-select';
 import { CheckIcon, ChevronDownIcon, ChevronUpIcon } from 'lucide-react';
-import { Select as SelectPrimitive } from 'radix-ui';
 
 import { cn } from '@/lib/utils';
 
@@ -11,11 +11,7 @@ function Select({ ...props }: React.ComponentProps<typeof SelectPrimitive.Root>)
 
 function SelectGroup({ className, ...props }: React.ComponentProps<typeof SelectPrimitive.Group>) {
   return (
-    <SelectPrimitive.Group
-      data-slot="select-group"
-      className={cn('scroll-my-1 p-1', className)}
-      {...props}
-    />
+    <SelectPrimitive.Group data-slot="select-group" className={cn('p-1', className)} {...props} />
   );
 }
 
@@ -25,25 +21,40 @@ function SelectValue({ ...props }: React.ComponentProps<typeof SelectPrimitive.V
 
 function SelectTrigger({
   className,
-  size = 'default',
   children,
   ...props
-}: React.ComponentProps<typeof SelectPrimitive.Trigger> & {
-  size?: 'sm' | 'default';
-}) {
+}: React.ComponentProps<typeof SelectPrimitive.Trigger>) {
   return (
     <SelectPrimitive.Trigger
       data-slot="select-trigger"
-      data-size={size}
       className={cn(
-        "border-input data-[placeholder]:text-muted-foreground dark:bg-input/30 dark:hover:bg-input/50 focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:aria-invalid:border-destructive/50 gap-1.5 rounded-md border bg-transparent py-2 pr-2 pl-2.5 text-sm shadow-xs transition-[color,box-shadow] focus-visible:ring-[3px] aria-invalid:ring-[3px] data-[size=default]:h-9 data-[size=sm]:h-8 *:data-[slot=select-value]:flex *:data-[slot=select-value]:gap-1.5 [&_svg:not([class*='size-'])]:size-4 flex w-fit items-center justify-between whitespace-nowrap outline-none disabled:cursor-not-allowed disabled:opacity-50 *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center [&_svg]:pointer-events-none [&_svg]:shrink-0",
+        // Base Layout
+        'flex w-full items-center justify-between gap-2 px-4 py-4 h-14',
+        // Text overflow handling
+        '[&>span]:truncate [&>span]:whitespace-nowrap',
+        // JoyRide Specifics: Borders & Shapes
+        'rounded-2xl border-2 border-emerald-100 bg-white shadow-sm transition-all duration-200',
+        // Typography
+        'text-emerald-900 placeholder:text-emerald-300 text-base md:text-sm',
+        // Focus States
+        'focus-visible:outline-none focus-visible:border-emerald-400 focus-visible:ring-4 focus-visible:ring-emerald-100',
+        // Dark Mode
+        'dark:bg-emerald-900/50 dark:border-emerald-800 dark:text-emerald-50 dark:focus-visible:ring-emerald-900/50',
+        // Hover & Shadow effects
+        'hover:shadow-md',
+        // Disabled
+        'disabled:cursor-not-allowed disabled:opacity-50',
+        // Error States
+        'aria-invalid:border-red-500 aria-invalid:ring-red-200 dark:aria-invalid:ring-red-900/50',
+        // SVG styling
+        '[&>svg]:size-5 [&>svg]:text-emerald-600/50 dark:[&>svg]:text-emerald-400/50',
         className,
       )}
       {...props}
     >
       {children}
       <SelectPrimitive.Icon asChild>
-        <ChevronDownIcon className="text-muted-foreground size-4 pointer-events-none" />
+        <ChevronDownIcon />
       </SelectPrimitive.Icon>
     </SelectPrimitive.Trigger>
   );
@@ -52,8 +63,7 @@ function SelectTrigger({
 function SelectContent({
   className,
   children,
-  position = 'item-aligned',
-  align = 'center',
+  position = 'popper',
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.Content>) {
   return (
@@ -61,21 +71,25 @@ function SelectContent({
       <SelectPrimitive.Content
         data-slot="select-content"
         className={cn(
-          'bg-popover text-popover-foreground data-open:animate-in data-closed:animate-out data-closed:fade-out-0 data-open:fade-in-0 data-closed:zoom-out-95 data-open:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 ring-foreground/10 min-w-36 rounded-md shadow-md ring-1 duration-100 relative z-50 max-h-(--radix-select-content-available-height) origin-(--radix-select-content-transform-origin) overflow-x-hidden overflow-y-auto',
+          // Animation
+          'data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=top]:slide-in-from-bottom-2',
+          // JoyRide Card Aesthetics
+          'relative z-50 max-h-96 min-w-[8rem] overflow-hidden rounded-2xl border border-emerald-100 bg-white shadow-xl shadow-emerald-900/5',
+          // Dark Mode
+          'dark:bg-emerald-900 dark:border-emerald-800 dark:shadow-black/20',
           position === 'popper' &&
-            'data-[side=bottom]:translate-y-1 data-[side=left]:-translate-x-1 data-[side=right]:translate-x-1 data-[side=top]:-translate-y-1',
+            'data-[side=bottom]:translate-y-2 data-[side=left]:-translate-x-2 data-[side=right]:translate-x-2 data-[side=top]:-translate-y-2',
           className,
         )}
         position={position}
-        align={align}
         {...props}
       >
         <SelectScrollUpButton />
         <SelectPrimitive.Viewport
-          data-position={position}
           className={cn(
-            'data-[position=popper]:h-[var(--radix-select-trigger-height)] data-[position=popper]:w-full data-[position=popper]:min-w-[var(--radix-select-trigger-width)]',
-            position === 'popper' && '',
+            'p-2',
+            position === 'popper' &&
+              'h-[var(--radix-select-trigger-height)] w-full min-w-[var(--radix-select-trigger-width)]',
           )}
         >
           {children}
@@ -90,7 +104,10 @@ function SelectLabel({ className, ...props }: React.ComponentProps<typeof Select
   return (
     <SelectPrimitive.Label
       data-slot="select-label"
-      className={cn('text-muted-foreground px-2 py-1.5 text-xs', className)}
+      className={cn(
+        'px-2 py-2 text-xs font-bold uppercase tracking-wider text-emerald-500 dark:text-emerald-400',
+        className,
+      )}
       {...props}
     />
   );
@@ -105,14 +122,20 @@ function SelectItem({
     <SelectPrimitive.Item
       data-slot="select-item"
       className={cn(
-        "focus:bg-accent focus:text-accent-foreground not-data-[variant=destructive]:focus:**:text-accent-foreground gap-2 rounded-sm py-1.5 pr-8 pl-2 text-sm [&_svg:not([class*='size-'])]:size-4 *:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-2 relative flex w-full cursor-default items-center outline-hidden select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0",
+        'relative flex w-full cursor-pointer select-none items-center rounded-xl py-2.5 pl-2 pr-8 text-sm outline-none transition-colors',
+        // Default text
+        'text-emerald-900 dark:text-emerald-100',
+        // Focus/Hover States
+        'focus:bg-emerald-100/50 focus:text-emerald-900 dark:focus:bg-emerald-800/50 dark:focus:text-emerald-50',
+        // Disabled
+        'data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
         className,
       )}
       {...props}
     >
-      <span className="pointer-events-none absolute right-2 flex size-4 items-center justify-center">
+      <span className="absolute right-2 flex size-3.5 items-center justify-center">
         <SelectPrimitive.ItemIndicator>
-          <CheckIcon className="pointer-events-none" />
+          <CheckIcon className="size-4 text-emerald-600 dark:text-emerald-400" />
         </SelectPrimitive.ItemIndicator>
       </span>
       <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
@@ -127,7 +150,7 @@ function SelectSeparator({
   return (
     <SelectPrimitive.Separator
       data-slot="select-separator"
-      className={cn('bg-border -mx-1 my-1 h-px pointer-events-none', className)}
+      className={cn('-mx-1 my-1 h-px bg-emerald-100 dark:bg-emerald-800', className)}
       {...props}
     />
   );
@@ -141,12 +164,12 @@ function SelectScrollUpButton({
     <SelectPrimitive.ScrollUpButton
       data-slot="select-scroll-up-button"
       className={cn(
-        "bg-popover z-10 flex cursor-default items-center justify-center py-1 [&_svg:not([class*='size-'])]:size-4",
+        'flex cursor-default items-center justify-center py-1 text-emerald-400',
         className,
       )}
       {...props}
     >
-      <ChevronUpIcon />
+      <ChevronUpIcon className="size-4" />
     </SelectPrimitive.ScrollUpButton>
   );
 }
@@ -159,12 +182,12 @@ function SelectScrollDownButton({
     <SelectPrimitive.ScrollDownButton
       data-slot="select-scroll-down-button"
       className={cn(
-        "bg-popover z-10 flex cursor-default items-center justify-center py-1 [&_svg:not([class*='size-'])]:size-4",
+        'flex cursor-default items-center justify-center py-1 text-emerald-400',
         className,
       )}
       {...props}
     >
-      <ChevronDownIcon />
+      <ChevronDownIcon className="size-4" />
     </SelectPrimitive.ScrollDownButton>
   );
 }

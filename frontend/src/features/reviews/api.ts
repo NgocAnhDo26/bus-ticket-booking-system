@@ -35,6 +35,11 @@ export interface PagedReviewResponse {
   };
 }
 
+export interface OperatorStatsResponse {
+  averageRating: number | null;
+  totalReviews: number;
+}
+
 // API functions - these will be replaced with Orval-generated functions
 // After Orval generation, import from: '@/features/api/reviews/reviews'
 export const createReview = async (request: CreateReviewRequest): Promise<ReviewResponse> => {
@@ -76,4 +81,11 @@ export const getReviewByBookingId = async (bookingId: string): Promise<ReviewRes
     console.error('Error fetching review:', error);
     return null;
   }
+};
+
+export const getOperatorStats = async (operatorId: string): Promise<OperatorStatsResponse> => {
+  const response = await apiClient.get<{ data: OperatorStatsResponse }>(
+    `/api/reviews/operator/${operatorId}/stats`,
+  );
+  return response.data.data;
 };

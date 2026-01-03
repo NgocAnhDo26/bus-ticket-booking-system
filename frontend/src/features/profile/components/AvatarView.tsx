@@ -1,5 +1,17 @@
+import { useState } from 'react';
+
 import { Edit2, Trash2 } from 'lucide-react';
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,6 +26,7 @@ type AvatarViewProps = {
 
 export function AvatarView({ onEdit, onRemove, isRemoving = false }: AvatarViewProps) {
   const { data: userData, isLoading } = useMe();
+  const [showRemoveDialog, setShowRemoveDialog] = useState(false);
 
   if (isLoading) {
     return (
@@ -45,7 +58,7 @@ export function AvatarView({ onEdit, onRemove, isRemoving = false }: AvatarViewP
               <Button
                 variant="outline"
                 size="sm"
-                onClick={onRemove}
+                onClick={() => setShowRemoveDialog(true)}
                 disabled={isRemoving}
                 className="text-destructive hover:text-destructive"
               >
@@ -75,6 +88,30 @@ export function AvatarView({ onEdit, onRemove, isRemoving = false }: AvatarViewP
           </div>
         </div>
       </CardContent>
+
+      <AlertDialog open={showRemoveDialog} onOpenChange={setShowRemoveDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Xác nhận xóa ảnh đại diện</AlertDialogTitle>
+            <AlertDialogDescription>
+              Bạn có chắc chắn muốn xóa ảnh đại diện? Hành động này không thể hoàn tác.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isRemoving}>Hủy</AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              disabled={isRemoving}
+              onClick={() => {
+                onRemove();
+                setShowRemoveDialog(false);
+              }}
+            >
+              {isRemoving ? 'Đang xóa...' : 'Xóa'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 }

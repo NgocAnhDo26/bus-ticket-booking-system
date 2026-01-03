@@ -117,7 +117,7 @@ export function ProfileForm({ onCancel }: ProfileFormProps) {
             >
               Hủy
             </Button>
-            <Button type="submit" disabled={mutation.isPending}>
+            <Button variant="secondary" type="submit" disabled={mutation.isPending}>
               {mutation.isPending ? 'Đang cập nhật...' : 'Lưu thay đổi'}
             </Button>
           </div>

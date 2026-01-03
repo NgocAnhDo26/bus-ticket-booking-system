@@ -5,6 +5,7 @@ import com.awad.ticketbooking.common.enums.TripStatus;
 import com.awad.ticketbooking.modules.booking.entity.Booking;
 import com.awad.ticketbooking.modules.booking.repository.BookingRepository;
 import com.awad.ticketbooking.modules.review.dto.CreateReviewRequest;
+import com.awad.ticketbooking.modules.review.dto.OperatorStatsResponse;
 import com.awad.ticketbooking.modules.review.dto.ReviewResponse;
 import com.awad.ticketbooking.modules.review.entity.Review;
 import com.awad.ticketbooking.modules.review.repository.ReviewRepository;
@@ -68,6 +69,16 @@ public class ReviewService {
         return reviewRepository.findByBookingId(bookingId)
                 .map(this::mapToResponse)
                 .orElse(null);
+    }
+
+    public OperatorStatsResponse getOperatorStats(UUID operatorId) {
+        Double averageRating = reviewRepository.findAverageRatingByOperatorId(operatorId);
+        Long totalReviews = reviewRepository.countByOperatorId(operatorId);
+        
+        return OperatorStatsResponse.builder()
+                .averageRating(averageRating != null ? Math.round(averageRating * 10.0) / 10.0 : null)
+                .totalReviews(totalReviews != null ? totalReviews : 0L)
+                .build();
     }
 
     private ReviewResponse mapToResponse(Review review) {

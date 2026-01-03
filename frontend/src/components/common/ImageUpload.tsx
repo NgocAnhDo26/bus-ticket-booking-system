@@ -232,15 +232,15 @@ export function ImageUpload({
           </div>
           <p className="mb-2 text-sm font-medium">
             {isDragActive
-              ? 'Drop images here'
+              ? 'Thả ảnh vào đây'
               : multiple
-                ? 'Drag & drop images here, or click to select'
-                : 'Drag & drop an image here, or click to select'}
+                ? 'Kéo thả ảnh vào đây hoặc nhấp để chọn'
+                : 'Kéo thả ảnh vào đây hoặc nhấp để chọn'}
           </p>
           <p className="text-xs text-muted-foreground">
             {multiple
-              ? `Up to ${maxFiles} files, ${maxTotalSize}MB total (JPEG, PNG, WebP)`
-              : 'Max 5MB (JPEG, PNG, WebP)'}
+              ? `Tối đa ${maxFiles} tệp, ${maxTotalSize}MB tổng cộng (JPEG, PNG, WebP)`
+              : 'Tối đa 5MB (JPEG, PNG, WebP)'}
           </p>
         </div>
       </Card>
@@ -261,11 +261,9 @@ export function ImageUpload({
       {hasFiles && (
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <p className="text-sm font-medium">
-              {files.length} file{files.length !== 1 ? 's' : ''} selected
-            </p>
+            <p className="text-sm font-medium">Đã chọn {files.length} tệp</p>
             <Button onClick={handleUpload} disabled={isUploading || files.length === 0} size="sm">
-              {isUploading ? 'Uploading...' : 'Upload'}
+              {isUploading ? 'Đang tải lên...' : 'Tải lên'}
             </Button>
           </div>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
@@ -285,13 +283,13 @@ export function ImageUpload({
                     {file.uploadStatus === 'error' && (
                       <div className="absolute inset-0 flex items-center justify-center bg-destructive/80">
                         <p className="p-2 text-xs text-destructive-foreground">
-                          {file.error || 'Upload failed'}
+                          {file.error || 'Tải lên thất bại'}
                         </p>
                       </div>
                     )}
                     {file.uploadStatus === 'success' && (
                       <div className="absolute inset-0 flex items-center justify-center bg-primary/80">
-                        <p className="text-xs text-primary-foreground">Uploaded</p>
+                        <p className="text-xs text-primary-foreground">Đã tải lên</p>
                       </div>
                     )}
                     <Button
@@ -322,7 +320,7 @@ export function ImageUpload({
       {/* Uploaded Images Preview */}
       {showPreview && hasUploadedImages && (
         <div className="space-y-2">
-          <p className="text-sm font-medium">Uploaded images ({uploadedImages.length})</p>
+          <p className="text-sm font-medium">Ảnh đã tải lên ({uploadedImages.length})</p>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
             {uploadedImages.map((image, index) => (
               <Card key={image.publicId || index} className="relative overflow-hidden">
