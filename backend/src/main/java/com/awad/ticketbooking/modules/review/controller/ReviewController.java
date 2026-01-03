@@ -3,6 +3,7 @@ package com.awad.ticketbooking.modules.review.controller;
 import com.awad.ticketbooking.common.config.security.ApplicationUserDetails;
 import com.awad.ticketbooking.common.model.ApiResponse;
 import com.awad.ticketbooking.modules.review.dto.CreateReviewRequest;
+import com.awad.ticketbooking.modules.review.dto.OperatorStatsResponse;
 import com.awad.ticketbooking.modules.review.dto.ReviewResponse;
 import com.awad.ticketbooking.modules.review.service.ReviewService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -47,6 +48,14 @@ public class ReviewController {
             Pageable pageable) {
         Page<ReviewResponse> reviews = reviewService.getReviewsByOperator(operatorId, pageable);
         return ResponseEntity.ok(ApiResponse.success(reviews));
+    }
+
+    @GetMapping("/operator/{operatorId}/stats")
+    @Operation(summary = "Get operator stats", description = "Returns the average rating and total review count for a specific bus operator.")
+    public ResponseEntity<ApiResponse<OperatorStatsResponse>> getOperatorStats(
+            @PathVariable UUID operatorId) {
+        OperatorStatsResponse stats = reviewService.getOperatorStats(operatorId);
+        return ResponseEntity.ok(ApiResponse.success(stats));
     }
 
     @GetMapping("/booking/{bookingId}")

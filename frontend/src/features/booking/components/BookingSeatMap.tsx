@@ -115,7 +115,7 @@ export const BookingSeatMap = ({
         onValueChange={(value) => setCurrentFloor(Number(value.split('-')[1]))}
         className="w-full"
       >
-        <div className="flex items-center justify-between gap-4">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <TabsList>
             {floors.map((floor) => (
               <TabsTrigger key={floor} value={`floor-${floor}`}>
@@ -124,28 +124,28 @@ export const BookingSeatMap = ({
             ))}
           </TabsList>
 
-          <div className="flex gap-4 text-sm">
-            <div className="flex items-center gap-2">
-              <Square className="h-4 w-4 fill-emerald-100 text-emerald-500" />
-              <span>Ghế thường</span>
+          <div className="flex flex-wrap gap-x-3 gap-y-1 text-sm text-muted-foreground">
+            <div className="flex items-center gap-1">
+              <Square className="h-3 w-3 fill-emerald-100 text-emerald-500" />
+              <span>Thường</span>
             </div>
-            <div className="flex items-center gap-2">
-              <Square className="h-4 w-4 fill-amber-100 text-amber-500" />
-              <span>Ghế VIP</span>
+            <div className="flex items-center gap-1">
+              <Square className="h-3 w-3 fill-amber-100 text-amber-500" />
+              <span>VIP</span>
             </div>
-            <div className="flex items-center gap-2">
-              <Square className="h-4 w-4 fill-primary text-primary" />
+            <div className="flex items-center gap-1">
+              <Square className="h-3 w-3 fill-primary text-primary" />
               <span>Đang chọn</span>
             </div>
-            <div className="flex items-center gap-2">
-              <Square className="h-4 w-4 fill-muted text-muted" />
+            <div className="flex items-center gap-1">
+              <Square className="h-3 w-3 fill-muted text-muted" />
               <span>Đã đặt</span>
             </div>
           </div>
         </div>
 
         {floors.map((floor) => (
-          <TabsContent key={floor} value={`floor-${floor}`} className="mt-4">
+          <TabsContent key={floor} value={`floor-${floor}`} className="mt-2">
             <div className="flex justify-center">
               <SeatGrid
                 rows={rows}
@@ -153,25 +153,12 @@ export const BookingSeatMap = ({
                 floor={floor}
                 seats={seats}
                 renderCell={(_row, col, _floor, seat) => {
+                  const alignment =
+                    col === 0 ? 'mr-auto' : col === cols - 1 ? 'ml-auto' : 'mx-auto';
+
                   if (!seat) {
                     return (
-                      // <div
-                      //   key={`${floor}-${row}-${col}`}
-                      //   className={cn(
-                      //     "flex items-center justify-center h-14 w-full max-w-14 relative rounded-md border",
-                      //     col === 0
-                      //       ? "mr-auto"
-                      //       : col === cols - 1
-                      //         ? "ml-auto"
-                      //         : "mx-auto",
-                      //   )}
-                      // >
-                      //   <X className="text-muted-foreground/30" />
-                      // </div>
-                      <div
-                        key={`empty-${_row}-${col}`}
-                        className="h-14 w-full max-w-14 mx-auto relative"
-                      />
+                      <div key={`empty-${_row}-${col}`} className={cn('h-9 w-9', alignment)} />
                     );
                   }
 
@@ -185,14 +172,15 @@ export const BookingSeatMap = ({
                       onClick={() => handleSeatClick(seat.seatCode, status)}
                       disabled={status === 'BOOKED' || status === 'LOCKED'}
                       className={cn(
-                        'flex h-14 w-full max-w-14 flex-col items-center justify-center rounded-md border text-xs transition-colors',
-                        col === 0 ? 'mr-auto' : col === cols - 1 ? 'ml-auto' : 'mx-auto',
-                        'relative',
+                        'flex h-9 w-9 items-center justify-center rounded border text-[10px] font-medium transition-colors',
+                        alignment,
                         style,
                       )}
                     >
-                      <span className="font-semibold">{seat.seatCode}</span>
-                      {status === 'SELECTED' && <User className="h-3 w-3 absolute top-1 right-1" />}
+                      <span>{seat.seatCode}</span>
+                      {status === 'SELECTED' && (
+                        <User className="h-2.5 w-2.5 absolute -top-0.5 -right-0.5" />
+                      )}
                     </button>
                   );
                 }}

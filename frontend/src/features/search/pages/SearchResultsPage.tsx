@@ -69,8 +69,11 @@ export const SearchResultsPage = () => {
   return (
     <div className="min-h-screen bg-background pb-12">
       {/* Header Search Bar */}
-      <div className="bg-card shadow-sm sticky top-0 z-30 py-4 border-b">
-        <SearchForm />
+
+      <div className="md:sticky md:top-22 md:z-30 py-4 lg:mx-23 sm:mx-6 mx-4 mt-2 bg-white dark:bg-emerald-900/80 backdrop-blur-xl p-4 md:p-6 rounded-2xl shadow-xl border border-white/20">
+        <div className="w-full">
+          <SearchForm />
+        </div>
       </div>
 
       <div className="container mx-auto px-4 py-8">

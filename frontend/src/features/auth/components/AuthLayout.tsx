@@ -1,6 +1,6 @@
 import { type ReactNode } from 'react';
 
-import { Tickets } from 'lucide-react';
+import { Bus } from 'lucide-react';
 
 type AuthLayoutProps = {
   children: ReactNode;
@@ -10,11 +10,13 @@ export const AuthLayout = ({ children }: AuthLayoutProps) => (
   <div className="grid min-h-svh lg:grid-cols-2">
     <div className="flex flex-col gap-4 p-6 md:p-10">
       <div className="flex justify-center gap-2 md:justify-start">
-        <a href="/" className="flex items-center gap-2 font-medium text-xl text-primary">
-          <div className="bg-primary text-primary-foreground flex size-6 items-center justify-center rounded-md">
-            <Tickets className="size-4" />
+        <a href="/" className="flex items-center gap-2 group">
+          <div className="bg-emerald-400 p-2 rounded-sm text-emerald-950 rotate-3 group-hover:rotate-12 transition-transform duration-300 shadow-lg shadow-emerald-400/20">
+            <Bus size={20} strokeWidth={2.5} />
           </div>
-          SwiftRide
+          <span className="text-xl font-black text-emerald-950 dark:text-emerald-50 tracking-tight">
+            SwiftRide<span className="text-emerald-400">.</span>
+          </span>
         </a>
       </div>
       <div className="flex flex-1 items-center justify-center">

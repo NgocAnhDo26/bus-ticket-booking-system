@@ -1,11 +1,13 @@
 import { Navigate } from 'react-router-dom';
 
+import { Clock, CreditCard, Ticket } from 'lucide-react';
+
+import { SearchForm } from '@/features/home/components/SearchForm';
 import { getDashboardPath } from '@/lib/navigation';
 import { useAuthStore } from '@/store/auth-store';
 
-import { SearchForm } from '../components/SearchForm';
-
 export const HomePage = () => {
+  // --- 1. Existing Logic ---
   const user = useAuthStore((state) => state.user);
 
   if (user?.role === 'ADMIN') {
@@ -13,105 +15,98 @@ export const HomePage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-linear-to-b from-background via-background to-muted/30">
+    <div className="min-h-screen bg-orange-50 dark:bg-emerald-950 font-sans selection:bg-emerald-200 dark:selection:bg-emerald-700 transition-colors duration-500">
       {/* Hero Section */}
-      <div className="relative h-[500px] w-full bg-primary/10 flex flex-col items-center justify-center text-center px-4 overflow-hidden">
-        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?q=80&w=2069&auto=format&fit=crop')] bg-cover bg-center opacity-20 dark:opacity-10" />
-        <div className="relative z-10 max-w-3xl mx-auto space-y-6">
-          <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-primary">
-            Vi vu khắp mọi nẻo đường
+      <main className="relative pt-24 pb-24 px-6 overflow-hidden">
+        {/* Decorative Background Elements */}
+        <div className="absolute top-20 right-0 md:right-20 w-64 h-64 bg-emerald-300 dark:bg-emerald-500 rounded-full blur-[100px] opacity-40 dark:opacity-20 animate-pulse"></div>
+        <div className="absolute top-60 left-0 md:left-20 w-64 h-64 bg-orange-300 dark:bg-teal-700 rounded-full blur-[100px] opacity-30 dark:opacity-20"></div>
+
+        <div className="max-w-4xl mx-auto relative z-10 text-center mb-16">
+          <div className="inline-flex items-center gap-2 bg-white/50 dark:bg-emerald-900/50 backdrop-blur-sm px-4 py-2 rounded-full mb-6 border border-white dark:border-emerald-800 shadow-sm">
+            <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-ping"></span>
+            <span className="text-sm font-bold text-emerald-800 dark:text-emerald-300">
+              Thông báo: Đã mở bán vé xe tết nguyên đán 2026!
+            </span>
+          </div>
+
+          <h1 className="text-5xl md:text-7xl font-black text-emerald-950 dark:text-emerald-50 leading-[1.1] tracking-tight mb-6">
+            Hành trình mới bắt đầu <br />
+            cùng{' '}
+            <span className="text-transparent bg-clip-text bg-linear-to-r from-emerald-400 to-teal-600 dark:from-emerald-300 dark:to-teal-400 inline-block hover:scale-105 transition-transform cursor-default">
+              SwiftRide
+            </span>
           </h1>
-          <p className="text-lg md:text-xl text-muted-foreground">
-            Đặt vé xe khách trực tuyến dễ dàng, nhanh chóng và tin cậy. Hàng ngàn chuyến đi đang chờ
-            đón bạn.
+
+          <p className="text-xl text-emerald-800/80 dark:text-emerald-200/60 max-w-2xl mx-auto mb-10 leading-relaxed">
+            Bỏ qua việc xếp hàng chờ đợi. Đặt vé xe khách trực tuyến chỉ trong vài giây. Hiện đại,
+            tiện lợi và êm ái hơn cả mong đợi.
           </p>
         </div>
-      </div>
 
-      {/* Search Section - Overlapping Hero */}
-      <div className="relative z-20 -mt-26 px-4">
-        <SearchForm />
-      </div>
+        {/* --- Search Widget Section --- */}
+        <div className="max-w-5xl mx-auto relative z-20">
+          {/* Glossy Background Effect */}
+          <div className="absolute -inset-4 bg-linear-to-r from-emerald-400 to-teal-400 rounded-[2.5rem] opacity-20 dark:opacity-10 blur-xl"></div>
 
-      {/* Features Section */}
-      <div className="py-24 px-4 max-w-7xl mx-auto">
-        <h2 className="text-3xl font-bold text-center mb-12">Tại sao chọn chúng tôi?</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {/* Feature 1 */}
-          <div className="flex flex-col items-center text-center space-y-4 p-6 rounded-lg bg-card shadow-sm border">
-            <div className="p-3 rounded-full bg-primary/10 text-primary">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="lucide lucide-shield-check"
-              >
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10" />
-                <path d="m9 12 2 2 4-4" />
-              </svg>
+          <div className="bg-white dark:bg-emerald-900/80 backdrop-blur-xl p-4 md:p-6 rounded-2xl relative shadow-2xl border border-white/20">
+            <div className="w-full">
+              <SearchForm />
             </div>
-            <h3 className="text-xl font-semibold">An toàn & Tin cậy</h3>
-            <p className="text-muted-foreground">
-              Đối tác với các nhà xe uy tín hàng đầu, đảm bảo chuyến đi an toàn cho bạn.
-            </p>
-          </div>
-          {/* Feature 2 */}
-          <div className="flex flex-col items-center text-center space-y-4 p-6 rounded-lg bg-card shadow-sm border">
-            <div className="p-3 rounded-full bg-primary/10 text-primary">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="lucide lucide-zap"
-              >
-                <path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z" />
-              </svg>
-            </div>
-            <h3 className="text-xl font-semibold">Đặt vé nhanh chóng</h3>
-            <p className="text-muted-foreground">
-              Hệ thống đặt vé thông minh, thao tác đơn giản chỉ trong vài cú nhấp chuột.
-            </p>
-          </div>
-          {/* Feature 3 */}
-          <div className="flex flex-col items-center text-center space-y-4 p-6 rounded-lg bg-card shadow-sm border">
-            <div className="p-3 rounded-full bg-primary/10 text-primary">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="lucide lucide-coins"
-              >
-                <circle cx="8" cy="8" r="6" />
-                <path d="M18.09 10.37A6 6 0 1 1 10.34 18" />
-                <path d="M7 6h1v4" />
-                <path d="m16.71 13.88.7.71-2.82 2.82" />
-              </svg>
-            </div>
-            <h3 className="text-xl font-semibold">Giá cả cạnh tranh</h3>
-            <p className="text-muted-foreground">
-              Cam kết giá vé tốt nhất với nhiều ưu đãi hấp dẫn dành cho khách hàng.
-            </p>
           </div>
         </div>
-      </div>
+      </main>
+
+      {/* Features Grid */}
+      {/* Features Grid */}
+      <section className="bg-white dark:bg-emerald-900/20 py-24 px-6 border-t border-emerald-50 dark:border-emerald-900">
+        <div className="max-w-7xl mx-auto">
+          <h2 className="text-3xl font-bold text-center mb-12 text-emerald-950 dark:text-emerald-50">
+            Tại sao chọn JoyRide?
+          </h2>
+
+          <div className="grid md:grid-cols-3 gap-12">
+            {/* Feature 1 */}
+            <div className="flex flex-col items-center text-center p-6 rounded-3xl hover:bg-orange-50 dark:hover:bg-emerald-900/40 transition-colors duration-300">
+              <div className="bg-emerald-100 dark:bg-emerald-900 p-4 rounded-full text-emerald-600 dark:text-emerald-400 mb-6 shadow-sm">
+                <Ticket size={32} />
+              </div>
+              <h3 className="text-xl font-bold text-emerald-950 dark:text-emerald-50 mb-3">
+                Vé điện tử tức thì
+              </h3>
+              <p className="text-emerald-700 dark:text-emerald-400/80 leading-relaxed">
+                Không cần in ấn. Chỉ cần hiển thị mã QR trên điện thoại và lên xe ngay.
+              </p>
+            </div>
+
+            {/* Feature 2 */}
+            <div className="flex flex-col items-center text-center p-6 rounded-3xl hover:bg-orange-50 dark:hover:bg-emerald-900/40 transition-colors duration-300">
+              <div className="bg-emerald-100 dark:bg-emerald-900 p-4 rounded-full text-emerald-600 dark:text-emerald-400 mb-6 shadow-sm">
+                <Clock size={32} />
+              </div>
+              <h3 className="text-xl font-bold text-emerald-950 dark:text-emerald-50 mb-3">
+                Lịch trình thời gian thực
+              </h3>
+              <p className="text-emerald-700 dark:text-emerald-400/80 leading-relaxed">
+                Theo dõi vị trí xe trực tiếp để bạn luôn chủ động thời gian, không phải chờ đợi.
+              </p>
+            </div>
+
+            {/* Feature 3 */}
+            <div className="flex flex-col items-center text-center p-6 rounded-3xl hover:bg-orange-50 dark:hover:bg-emerald-900/40 transition-colors duration-300">
+              <div className="bg-emerald-100 dark:bg-emerald-900 p-4 rounded-full text-emerald-600 dark:text-emerald-400 mb-6 shadow-sm">
+                <CreditCard size={32} />
+              </div>
+              <h3 className="text-xl font-bold text-emerald-950 dark:text-emerald-50 mb-3">
+                Thanh toán an toàn
+              </h3>
+              <p className="text-emerald-700 dark:text-emerald-400/80 leading-relaxed">
+                Hỗ trợ hầu hết các ngân hàng tại Việt Nam, ví Momo và thẻ quốc tế.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
   );
 };

@@ -11,6 +11,13 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { getFriendlyErrorMessage } from '@/utils/error-utils';
 
 import { RouteStopsManager } from '../components/RouteStopsManager';
@@ -43,6 +50,7 @@ export const RouteFormPage = () => {
     handleSubmit,
     reset,
     control,
+    setValue,
     formState: { errors },
   } = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -180,18 +188,22 @@ export const RouteFormPage = () => {
                   <FieldLabel className="after:content-['*'] after:ml-0.5 after:text-red-500">
                     Điểm đi
                   </FieldLabel>
-                  <select
-                    className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                    {...register('originStationId')}
+                  <Select
+                    onValueChange={(value) => setValue('originStationId', value)}
+                    value={watchedValues.originStationId || ''}
                     disabled={createRoute.isPending || updateRoute.isPending}
                   >
-                    <option value="">Chọn điểm đi...</option>
-                    {stations?.map((station) => (
-                      <option key={station.id} value={station.id}>
-                        {station.name} ({station.city})
-                      </option>
-                    ))}
-                  </select>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Chọn điểm đi..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {stations?.map((station) => (
+                        <SelectItem key={station.id} value={station.id}>
+                          {station.name} ({station.city})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <FieldError>{errors.originStationId?.message}</FieldError>
                 </Field>
 
@@ -199,18 +211,22 @@ export const RouteFormPage = () => {
                   <FieldLabel className="after:content-['*'] after:ml-0.5 after:text-red-500">
                     Điểm đến
                   </FieldLabel>
-                  <select
-                    className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                    {...register('destinationStationId')}
+                  <Select
+                    onValueChange={(value) => setValue('destinationStationId', value)}
+                    value={watchedValues.destinationStationId || ''}
                     disabled={createRoute.isPending || updateRoute.isPending}
                   >
-                    <option value="">Chọn điểm đến...</option>
-                    {stations?.map((station) => (
-                      <option key={station.id} value={station.id}>
-                        {station.name} ({station.city})
-                      </option>
-                    ))}
-                  </select>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Chọn điểm đến..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {stations?.map((station) => (
+                        <SelectItem key={station.id} value={station.id}>
+                          {station.name} ({station.city})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <FieldError>{errors.destinationStationId?.message}</FieldError>
                 </Field>
 

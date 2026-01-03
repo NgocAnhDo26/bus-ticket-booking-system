@@ -1,6 +1,7 @@
 import * as React from 'react';
+import { Link } from 'react-router-dom';
 
-import { Tickets } from 'lucide-react';
+import { Bus } from 'lucide-react';
 
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
@@ -23,22 +24,22 @@ export function AdminDashboardSidebar({ ...props }: React.ComponentProps<typeof 
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
-        <a
-          href="#"
-          className={cn('flex items-center gap-3 font-medium p-2', isCollapsed && 'justify-center')}
+        <Link
+          to="/"
+          className={cn('flex items-center gap-2 p-2 group', isCollapsed && 'justify-center')}
         >
-          <div className="bg-primary text-primary-foreground flex size-8 items-center justify-center rounded-md shrink-0">
-            <Tickets className="size-5" />
+          <div className="bg-emerald-400 p-2 rounded-sm text-emerald-950 rotate-3 group-hover:rotate-12 transition-transform duration-300 shadow-lg shadow-emerald-400/20 shrink-0">
+            <Bus size={20} strokeWidth={2.5} />
           </div>
-          <p
+          <span
             className={cn(
-              'text-xl font-semibold overflow-hidden text-ellipsis text-nowrap',
+              'text-xl font-black text-emerald-950 dark:text-emerald-50 tracking-tight overflow-hidden text-ellipsis text-nowrap',
               isCollapsed && 'hidden',
             )}
           >
-            SwiftRide
-          </p>
-        </a>
+            SwiftRide<span className="text-emerald-400">.</span>
+          </span>
+        </Link>
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={adminNavItems} />

@@ -185,7 +185,6 @@ export const BookingCard = ({ booking, onCancel, isCancelling }: BookingCardProp
                   <Button
                     variant="destructive"
                     size="sm"
-                    className="text-destructive hover:text-destructive"
                     onClick={() => setShowCancelDialog(true)}
                     disabled={!canCancel || isCancelling}
                   >

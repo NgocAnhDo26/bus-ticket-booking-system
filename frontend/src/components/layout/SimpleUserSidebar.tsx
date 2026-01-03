@@ -31,7 +31,7 @@ export function SimpleUserSidebar() {
   ];
 
   return (
-    <aside className="w-64 border-r bg-muted/40 p-4">
+    <aside className="md:w-64 border-r bg-muted/40 p-4">
       <div className="mb-6">
         <h2 className="text-lg font-semibold">Menu</h2>
       </div>

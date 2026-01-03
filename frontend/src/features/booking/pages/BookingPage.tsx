@@ -307,17 +307,17 @@ export const BookingPage = () => {
             </CardContent>
           </Card>
 
-          <Card className="border-primary/20 shadow-lg">
+          <Card className="border-primary/20 shadow-lg pt-0">
             <CardHeader className="bg-primary/5 pb-4">
-              <CardTitle className="text-lg">Ghế đã chọn</CardTitle>
+              <CardTitle className="text-lg mt-4">Ghế đã chọn</CardTitle>
             </CardHeader>
-            <CardContent className="pt-6">
+            <CardContent>
               {mySelectedSeats.length > 0 ? (
                 <div className="space-y-2">
                   {seatDetails.map((d) => (
                     <div key={d.seatCode} className="flex justify-between items-center">
                       <div className="flex items-center gap-2">
-                        <span className="bg-primary text-primary-foreground px-2 py-0.5 rounded text-sm font-medium">
+                        <span className="bg-primary text-primary-foreground px-2 py-0.5 rounded text-sm font-medium w-12 text-center">
                           {d.seatCode}
                         </span>
                         <span className="text-sm text-muted-foreground">
