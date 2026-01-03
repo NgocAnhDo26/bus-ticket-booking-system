@@ -1,13 +1,13 @@
-import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
-import type { AxiosError } from 'axios';
+import { toast } from 'sonner';
 
 import { LoginForm } from '@/features/auth/components/LoginForm';
 import { useAuthStore } from '@/store/auth-store';
+import { getFriendlyErrorMessage } from '@/utils/error-utils';
 
 import { login, loginWithGoogle } from '../api';
 import { AuthLayout } from '../components/AuthLayout';
@@ -16,7 +16,6 @@ import { type LoginFormValues, loginSchema } from '../schema';
 export const LoginPage = () => {
   const setAuth = useAuthStore((state) => state.setAuth);
   const navigate = useNavigate();
-  const [error, setError] = useState<string>('');
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -25,35 +24,29 @@ export const LoginPage = () => {
     },
   });
 
-  type ErrorResponse = { message?: string };
-
   const loginMutation = useMutation({
     mutationFn: login,
     onSuccess: (data) => {
-      console.log('Login success, data:', data);
-      setError('');
       setAuth(data);
-      console.log('Auth set, navigating to home');
+      toast.success('Đăng nhập thành công!');
       navigate('/');
     },
-    onError: (error: AxiosError<ErrorResponse>) => {
-      const errorMessage = error.response?.data?.message || error.message || 'Login failed';
-      setError(errorMessage);
-      console.error('Login error:', errorMessage);
+    onError: (error) => {
+      const msg = getFriendlyErrorMessage(error);
+      toast.error('Đăng nhập thất bại: ' + msg);
     },
   });
 
   const googleMutation = useMutation({
     mutationFn: loginWithGoogle,
     onSuccess: (data) => {
-      setError('');
       setAuth(data);
+      toast.success('Đăng nhập Google thành công!');
       navigate('/');
     },
-    onError: (error: AxiosError<ErrorResponse>) => {
-      const errorMessage = error.response?.data?.message || error.message || 'Google login failed';
-      setError(errorMessage);
-      console.error('Google login error:', errorMessage);
+    onError: (error) => {
+      const msg = getFriendlyErrorMessage(error);
+      toast.error(msg);
     },
   });
 
@@ -65,12 +58,11 @@ export const LoginPage = () => {
     <AuthLayout>
       <LoginForm
         form={form}
-        error={error}
         isSubmitting={loginMutation.isPending}
         onSubmit={onSubmit}
         onGoogleLogin={(credential) => googleMutation.mutate({ credential })}
         onGoogleError={() => {
-          setError('Lỗi khi đăng nhập với Google');
+          toast.error('Lỗi khi kết nối Google');
         }}
       />
     </AuthLayout>

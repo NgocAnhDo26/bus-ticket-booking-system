@@ -20,6 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { getFriendlyErrorMessage } from '@/utils/error-utils';
 
 import { BusImageUpload, type BusImageUploadRef } from '../components/BusImageUpload';
 import { useBusById, useBusLayouts, useCreateBus, useOperators, useUpdateBus } from '../hooks';
@@ -123,11 +124,11 @@ export const BusFormPage = () => {
 
     toast.promise(saveOperation(), {
       loading: isEditing ? 'Đang cập nhật xe...' : 'Đang tạo xe mới...',
-      success: isEditing ? 'Cập nhật xe thành công!' : 'Tạo xe mới thành công!',
-      error: (error) =>
-        isEditing
-          ? 'Cập nhật thất bại: ' + (error instanceof Error ? error.message : 'Lỗi không xác định')
-          : 'Tạo thất bại: ' + (error instanceof Error ? error.message : 'Lỗi không xác định'),
+      success: isEditing ? 'Cập nhật xe thành công' : 'Đã tạo xe mới thành công',
+      error: (error) => {
+        const msg = getFriendlyErrorMessage(error);
+        return isEditing ? `Cập nhật thất bại: ${msg}` : `Tạo thất bại: ${msg}`;
+      },
       finally: () => setIsSubmitting(false),
     });
   };

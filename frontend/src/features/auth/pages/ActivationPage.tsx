@@ -1,12 +1,12 @@
-import { useEffect, useRef } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 
-import { useMutation } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { CheckCircle2, XCircle } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { customInstance } from '@/lib/api-client';
 import type { ApiResponseAuthResponse } from '@/model';
+import { getFriendlyErrorMessage } from '@/utils/error-utils';
 
 import { AuthLayout } from '../components/AuthLayout';
 
@@ -21,29 +21,30 @@ const activateAccount = (token: string) => {
 export const ActivationPage = () => {
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token');
-  const hasActivated = useRef(false);
+  // Removed useRef code as useQuery handles deduplication automatically
 
-  const activationMutation = useMutation({
-    mutationFn: activateAccount,
+  const { isLoading, isSuccess, isError, error } = useQuery({
+    queryKey: ['activation', token],
+    queryFn: () => activateAccount(token!),
+    enabled: !!token,
+    retry: false,
+    staleTime: Infinity,
+    gcTime: Infinity, // Keep cache data to avoid refetching if component remounts
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
   });
 
-  useEffect(() => {
-    if (hasActivated.current) return;
-
-    if (token) {
-      hasActivated.current = true;
-      activationMutation.mutate(token);
-    }
-  }, [token, activationMutation]);
-
-  // Derive status from mutation state and token
+  // Determine UI state
   const status = !token
     ? 'error'
-    : activationMutation.isSuccess
-      ? 'success'
-      : activationMutation.isError
-        ? 'error'
-        : 'loading';
+    : isLoading
+      ? 'loading'
+      : isSuccess
+        ? 'success'
+        : isError
+          ? 'error'
+          : 'idle';
 
   return (
     <AuthLayout>
@@ -77,8 +78,10 @@ export const ActivationPage = () => {
               <XCircle className="h-12 w-12 text-red-600" />
             </div>
             <h1 className="text-2xl font-bold text-red-700">Kích hoạt thất bại</h1>
-            <p className="text-muted-foreground">
-              Link kích hoạt không hợp lệ hoặc đã hết hạn. Vui lòng thử lại hoặc liên hệ hỗ trợ.
+            <p className="text-muted-foreground text-center px-4">
+              {error
+                ? getFriendlyErrorMessage(error)
+                : 'Link kích hoạt không hợp lệ hoặc đã hết hạn.'}
             </p>
             <Button asChild className="w-full" variant="outline">
               <Link to="/login">Quay lại đăng nhập</Link>

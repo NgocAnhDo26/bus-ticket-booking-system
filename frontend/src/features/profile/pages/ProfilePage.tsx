@@ -1,7 +1,6 @@
 import { useState } from 'react';
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import type { AxiosError } from 'axios';
 import { toast } from 'sonner';
 
 import { Separator } from '@/components/ui/separator';
@@ -16,6 +15,7 @@ import { AvatarView } from '@/features/profile/components/AvatarView';
 import { PasswordChangeForm } from '@/features/profile/components/PasswordChangeForm';
 import { ProfileForm } from '@/features/profile/components/ProfileForm';
 import { ProfileView } from '@/features/profile/components/ProfileView';
+import { getFriendlyErrorMessage } from '@/utils/error-utils';
 
 export function ProfilePage() {
   const [isEditingProfile, setIsEditingProfile] = useState(false);
@@ -30,10 +30,9 @@ export function ProfilePage() {
       queryClient.invalidateQueries({ queryKey: getMeQueryKey() });
       toast.success('Xóa ảnh đại diện thành công');
     },
-    onError: (error: AxiosError<{ message?: string }>) => {
-      const message = error?.response?.data?.message || error?.message || 'Có lỗi xảy ra';
+    onError: (error) => {
       toast.error('Xóa ảnh đại diện thất bại', {
-        description: message,
+        description: getFriendlyErrorMessage(error),
       });
     },
   });

@@ -24,6 +24,7 @@ import { ReviewForm } from '@/features/reviews/components/ReviewForm';
 import { StarRating } from '@/features/reviews/components/StarRating';
 import { useReviewByBookingId } from '@/features/reviews/hooks';
 import { useAuthStore } from '@/store/auth-store';
+import { getFriendlyErrorMessage } from '@/utils/error-utils';
 
 import { getRefundEstimate, verifyPayment } from '../api';
 import { useBookingById, useCancelBooking, useCreatePayment } from '../hooks';
@@ -195,9 +196,9 @@ export const BookingConfirmationPage = () => {
       if (payment.checkoutUrl) {
         window.location.href = payment.checkoutUrl;
       }
-    } catch {
+    } catch (error) {
       toast.error('Tạo thanh toán thất bại', {
-        description: 'Có lỗi xảy ra, vui lòng thử lại.',
+        description: getFriendlyErrorMessage(error),
         id: 'payment-create-error',
       });
     }
@@ -218,9 +219,9 @@ export const BookingConfirmationPage = () => {
         id: 'booking-cancel-success',
       });
       setShowCancelDialog(false);
-    } catch {
+    } catch (error) {
       toast.error('Hủy vé thất bại', {
-        description: 'Có lỗi xảy ra, vui lòng thử lại.',
+        description: getFriendlyErrorMessage(error),
         id: 'booking-cancel-error',
       });
     }

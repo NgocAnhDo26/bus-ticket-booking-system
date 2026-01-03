@@ -5,6 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
 import { MapPin, MoreHorizontal, Pencil, Plus, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
 import * as z from 'zod';
 
 import { type ColumnDef, GenericTable } from '@/components/common';
@@ -37,6 +38,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
+import { getFriendlyErrorMessage } from '@/utils/error-utils';
 
 import { VIETNAM_PROVINCES } from '../constants';
 import { useCreateStation, useDeleteStation, useStations, useUpdateStation } from '../hooks';
@@ -82,6 +84,12 @@ export const StationManagementPage = () => {
             setIsOpen(false);
             setEditingStation(null);
             reset();
+            toast.success('Cập nhật bến xe thành công');
+          },
+          onError: (error) => {
+            toast.error('Cập nhật thất bại', {
+              description: getFriendlyErrorMessage(error),
+            });
           },
         },
       );
@@ -90,6 +98,12 @@ export const StationManagementPage = () => {
         onSuccess: () => {
           setIsOpen(false);
           reset();
+          toast.success('Tạo bến xe mới thành công');
+        },
+        onError: (error) => {
+          toast.error('Tạo thất bại', {
+            description: getFriendlyErrorMessage(error),
+          });
         },
       });
     }
@@ -117,12 +131,17 @@ export const StationManagementPage = () => {
         {
           onSuccess: () => {
             setDeletingStation(null);
+            toast.success('Đã xóa bến xe thành công');
           },
           onError: (error: Error) => {
             const axiosError = error as AxiosError;
             if (axiosError.response?.status === 409) {
               setForceDeleteId(deletingStation.id);
               setDeletingStation(null);
+            } else {
+              toast.error('Xóa thất bại', {
+                description: getFriendlyErrorMessage(error),
+              });
             }
           },
         },

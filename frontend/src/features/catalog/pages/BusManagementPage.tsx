@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
 import { Bus as BusIcon, MoreHorizontal, Pencil, Plus, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 import { type ColumnDef, GenericTable } from '@/components/common/GenericTable';
 import {
@@ -26,6 +27,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { getFriendlyErrorMessage } from '@/utils/error-utils';
 
 import { useBuses, useDeleteBus } from '../hooks';
 import type { Bus } from '../types';
@@ -45,12 +47,17 @@ export const BusManagementPage = () => {
         {
           onSuccess: () => {
             setDeletingBus(null);
+            toast.success('Đã xóa xe thành công');
           },
           onError: (error: Error) => {
             const axiosError = error as AxiosError;
             if (axiosError.response?.status === 409) {
               setForceDeleteId(deletingBus.id);
               setDeletingBus(null);
+            } else {
+              toast.error('Xóa thất bại', {
+                description: getFriendlyErrorMessage(error),
+              });
             }
           },
         },

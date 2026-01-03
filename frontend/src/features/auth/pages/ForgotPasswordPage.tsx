@@ -18,6 +18,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { AuthLayout } from '@/features/auth/components/AuthLayout';
+import { getFriendlyErrorMessage } from '@/utils/error-utils';
 
 import { forgotPassword } from '../api';
 
@@ -38,15 +39,12 @@ export const ForgotPasswordPage = () => {
   const mutation = useMutation({
     mutationFn: forgotPassword,
     onSuccess: () => {
-      toast.success('Đã gửi email khôi phục', {
-        description: 'Vui lòng kiểm tra hộp thư đến của bạn.',
-      });
+      toast.success('Đã gửi email khôi phục. Vui lòng kiểm tra hộp thư đến.');
       form.reset();
     },
-    onError: () => {
-      toast.error('Gửi yêu cầu thất bại', {
-        description: 'Vui lòng thử lại sau.',
-      });
+    onError: (error) => {
+      const msg = getFriendlyErrorMessage(error);
+      toast.error(msg);
     },
   });
 

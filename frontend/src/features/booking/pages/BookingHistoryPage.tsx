@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { getFriendlyErrorMessage } from '@/utils/error-utils';
 
 import { BookingCard } from '../components/BookingCard';
 import { useCancelBooking, useUserBookings } from '../hooks';
@@ -24,9 +25,9 @@ export const BookingHistoryPage = () => {
       toast.success('Hủy vé thành công', {
         description: 'Đặt vé của bạn đã được hủy.',
       });
-    } catch {
+    } catch (error) {
       toast.error('Hủy vé thất bại', {
-        description: 'Có lỗi xảy ra, vui lòng thử lại.',
+        description: getFriendlyErrorMessage(error),
       });
     }
   };

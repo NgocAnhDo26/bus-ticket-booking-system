@@ -3,7 +3,6 @@ import { useForm } from 'react-hook-form';
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import type { AxiosError } from 'axios';
 import { X } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -16,6 +15,7 @@ import { type UpdateProfileRequest, updateProfile, useMe } from '@/features/api/
 import { getMeQueryKey } from '@/features/api/users/users';
 import type { UpdateProfileFormValues } from '@/features/profile/schema';
 import { updateProfileSchema } from '@/features/profile/schema';
+import { getFriendlyErrorMessage } from '@/utils/error-utils';
 
 type ProfileFormProps = {
   onCancel: () => void;
@@ -63,10 +63,9 @@ export function ProfileForm({ onCancel }: ProfileFormProps) {
       }
       onCancel(); // Return to preview mode after successful save
     },
-    onError: (error: AxiosError<{ message?: string }>) => {
-      const message = error?.response?.data?.message || error?.message || 'Có lỗi xảy ra';
+    onError: (error) => {
       toast.error('Cập nhật thông tin thất bại', {
-        description: message,
+        description: getFriendlyErrorMessage(error),
       });
     },
   });
