@@ -153,8 +153,8 @@ export const BookingConfirmationPage = () => {
       let stompClient: Client | null = null;
       
       const connectWebSocket = () => {
-          if (typeof window !== 'undefined' && !(window as any).global) {
-              (window as any).global = window;
+          if (typeof window !== 'undefined' && !(window as unknown as { global: Window }).global) {
+              (window as unknown as { global: Window }).global = window;
           }
 
           const socketUrl = `${getBaseUrl()}/ws`;
@@ -162,6 +162,7 @@ export const BookingConfirmationPage = () => {
               webSocketFactory: () => new SockJS(socketUrl),
               reconnectDelay: 5000,
               onConnect: () => {
+                  if (!booking?.code) return;
                   console.log('Connected to WS for Payment Updates');
                   stompClient?.subscribe(`/topic/booking/${booking.code}`, (message) => {
                       try {
@@ -197,7 +198,7 @@ export const BookingConfirmationPage = () => {
               stompClient.deactivate();
           }
       };
-  }, [booking?.code, booking?.status, bookingId, queryClient]);
+  }, [booking?.code, booking?.status, bookingId, queryClient, booking]);
 
   // Auto-verify payment when returning from PayOS (localhost webhook workaround)
   useEffect(() => {
@@ -359,7 +360,7 @@ export const BookingConfirmationPage = () => {
 
   // Derive Check-in status from tickets
   // Note: Java field 'isBoarded' is serialized as 'boarded' by Jackson
-  const isCheckedIn = booking.tickets?.length > 0 && booking.tickets.every((t: any) => t.boarded);
+  const isCheckedIn = booking.tickets?.length > 0 && booking.tickets.every((t) => t.boarded);
 
   if (isCheckedIn && booking.status === 'CONFIRMED') {
       status = statusConfig.CHECKED_IN;

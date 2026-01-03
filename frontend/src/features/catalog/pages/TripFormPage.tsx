@@ -10,13 +10,13 @@ import { toast } from 'sonner';
 import * as z from 'zod';
 
 import { Button } from '@/components/ui/button';
-import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { DatePicker } from '@/components/ui/date-picker';
+import { TimePicker } from '@/components/ui/time-picker';
 import {
   Select,
   SelectContent,
@@ -590,50 +590,36 @@ export const TripFormPage = () => {
                   <FieldLabel className="after:content-['*'] after:ml-0.5 after:text-red-500">
                     Ngày khởi hành
                   </FieldLabel>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant={'outline'}
-                        className={cn(
-                          'w-full justify-start text-left font-normal',
-                          !departureDate && 'text-muted-foreground',
-                        )}
-                      >
-                        <Calendar className="mr-2 h-4 w-4" />
-                        {departureDate ? format(departureDate, 'PPP') : <span>Chọn ngày</span>}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <CalendarComponent
-                        mode="single"
-                        selected={departureDate}
-                        onSelect={(date) => {
-                          if (date) {
-                            const current = departureDate || new Date();
-                            date.setHours(current.getHours());
-                            date.setMinutes(current.getMinutes());
-                            setValue('departureDate', date);
-                          }
-                        }}
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
+                  <DatePicker
+                    date={departureDate}
+                    setDate={(date) => {
+                      if (date) {
+                        const current = departureDate || new Date();
+                        date.setHours(current.getHours());
+                        date.setMinutes(current.getMinutes());
+                        setValue('departureDate', date);
+                      } else {
+                        setValue('departureDate', undefined); // eslint-disable-line @typescript-eslint/no-explicit-any
+                      }
+                    }}
+                    placeholder="Chọn ngày"
+                  />
                 </Field>
                 <Field>
                   <FieldLabel className="after:content-['*'] after:ml-0.5 after:text-red-500">
                     Giờ khởi hành
                   </FieldLabel>
-                  <Input
-                    type="time"
-                    onChange={(e) => {
-                      const [h, m] = e.target.value.split(':').map(Number);
-                      const d = departureDate || new Date();
-                      d.setHours(h);
-                      d.setMinutes(m);
-                      setValue('departureDate', new Date(d));
+                  <TimePicker
+                    date={departureDate}
+                    setDate={(date) => {
+                      // If we get a date (has time), we update just the time part of our departureDate
+                      if (date) {
+                        const current = departureDate || new Date();
+                        current.setHours(date.getHours());
+                        current.setMinutes(date.getMinutes());
+                        setValue('departureDate', new Date(current));
+                      }
                     }}
-                    value={departureDate ? format(departureDate, 'HH:mm') : ''}
                   />
                   {errors.departureDate && <FieldError>{errors.departureDate.message}</FieldError>}
                 </Field>
@@ -645,11 +631,26 @@ export const TripFormPage = () => {
                     <FieldLabel className="after:content-['*'] after:ml-0.5 after:text-red-500">
                       Giờ khởi hành (Hàng ngày)
                     </FieldLabel>
-                    <Input
-                      type="time"
-                      {...register('departureTime')}
-                      disabled={isRecurrenceDisabled}
-                    />
+                    <div className="relative">
+                      <TimePicker
+                        disabled={isRecurrenceDisabled}
+                        date={(() => {
+                          const val = watch('departureTime');
+                          if (!val) return undefined;
+                          const [h, m] = val.split(':').map(Number);
+                          const d = new Date();
+                          d.setHours(h);
+                          d.setMinutes(m);
+                          return d;
+                        })()}
+                        setDate={(date) => {
+                          if (date) {
+                            const timeStr = format(date, 'HH:mm');
+                            setValue('departureTime', timeStr);
+                          }
+                        }}
+                      />
+                    </div>
                     {errors.departureTime && (
                       <FieldError>{errors.departureTime.message}</FieldError>
                     )}
@@ -658,37 +659,14 @@ export const TripFormPage = () => {
                     <FieldLabel className="after:content-['*'] after:ml-0.5 after:text-red-500">
                       Ngày bắt đầu
                     </FieldLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant={'outline'}
-                          className={cn(
-                            'w-full pl-3 text-left font-normal',
-                            !watch('startDate') && 'text-muted-foreground',
-                          )}
-                          disabled={isRecurrenceDisabled}
-                        >
-                          {watch('startDate') ? (
-                            format(watch('startDate')!, 'PPP')
-                          ) : (
-                            <span>Chọn ngày</span>
-                          )}
-                          <Calendar className="ml-auto h-4 w-4 opacity-50" />
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <CalendarComponent
-                          mode="single"
-                          selected={watch('startDate')}
-                          onSelect={(date) => setValue('startDate', date)}
-                          disabled={(date) =>
-                            date < new Date() ||
-                            (watch('endDate') ? date > watch('endDate')! : false)
-                          }
-                          initialFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
+                    <DatePicker
+                      date={watch('startDate')}
+                      setDate={(date) => setValue('startDate', date)}
+                      placeholder="Chọn ngày"
+                      disabled={isRecurrenceDisabled}
+                      fromDate={new Date()}
+                      toDate={watch('endDate')}
+                    />
                     {errors.startDate && <FieldError>{errors.startDate.message}</FieldError>}
                   </Field>
 
@@ -696,36 +674,13 @@ export const TripFormPage = () => {
                     <FieldLabel className="after:content-['*'] after:ml-0.5 after:text-red-500">
                       Ngày kết thúc
                     </FieldLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant={'outline'}
-                          className={cn(
-                            'w-full pl-3 text-left font-normal',
-                            !watch('endDate') && 'text-muted-foreground',
-                          )}
-                          disabled={isRecurrenceDisabled}
-                        >
-                          {watch('endDate') ? (
-                            format(watch('endDate')!, 'PPP')
-                          ) : (
-                            <span>Chọn ngày</span>
-                          )}
-                          <Calendar className="ml-auto h-4 w-4 opacity-50" />
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <CalendarComponent
-                          mode="single"
-                          selected={watch('endDate')}
-                          onSelect={(date) => setValue('endDate', date)}
-                          disabled={(date) =>
-                            watch('startDate') ? date < watch('startDate')! : date < new Date()
-                          }
-                          initialFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
+                    <DatePicker
+                      date={watch('endDate')}
+                      setDate={(date) => setValue('endDate', date)}
+                      placeholder="Chọn ngày"
+                      disabled={isRecurrenceDisabled}
+                      fromDate={watch('startDate') || new Date()}
+                    />
                     {errors.endDate && <FieldError>{errors.endDate.message}</FieldError>}
                   </Field>
                 </div>

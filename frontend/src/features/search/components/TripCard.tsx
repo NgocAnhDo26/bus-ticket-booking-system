@@ -147,13 +147,13 @@ export const TripCard = ({ trip, onSelect }: TripCardProps) => {
           {/* Amenities (Bottom Left) */}
           <div className="mt-4 pt-3 border-t border-dashed border-emerald-100 dark:border-emerald-800/50 flex gap-3 overflow-hidden">
             {trip.bus.amenities.includes('WiFi') && (
-              <Wifi className="w-3.5 h-3.5 text-emerald-400" aria-label="WiFi" />
+              <Wifi className="w-3.5 h-3.5 text-emerald-400" aria-label="Wifi" />
             )}
             {trip.bus.amenities.includes('Máy lạnh') && (
-              <Wind className="w-3.5 h-3.5 text-emerald-400" aria-label="A/C" />
+              <Wind className="w-3.5 h-3.5 text-emerald-400" aria-label="Điều hòa" />
             )}
             {trip.bus.amenities.includes('Nước uống') && (
-              <Coffee className="w-3.5 h-3.5 text-emerald-400" aria-label="Water" />
+              <Coffee className="w-3.5 h-3.5 text-emerald-400" aria-label="Nước uống" />
             )}
             <span className="text-[10px] text-emerald-400/70 font-medium self-center ml-auto hidden md:block">
               Khởi hành {format(departure, 'dd/MM/yyyy')}

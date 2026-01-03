@@ -1,4 +1,4 @@
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Plus, Trash2 } from 'lucide-react';
@@ -17,6 +17,13 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 import { useAddRouteStop, useDeleteRouteStop } from '../hooks';
 import type { Route, RouteStop } from '../types';
@@ -51,6 +58,7 @@ export const RouteStopsManager = ({
     register,
     handleSubmit,
     reset,
+    control,
     formState: { errors },
   } = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -221,14 +229,22 @@ export const RouteStopsManager = ({
 
               <Field data-invalid={!!errors.stopType}>
                 <FieldLabel>Loại điểm dừng</FieldLabel>
-                <select
-                  className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                  {...register('stopType')}
-                >
-                  <option value="PICKUP">Đón khách</option>
-                  <option value="DROPOFF">Trả khách</option>
-                  <option value="BOTH">Đón và Trả</option>
-                </select>
+                <Controller
+                  control={control}
+                  name="stopType"
+                  render={({ field }) => (
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Chọn loại điểm dừng" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="PICKUP">Đón khách</SelectItem>
+                        <SelectItem value="DROPOFF">Trả khách</SelectItem>
+                        <SelectItem value="BOTH">Đón và Trả</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
                 <FieldError>{errors.stopType?.message}</FieldError>
               </Field>
 

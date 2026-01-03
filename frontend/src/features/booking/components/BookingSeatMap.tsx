@@ -67,15 +67,17 @@ export const BookingSeatMap = ({
     // Correctly identify MY selection using the persistent array
     if (selectedSeats.includes(seatCode)) return 'SELECTED';
 
+    // If seat is in the confirmed booked list, it is BOOKED
+    if (alreadyBookedSeats.includes(seatCode)) return 'BOOKED';
+
     const statusString = seatStatusMap[seatCode];
     if (!statusString) return 'AVAILABLE';
-    // If it's booked but it's one of OUR seats, treat as available so we can select/deselect
-    if (statusString === 'BOOKED' && !alreadyBookedSeats.includes(seatCode)) return 'BOOKED';
-    if (statusString === 'BOOKED' && alreadyBookedSeats.includes(seatCode)) return 'AVAILABLE'; // Or implicitly available
+    
+    // If socket says BOOKED (realtime update), it's BOOKED
+    if (statusString === 'BOOKED') return 'BOOKED';
 
     // If it's locked but NOT by me (since I checked selectedSeats above), then it's LOCKED (gray)
     if (statusString.startsWith('LOCKED:')) {
-      // Optional: Double check generic ID if logged in, but selectedSeats should suffice
       return 'LOCKED';
     }
 

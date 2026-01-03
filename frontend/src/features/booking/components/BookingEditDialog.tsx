@@ -28,6 +28,13 @@ import {
 } from '@/components/ui/dialog';
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { getBusLayout } from '@/features/bus-layout/api';
 
 import { bookingApi, getRefundEstimate, updateBooking } from '../api';
@@ -357,35 +364,43 @@ export const BookingEditDialog = ({ booking, open, onOpenChange }: BookingEditDi
                         <FieldLabel htmlFor="update-booking-form-pickupStationId">
                           Điểm đón
                         </FieldLabel>
-                        <select
-                          id="update-booking-form-pickupStationId"
-                          className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                          value={field.value || ''}
-                          onChange={field.onChange}
+                        <Select
+                          onValueChange={field.onChange}
+                          value={field.value || undefined}
                           disabled={isLoadingTrip || !trip}
-                          aria-invalid={fieldState.invalid}
                         >
-                          {isLoadingTrip ? (
-                            <option>Đang tải danh sách...</option>
-                          ) : (
-                            <>
-                              <option value="ORIGIN">
-                                {trip?.route.originStation.name} (Xuất phát)
-                              </option>
-                              {trip?.route.stops
-                                ?.filter(
-                                  (s) =>
-                                    s.station && (s.stopType === 'PICKUP' || s.stopType === 'BOTH'),
-                                )
-                                .sort((a, b) => a.stopOrder - b.stopOrder)
-                                .map((stop) => (
-                                  <option key={stop.id} value={stop.id}>
-                                    {stop.station!.name} ({stop.durationMinutesFromOrigin}m)
-                                  </option>
-                                ))}
-                            </>
-                          )}
-                        </select>
+                          <SelectTrigger
+                            id="update-booking-form-pickupStationId"
+                            className="w-full"
+                          >
+                            <SelectValue placeholder="Chọn điểm đón..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {isLoadingTrip ? (
+                              <SelectItem value="loading" disabled>
+                                Đang tải danh sách...
+                              </SelectItem>
+                            ) : (
+                              <>
+                                <SelectItem value="ORIGIN">
+                                  {trip?.route.originStation.name} (Xuất phát)
+                                </SelectItem>
+                                {trip?.route.stops
+                                  ?.filter(
+                                    (s) =>
+                                      s.station &&
+                                      (s.stopType === 'PICKUP' || s.stopType === 'BOTH'),
+                                  )
+                                  .sort((a, b) => a.stopOrder - b.stopOrder)
+                                  .map((stop) => (
+                                    <SelectItem key={stop.id} value={stop.id}>
+                                      {stop.station!.name} ({stop.durationMinutesFromOrigin}m)
+                                    </SelectItem>
+                                  ))}
+                              </>
+                            )}
+                          </SelectContent>
+                        </Select>
                         {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                       </Field>
                     )}
@@ -398,36 +413,43 @@ export const BookingEditDialog = ({ booking, open, onOpenChange }: BookingEditDi
                         <FieldLabel htmlFor="update-booking-form-dropoffStationId">
                           Điểm trả
                         </FieldLabel>
-                        <select
-                          id="update-booking-form-dropoffStationId"
-                          className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                          value={field.value || ''}
-                          onChange={field.onChange}
+                        <Select
+                          onValueChange={field.onChange}
+                          value={field.value || undefined}
                           disabled={isLoadingTrip || !trip}
-                          aria-invalid={fieldState.invalid}
                         >
-                          {isLoadingTrip ? (
-                            <option>Đang tải danh sách...</option>
-                          ) : (
-                            <>
-                              <option value="DESTINATION">
-                                {trip?.route.destinationStation.name} (Điểm cuối)
-                              </option>
-                              {trip?.route.stops
-                                ?.filter(
-                                  (s) =>
-                                    s.station &&
-                                    (s.stopType === 'DROPOFF' || s.stopType === 'BOTH'),
-                                )
-                                .sort((a, b) => a.stopOrder - b.stopOrder)
-                                .map((stop) => (
-                                  <option key={stop.id} value={stop.id}>
-                                    {stop.station!.name} ({stop.durationMinutesFromOrigin}m)
-                                  </option>
-                                ))}
-                            </>
-                          )}
-                        </select>
+                          <SelectTrigger
+                            id="update-booking-form-dropoffStationId"
+                            className="w-full"
+                          >
+                            <SelectValue placeholder="Chọn điểm trả..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {isLoadingTrip ? (
+                              <SelectItem value="loading" disabled>
+                                Đang tải danh sách...
+                              </SelectItem>
+                            ) : (
+                              <>
+                                <SelectItem value="DESTINATION">
+                                  {trip?.route.destinationStation.name} (Điểm cuối)
+                                </SelectItem>
+                                {trip?.route.stops
+                                  ?.filter(
+                                    (s) =>
+                                      s.station &&
+                                      (s.stopType === 'DROPOFF' || s.stopType === 'BOTH'),
+                                  )
+                                  .sort((a, b) => a.stopOrder - b.stopOrder)
+                                  .map((stop) => (
+                                    <SelectItem key={stop.id} value={stop.id}>
+                                      {stop.station!.name} ({stop.durationMinutesFromOrigin}m)
+                                    </SelectItem>
+                                  ))}
+                              </>
+                            )}
+                          </SelectContent>
+                        </Select>
                         {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                       </Field>
                     )}

@@ -15,6 +15,7 @@ import { type LoginFormValues, loginSchema } from '../schema';
 
 export const LoginPage = () => {
   const setAuth = useAuthStore((state) => state.setAuth);
+  const clearAuth = useAuthStore((state) => state.clearAuth);
   const navigate = useNavigate();
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -51,6 +52,8 @@ export const LoginPage = () => {
   });
 
   const onSubmit = (values: LoginFormValues) => {
+    // Clear any existing local auth state before login attempt
+    clearAuth();
     loginMutation.mutate(values);
   };
 
