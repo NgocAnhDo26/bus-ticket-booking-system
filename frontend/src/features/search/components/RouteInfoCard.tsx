@@ -53,8 +53,6 @@ export const RouteInfoCard = ({
                 )}
               </div>
 
-
-
               <div>
                 <h3 className="text-lg font-semibold text-foreground">
                   {route?.destinationStation?.name}

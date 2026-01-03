@@ -150,13 +150,13 @@ export const TripDetailsPage = () => {
               </TabsList>
 
               <TabsContent value="info" className="space-y-4 mt-4">
-                  <RouteInfoCard
-                    route={route}
-                    departure={departure}
-                    arrival={arrival}
-                    hours={hours}
-                    minutes={minutes}
-                  />
+                <RouteInfoCard
+                  route={route}
+                  departure={departure}
+                  arrival={arrival}
+                  hours={hours}
+                  minutes={minutes}
+                />
 
                 <PickupDropoffCard route={route} sortedStops={sortedStops} />
 

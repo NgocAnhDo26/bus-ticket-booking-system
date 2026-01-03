@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 
-import { useQueryClient } from '@tanstack/react-query';
 import { Client } from '@stomp/stompjs';
+import { useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { AlertCircle, CheckCircle2, Clock, Download, Home, UserCheck, XCircle } from 'lucide-react';
 import QRCode from 'qrcode';
@@ -91,8 +91,8 @@ const statusConfig = {
 };
 
 const getBaseUrl = () => {
-    const apiUrl = import.meta.env.VITE_API_URL ?? 'http://localhost:8080';
-    return apiUrl.replace(/\/api\/?$/, '');
+  const apiUrl = import.meta.env.VITE_API_URL ?? 'http://localhost:8080';
+  return apiUrl.replace(/\/api\/?$/, '');
 };
 
 export const BookingConfirmationPage = () => {
@@ -126,78 +126,78 @@ export const BookingConfirmationPage = () => {
   // Generate QR Code when booking is confirmed
   useEffect(() => {
     if (booking?.status === 'CONFIRMED' && booking?.code && canvasRef.current) {
-        QRCode.toCanvas(
-            canvasRef.current,
-            booking.code,
-            {
-                width: 250,
-                margin: 2,
-                color: {
-                    dark: '#000000',
-                    light: '#ffffff',
-                },
-                errorCorrectionLevel: 'H',
-            },
-            (error) => {
-                if (error) console.error('QR Gen Error:', error);
-            }
-        );
+      QRCode.toCanvas(
+        canvasRef.current,
+        booking.code,
+        {
+          width: 250,
+          margin: 2,
+          color: {
+            dark: '#000000',
+            light: '#ffffff',
+          },
+          errorCorrectionLevel: 'H',
+        },
+        (error) => {
+          if (error) console.error('QR Gen Error:', error);
+        },
+      );
     }
   }, [booking?.status, booking?.code]);
 
   // WebSocket Subscription for Real-time Status Update
   useEffect(() => {
-      // Connect for both PENDING (payment) and CONFIRMED (check-in) statuses
-      if (!booking || (booking.status !== 'PENDING' && booking.status !== 'CONFIRMED')) return;
+    // Connect for both PENDING (payment) and CONFIRMED (check-in) statuses
+    if (!booking || (booking.status !== 'PENDING' && booking.status !== 'CONFIRMED')) return;
 
-      let stompClient: Client | null = null;
-      
-      const connectWebSocket = () => {
-          if (typeof window !== 'undefined' && !(window as unknown as { global: Window }).global) {
-              (window as unknown as { global: Window }).global = window;
-          }
+    let stompClient: Client | null = null;
 
-          const socketUrl = `${getBaseUrl()}/ws`;
-          stompClient = new Client({
-              webSocketFactory: () => new SockJS(socketUrl),
-              reconnectDelay: 5000,
-              onConnect: () => {
-                  if (!booking?.code) return;
-                  console.log('Connected to WS for Payment Updates');
-                  stompClient?.subscribe(`/topic/booking/${booking.code}`, (message) => {
-                      try {
-                          const body = JSON.parse(message.body);
-                          if (body.status === 'CONFIRMED') {
-                              toast.success('Thanh toán thành công!', {
-                                  description: 'Hệ thống đã nhận được thanh toán.',
-                                  id: 'payment-realtime-success',
-                              });
-                              // Invalidate query to refresh UI
-                              queryClient.invalidateQueries({ queryKey: ['booking', bookingId] });
-                          } else if (body.status === 'CHECKED_IN') {
-                              toast.success('Check-in thành công!', {
-                                  description: 'Chúc quý khách thượng lộ bình an!',
-                                  id: 'checkin-realtime-success',
-                                  duration: 5000,
-                              });
-                              queryClient.invalidateQueries({ queryKey: ['booking', bookingId] });
-                          }
-                      } catch (e) {
-                          console.error('Error parsing WS message', e);
-                      }
-                  });
-              },
+    const connectWebSocket = () => {
+      if (typeof window !== 'undefined' && !(window as unknown as { global: Window }).global) {
+        (window as unknown as { global: Window }).global = window;
+      }
+
+      const socketUrl = `${getBaseUrl()}/ws`;
+      stompClient = new Client({
+        webSocketFactory: () => new SockJS(socketUrl),
+        reconnectDelay: 5000,
+        onConnect: () => {
+          if (!booking?.code) return;
+          console.log('Connected to WS for Payment Updates');
+          stompClient?.subscribe(`/topic/booking/${booking.code}`, (message) => {
+            try {
+              const body = JSON.parse(message.body);
+              if (body.status === 'CONFIRMED') {
+                toast.success('Thanh toán thành công!', {
+                  description: 'Hệ thống đã nhận được thanh toán.',
+                  id: 'payment-realtime-success',
+                });
+                // Invalidate query to refresh UI
+                queryClient.invalidateQueries({ queryKey: ['booking', bookingId] });
+              } else if (body.status === 'CHECKED_IN') {
+                toast.success('Check-in thành công!', {
+                  description: 'Chúc quý khách thượng lộ bình an!',
+                  id: 'checkin-realtime-success',
+                  duration: 5000,
+                });
+                queryClient.invalidateQueries({ queryKey: ['booking', bookingId] });
+              }
+            } catch (e) {
+              console.error('Error parsing WS message', e);
+            }
           });
-          stompClient.activate();
-      };
+        },
+      });
+      stompClient.activate();
+    };
 
-      connectWebSocket();
+    connectWebSocket();
 
-      return () => {
-          if (stompClient) {
-              stompClient.deactivate();
-          }
-      };
+    return () => {
+      if (stompClient) {
+        stompClient.deactivate();
+      }
+    };
   }, [booking?.code, booking?.status, bookingId, queryClient, booking]);
 
   // Auto-verify payment when returning from PayOS (localhost webhook workaround)
@@ -363,7 +363,7 @@ export const BookingConfirmationPage = () => {
   const isCheckedIn = booking.tickets?.length > 0 && booking.tickets.every((t) => t.boarded);
 
   if (isCheckedIn && booking.status === 'CONFIRMED') {
-      status = statusConfig.CHECKED_IN;
+    status = statusConfig.CHECKED_IN;
   }
 
   const StatusIcon = status.icon;
@@ -389,10 +389,10 @@ export const BookingConfirmationPage = () => {
 
             {isPaid && (
               <div className="mt-4 flex flex-col items-center justify-center gap-2">
-                <canvas 
-                    ref={canvasRef} 
-                    className="border p-1 rounded-lg shadow-sm"
-                    style={{ width: '200px', height: '200px' }} // Fallback size, real size controlled by canvas attr
+                <canvas
+                  ref={canvasRef}
+                  className="border p-1 rounded-lg shadow-sm"
+                  style={{ width: '200px', height: '200px' }} // Fallback size, real size controlled by canvas attr
                 />
                 <p className="text-xs text-muted-foreground">Quét mã để lên xe</p>
               </div>

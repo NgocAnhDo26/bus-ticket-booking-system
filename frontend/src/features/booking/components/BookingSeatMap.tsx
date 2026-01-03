@@ -72,7 +72,7 @@ export const BookingSeatMap = ({
 
     const statusString = seatStatusMap[seatCode];
     if (!statusString) return 'AVAILABLE';
-    
+
     // If socket says BOOKED (realtime update), it's BOOKED
     if (statusString === 'BOOKED') return 'BOOKED';
 
