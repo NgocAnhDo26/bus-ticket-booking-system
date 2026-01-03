@@ -14,6 +14,7 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { getBusLayout } from '@/features/bus-layout/api';
 import { useAuthStore } from '@/store/auth-store';
+import { getFriendlyErrorMessage } from '@/utils/error-utils';
 
 import { bookingApi, createBooking } from '../api';
 import { useBookingStore } from '../store';
@@ -279,9 +280,9 @@ export const PassengerInfoPage = () => {
       setDropoffStationId(null);
 
       navigate(`/booking/confirmation/${booking.id}`);
-    } catch {
+    } catch (error) {
       toast.error('Đặt vé thất bại', {
-        description: 'Có lỗi xảy ra, vui lòng thử lại.',
+        description: getFriendlyErrorMessage(error),
       });
     } finally {
       setIsSubmitting(false);

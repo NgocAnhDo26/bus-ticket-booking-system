@@ -2,7 +2,6 @@ import { useForm } from 'react-hook-form';
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
-import type { AxiosError } from 'axios';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
@@ -12,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { type ChangePasswordRequest, changePassword } from '@/features/api/users/users';
 import type { ChangePasswordFormValues } from '@/features/profile/schema';
 import { changePasswordSchema } from '@/features/profile/schema';
+import { getFriendlyErrorMessage } from '@/utils/error-utils';
 
 export function PasswordChangeForm() {
   const form = useForm<ChangePasswordFormValues>({
@@ -36,10 +36,9 @@ export function PasswordChangeForm() {
       toast.success('Đổi mật khẩu thành công');
       reset();
     },
-    onError: (error: AxiosError<{ message?: string }>) => {
-      const message = error?.response?.data?.message || error?.message || 'Có lỗi xảy ra';
+    onError: (error) => {
       toast.error('Đổi mật khẩu thất bại', {
-        description: message,
+        description: getFriendlyErrorMessage(error),
       });
     },
   });

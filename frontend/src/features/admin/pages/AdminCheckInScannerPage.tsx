@@ -26,6 +26,7 @@ export const AdminCheckInScannerPage = () => {
 
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [isScannerRunning, setIsScannerRunning] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(false);
 
   // Use a ref to control the scanner instance
   const scannerRef = useRef<Html5Qrcode | null>(null);
@@ -56,22 +57,30 @@ export const AdminCheckInScannerPage = () => {
         console.error('Check-in failed:', error);
 
         // Cast to unknown first then to a shape we expect
-        const err = error as { response?: { data?: { message?: string } }; message?: string };
+        const err = error as {
+          response?: { status?: number; data?: { message?: string } };
+          message?: string;
+        };
         const errorMessage = err?.response?.data?.message || err?.message || '';
+        const status = err?.response?.status;
 
-        if (errorMessage.includes('ALREADY_CHECKED_IN')) {
-          toast.warning('Vé đã được check-in trước đó!', {
-            description: 'Hành khách này đã lên xe.',
+        if (status === 404 || errorMessage.includes('Booking not found')) {
+          toast.error('Mã không hợp lệ', {
+            description: 'Không tìm thấy mã vé này trong hệ thống.',
+          });
+        } else if (errorMessage.includes('ALREADY_CHECKED_IN')) {
+          toast.warning('Mã đã sử dụng', {
+            description: 'Hành khách này đã check-in trước đó.',
             duration: 5000,
           });
         } else if (errorMessage.includes('INVALID_STATUS')) {
-          toast.error('Vé không hợp lệ!', {
-            description: 'Vé này chưa thanh toán hoặc đã bị hủy.',
+          toast.error('Mã không hợp lệ', {
+            description: 'Vé chưa thanh toán hoặc đã bị hủy.',
             duration: 5000,
           });
         } else {
           toast.error('Check-in thất bại', {
-            description: 'Mã vé không hợp lệ hoặc lỗi hệ thống.',
+            description: 'Vui lòng thử lại hoặc kiểm tra kết nối.',
           });
         }
 
@@ -89,19 +98,27 @@ export const AdminCheckInScannerPage = () => {
     [isLoading, isScannerRunning],
   );
 
+  // Use a ref for the callback to avoid re-creating startScanner when state changes
+  const handleCheckInRef = useRef(handleCheckIn);
+  useEffect(() => {
+    handleCheckInRef.current = handleCheckIn;
+  }, [handleCheckIn]);
+
   const startScanner = useCallback(async () => {
+    // If we think it's running or initializing, we should probably be careful.
+    // However, with stabilized startScanner, this function won't be called repeatedly by useEffect.
+
     if (scannerRef.current) {
-      // Already running or initialized
       try {
         try {
           await scannerRef.current.stop();
         } catch {
-          // ignore stop error
+          // ignore
         }
         try {
           scannerRef.current.clear();
         } catch {
-          // ignore clear error
+          // ignore
         }
       } catch {
         // ignore
@@ -109,9 +126,19 @@ export const AdminCheckInScannerPage = () => {
     }
 
     setCameraError(null);
-    setIsScannerRunning(true); // Optimistic
+    setIsInitializing(true);
+    setIsScannerRunning(false);
 
     try {
+      // 1. Check if camera exists on device first (fail fast)
+      const devices = await Html5Qrcode.getCameras().catch((err) => {
+        throw new Error(err || 'Không thể liệt kê danh sách camera.');
+      });
+
+      if (!devices || devices.length === 0) {
+        throw new Error('Không tìm thấy Camera trên thiết bị này.');
+      }
+
       const html5QrCode = new Html5Qrcode(scannerContainerId);
       scannerRef.current = html5QrCode;
 
@@ -121,41 +148,55 @@ export const AdminCheckInScannerPage = () => {
         aspectRatio: 1.0,
       };
 
-      // Prefer back camera environment
-      await html5QrCode.start(
+      // 2. Start with timeout to prevent hanging forever
+      const startPromise = html5QrCode.start(
         { facingMode: 'environment' },
         config,
         (decodedText) => {
-          handleCheckIn(decodedText);
+          // Use the ref here
+          handleCheckInRef.current(decodedText);
         },
         () => {
           // error - ignored for individual frames
         },
       );
+
+      // Race against a 10s timeout
+      await Promise.race([
+        startPromise,
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Khởi động Camera quá lâu (Timeout).')), 10000),
+        ),
+      ]);
+
+      setIsScannerRunning(true);
     } catch (err) {
       console.error('Error starting scanner', err);
       setIsScannerRunning(false);
 
       const error = err as { message?: string; name?: string };
-      setCameraError(error?.message || 'Không thể khởi động camera.');
+      let friendlyMsg = error?.message || 'Không thể khởi động camera.';
 
       if (error?.name === 'NotAllowedError' || error?.message?.includes('permission')) {
-        setCameraError('Quyền truy cập Camera bị từ chối. Vui lòng cấp quyền và thử lại.');
-      } else if (error?.name === 'NotFoundError') {
-        setCameraError('Không tìm thấy Camera trên thiết bị này.');
+        friendlyMsg = 'Quyền truy cập Camera bị từ chối. Vui lòng cấp quyền và thử lại.';
+      } else if (friendlyMsg.includes('Timeout')) {
+        friendlyMsg = 'Camera không phản hồi. Vui lòng tải lại trang.';
       }
+
+      setCameraError(friendlyMsg);
+    } finally {
+      setIsInitializing(false);
     }
-  }, [handleCheckIn]);
+  }, []); // Empty dependency array = Stable function identity
 
   const resetScanner = () => {
     setScannedBooking(null);
     setManualCode('');
     // Resume scanner if it was just paused
-    if (scannerRef.current) {
+    if (scannerRef.current && isScannerRunning) {
       try {
         scannerRef.current.resume();
       } catch {
-        // If resume fails (e.g. stopped), try starting again
         startScanner();
       }
     } else {
@@ -163,18 +204,17 @@ export const AdminCheckInScannerPage = () => {
     }
   };
 
-  // Initial start
+  // Initial start - only runs once on mount because startScanner is stable
   useEffect(() => {
-    // Small delay to ensure DOM is ready
     const timer = setTimeout(() => {
       startScanner();
     }, 500);
 
     return () => {
       clearTimeout(timer);
-      if (scannerRef.current) {
+      if (scannerRef.current && scannerRef.current.isScanning) {
         try {
-          scannerRef.current.stop();
+          scannerRef.current.stop().catch(console.error);
           scannerRef.current.clear();
         } catch (e) {
           console.error(e);
@@ -209,15 +249,16 @@ export const AdminCheckInScannerPage = () => {
                 Quét mã QR
               </CardTitle>
               <div className="flex gap-1">
-                {!isScannerRunning && (
+                {(!isScannerRunning || isInitializing) && (
                   <Button
                     variant="outline"
                     size="icon"
                     className="h-8 w-8"
                     onClick={startScanner}
+                    disabled={isInitializing}
                     title="Bật Camera"
                   >
-                    <RefreshCcw className="h-4 w-4" />
+                    <RefreshCcw className={`h-4 w-4 ${isInitializing ? 'animate-spin' : ''}`} />
                   </Button>
                 )}
                 <Dialog>
@@ -296,7 +337,15 @@ export const AdminCheckInScannerPage = () => {
             <div className="w-full rounded-lg overflow-hidden border bg-black/90 min-h-[300px] flex items-center justify-center relative">
               <div id="reader-custom" className="w-full h-full"></div>
 
-              {cameraError && (
+              {/* Initializing Spinner Overlay */}
+              {isInitializing && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-6 text-white bg-black/80 z-20">
+                  <RefreshCcw className="h-10 w-10 animate-spin mb-4 text-blue-400" />
+                  <p className="font-medium animate-pulse">Đang khởi động Camera...</p>
+                </div>
+              )}
+
+              {cameraError && !isInitializing && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-6 text-white bg-black/80 z-10">
                   <Camera className="h-12 w-12 mb-4 text-red-500 opacity-80" />
                   <p className="font-semibold text-lg mb-2">Lỗi Camera</p>
@@ -307,7 +356,7 @@ export const AdminCheckInScannerPage = () => {
                 </div>
               )}
 
-              {!isScannerRunning && !cameraError && (
+              {!isScannerRunning && !cameraError && !isInitializing && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-6 text-white z-10">
                   <Button onClick={startScanner} variant="secondary">
                     <Camera className="mr-2 h-4 w-4" /> Bật Camera

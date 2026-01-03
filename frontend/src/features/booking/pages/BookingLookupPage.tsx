@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { getFriendlyErrorMessage } from '@/utils/error-utils';
 
 import { lookupBooking } from '../api';
 
@@ -32,9 +33,9 @@ export const BookingLookupPage = () => {
       });
       navigate(`/booking/confirmation/${data.id}`);
     },
-    onError: () => {
-      toast.error('Không tìm thấy vé', {
-        description: 'Vui lòng kiểm tra lại Mã đặt vé và Email.',
+    onError: (error) => {
+      toast.error('Tra cứu thất bại', {
+        description: getFriendlyErrorMessage(error),
       });
     },
   });

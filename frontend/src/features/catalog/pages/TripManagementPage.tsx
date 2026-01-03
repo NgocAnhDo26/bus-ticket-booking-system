@@ -36,6 +36,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { getFriendlyErrorMessage } from '@/utils/error-utils';
 
 import { TripPassengersDialog } from '../components/TripPassengersDialog';
 import {
@@ -76,7 +77,7 @@ export const TripManagementPage = () => {
           onSuccess: () => {
             setSelectedTrip(null);
             setIsDeleteDialogOpen(false);
-            toast.success('Chuyến đi đã được xóa thành công!');
+            toast.success('Đã xóa chuyến đi thành công');
           },
           onError: (error: Error) => {
             const axiosError = error as AxiosError;
@@ -85,10 +86,8 @@ export const TripManagementPage = () => {
               setSelectedTrip(null);
               setIsDeleteDialogOpen(false);
             } else {
-              toast.error('Xóa chuyến đi thất bại.', {
-                description: axiosError.response?.data
-                  ? (axiosError.response.data as { message: string }).message
-                  : axiosError.message,
+              toast.error('Xóa thất bại', {
+                description: getFriendlyErrorMessage(error),
               });
             }
           },
@@ -105,14 +104,11 @@ export const TripManagementPage = () => {
           onSuccess: () => {
             setForceDeleteId(null);
             queryClient.invalidateQueries({ queryKey: ['trips'] });
-            toast.success('Chuyến đi và các vé liên quan đã được xóa thành công!');
+            toast.success('Đã xóa bắt buộc chuyến đi thành công');
           },
           onError: (error: Error) => {
-            const axiosError = error as AxiosError;
-            toast.error('Xóa bắt buộc chuyến đi thất bại.', {
-              description: axiosError.response?.data
-                ? (axiosError.response.data as { message: string }).message
-                : axiosError.message,
+            toast.error('Xóa thất bại', {
+              description: getFriendlyErrorMessage(error),
             });
           },
         },

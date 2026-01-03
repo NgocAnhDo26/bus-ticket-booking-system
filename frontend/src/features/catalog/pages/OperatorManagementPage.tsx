@@ -5,6 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
 import { Building2, Globe, Mail, MoreHorizontal, Pencil, Phone, Plus, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
 import * as z from 'zod';
 
 import { type ColumnDef, GenericTable } from '@/components/common';
@@ -37,6 +38,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
+import { getFriendlyErrorMessage } from '@/utils/error-utils';
 
 import { useCreateOperator, useDeleteOperator, useOperators, useUpdateOperator } from '../hooks';
 import type { Operator } from '../types';
@@ -91,6 +93,12 @@ export const OperatorManagementPage = () => {
             setIsOpen(false);
             setEditingOperator(null);
             reset();
+            toast.success('Cập nhật nhà xe thành công');
+          },
+          onError: (error) => {
+            toast.error('Cập nhật thất bại', {
+              description: getFriendlyErrorMessage(error),
+            });
           },
         },
       );
@@ -99,6 +107,12 @@ export const OperatorManagementPage = () => {
         onSuccess: () => {
           setIsOpen(false);
           reset();
+          toast.success('Đã tạo nhà xe mới thành công');
+        },
+        onError: (error) => {
+          toast.error('Tạo thất bại', {
+            description: getFriendlyErrorMessage(error),
+          });
         },
       });
     }
@@ -127,12 +141,17 @@ export const OperatorManagementPage = () => {
         {
           onSuccess: () => {
             setDeletingOperator(null);
+            toast.success('Đã xóa nhà xe thành công');
           },
           onError: (error: Error) => {
             const axiosError = error as AxiosError;
             if (axiosError.response?.status === 409) {
               setForceDeleteId(deletingOperator.id);
               setDeletingOperator(null);
+            } else {
+              toast.error('Xóa thất bại', {
+                description: getFriendlyErrorMessage(error),
+              });
             }
           },
         },

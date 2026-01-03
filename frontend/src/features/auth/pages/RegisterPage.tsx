@@ -5,8 +5,10 @@ import { Link } from 'react-router-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
 import { CheckCircle2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
+import { getFriendlyErrorMessage } from '@/utils/error-utils';
 
 import { register as registerApi } from '../api';
 import { AuthLayout } from '../components/AuthLayout';
@@ -15,6 +17,7 @@ import { type RegisterFormValues, registerSchema } from '../schema';
 
 export const RegisterPage = () => {
   const [isSuccess, setIsSuccess] = useState(false);
+
   const form = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
@@ -29,10 +32,13 @@ export const RegisterPage = () => {
     mutationFn: registerApi,
     onSuccess: () => {
       setIsSuccess(true);
+      toast.success('Đăng ký thành công!');
+    },
+    onError: (err) => {
+      const msg = getFriendlyErrorMessage(err);
+      toast.error(msg);
     },
   });
-
-  const apiError = registerMutation.error?.message;
 
   const onSubmit = (values: RegisterFormValues) => {
     registerMutation.mutate({
@@ -67,12 +73,7 @@ export const RegisterPage = () => {
 
   return (
     <AuthLayout>
-      <RegisterForm
-        form={form}
-        onSubmit={onSubmit}
-        isSubmitting={registerMutation.isPending}
-        error={apiError}
-      />
+      <RegisterForm form={form} onSubmit={onSubmit} isSubmitting={registerMutation.isPending} />
     </AuthLayout>
   );
 };
