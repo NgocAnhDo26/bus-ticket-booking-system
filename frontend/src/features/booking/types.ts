@@ -27,6 +27,17 @@ export type RouteInfo = {
   originStation: StationInfo;
   destinationStation: StationInfo;
   durationMinutes: number;
+  stops?: {
+    id: string;
+    stopOrder: number;
+    stopType: 'PICKUP' | 'DROPOFF' | 'BOTH';
+    durationMinutesFromOrigin: number;
+    station?: StationInfo;
+    customName?: string;
+    customAddress?: string;
+    normalPrice?: number;
+    vipPrice?: number;
+  }[];
 };
 
 export type BusInfo = {

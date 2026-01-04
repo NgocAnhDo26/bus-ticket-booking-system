@@ -395,7 +395,7 @@ public class TripService {
         };
 
         // Sorting
-        Sort sort = Sort.unsorted();
+        Sort sort = Sort.by(Sort.Direction.ASC, "departureTime");
         if (request.getSortBy() != null) {
             String[] parts = request.getSortBy().split(",");
             if (parts.length == 2) {

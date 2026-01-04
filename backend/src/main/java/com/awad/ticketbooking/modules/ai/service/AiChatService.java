@@ -44,6 +44,7 @@ public class AiChatService {
                         - Use bullet points (•) or numbered lists when listing multiple items.
                         - Separate paragraphs with blank lines.
                         - Keep responses concise but well-structured.
+                        - WHEN LISTING SEATS: Always list them separately or grouped by row/type with LINE BREAKS. Do not run them together in one line.
                         - Example format:
                           "Tôi tìm thấy 2 chuyến xe:
 
@@ -352,6 +353,10 @@ public class AiChatService {
                 }
         }
 
+        private static final java.time.ZoneId VN_ZONE = java.time.ZoneId.of("Asia/Ho_Chi_Minh");
+        private static final java.time.format.DateTimeFormatter VN_TIME_FORMATTER = java.time.format.DateTimeFormatter
+                        .ofPattern("HH:mm dd/MM/yyyy");
+
         private String executeSearch(String origin, String destination, String dateStr) {
                 try {
                         com.awad.ticketbooking.modules.trip.dto.SearchTripRequest searchRequest = new com.awad.ticketbooking.modules.trip.dto.SearchTripRequest();
@@ -386,7 +391,12 @@ public class AiChatService {
                                 map.put("tripId", t.getId()); // Hidden for AI
                                 map.put("route", t.getRoute().getOriginStation().getCity() + " - "
                                                 + t.getRoute().getDestinationStation().getCity());
-                                map.put("time", t.getDepartureTime().toString());
+
+                                // Format time to VN timezone
+                                java.time.ZonedDateTime zdt = t.getDepartureTime().atZone(java.time.ZoneId.of("UTC"))
+                                                .withZoneSameInstant(VN_ZONE);
+                                map.put("time", zdt.format(VN_TIME_FORMATTER));
+
                                 map.put("price", t.getTripPricings().isEmpty() ? "Liên hệ"
                                                 : String.format("%,.0f VNĐ", t.getTripPricings().get(0).getPrice()));
                                 map.put("bus", t.getBus().getOperator().getName() + " (" + t.getBus().getPlateNumber()
@@ -430,7 +440,12 @@ public class AiChatService {
                         details.put("tripId", trip.getId());
                         details.put("route", trip.getRoute().getOriginStation().getCity() + " -> "
                                         + trip.getRoute().getDestinationStation().getCity());
-                        details.put("departure", trip.getDepartureTime().toString());
+
+                        // Format time to VN timezone
+                        java.time.ZonedDateTime zdt = trip.getDepartureTime().atZone(java.time.ZoneId.of("UTC"))
+                                        .withZoneSameInstant(VN_ZONE);
+                        details.put("departure", zdt.format(VN_TIME_FORMATTER));
+
                         details.put("totalSeats", trip.getBus().getTotalSeats());
                         details.put("bookedSeats", bookedSeats);
                         details.put("prices", trip.getTripPricings()); // List of {seatType, price}

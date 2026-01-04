@@ -154,7 +154,7 @@ export type TripPricing = {
   price: number;
 };
 
-export type BusInfo = {
+export type TripBusInfo = {
   id: string;
   plateNumber: string;
   operator: {
@@ -170,7 +170,7 @@ export type BusInfo = {
 export type Trip = {
   id: string;
   route: Route;
-  bus: BusInfo;
+  bus: TripBusInfo;
   tripSchedule?: TripSchedule; // Added
   departureTime: string;
   arrivalTime: string;
