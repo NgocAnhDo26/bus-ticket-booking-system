@@ -72,10 +72,12 @@ export const BookingPage = () => {
       // Clear any previous session state before initializing new booking
       useBookingStore.getState().clearSelection();
       initialize(tripId);
+      // Default to origin for pickup
+      setPickupStationId('ORIGIN');
       // Default to destination for dropoff
       setDropoffStationId('DESTINATION');
     }
-  }, [tripId, initialize, setDropoffStationId]);
+  }, [tripId, initialize, setPickupStationId, setDropoffStationId]);
 
   // Handle Real-time Trip Status Updates
   const tripStatus = useBookingStore(useShallow((state) => state.tripStatus));
@@ -258,7 +260,10 @@ export const BookingPage = () => {
                 </label>
                 <Select
                   value={pickupStationId || undefined}
-                  onValueChange={(value) => setPickupStationId(value)}
+                  onValueChange={(value) => {
+                    setPickupStationId(value);
+                    setDropoffStationId('DESTINATION');
+                  }}
                 >
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Chọn điểm đón..." />

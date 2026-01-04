@@ -6,6 +6,8 @@ import lombok.Data;
 
 import java.util.List;
 
+import java.util.UUID;
+
 @Data
 public class UpdateBookingRequest {
     @NotBlank(message = "Passenger name is required")
@@ -21,6 +23,9 @@ public class UpdateBookingRequest {
     // If provided, it replaces the current tickets/seats.
     private List<TicketRequest> tickets;
 
-    private Long pickupStationId;
-    private Long dropoffStationId;
+    private UUID pickupStationId;
+    private UUID dropoffStationId;
+
+    private UUID pickupTripStopId;
+    private UUID dropoffTripStopId;
 }
