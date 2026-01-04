@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.UuidGenerator;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import com.awad.ticketbooking.common.converter.MapConverter;
 import java.util.Map;
@@ -14,6 +15,7 @@ import java.util.UUID;
 @Table(name = "operators")
 @Getter
 @Setter
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Operator {
 
     @Id
