@@ -117,12 +117,41 @@ export const BookingEditDialog = ({ booking, open, onOpenChange }: BookingEditDi
 
   useEffect(() => {
     if (open) {
+      const getInitialPickup = () => {
+        if (booking.pickupTripPoint?.id) return booking.pickupTripPoint.id;
+        // If no trip point, check if it's origin
+        if (booking.pickupStation?.id === booking.trip.route.originStation.id) return 'ORIGIN';
+        
+        // If it's a stop but no trip point recorded (maybe legacy or bug), try to find the stop ID
+        if (booking.pickupStation?.id) {
+             const stop = booking.trip.route.stops?.find(s => s.station?.id === booking.pickupStation?.id && (s.stopType === 'PICKUP' || s.stopType === 'BOTH'));
+             if (stop) return stop.id;
+        }
+
+        return booking.pickupStation?.id;
+      };
+
+      const getInitialDropoff = () => {
+        if (booking.dropoffTripPoint?.id) return booking.dropoffTripPoint.id;
+        // If no trip point, check if it's destination
+        if (booking.dropoffStation?.id === booking.trip.route.destinationStation.id)
+          return 'DESTINATION';
+
+        // If it's a stop but no trip point recorded, try to find the stop ID
+        if (booking.dropoffStation?.id) {
+            const stop = booking.trip.route.stops?.find(s => s.station?.id === booking.dropoffStation?.id && (s.stopType === 'DROPOFF' || s.stopType === 'BOTH'));
+            if (stop) return stop.id;
+       }
+
+        return booking.dropoffStation?.id;
+      };
+
       form.reset({
         passengerName: booking.passengerName,
         passengerPhone: booking.passengerPhone,
-        passengerEmail: '',
-        pickupStationId: booking.pickupStation?.id,
-        dropoffStationId: booking.dropoffStation?.id,
+        passengerEmail: '', // Email not in booking response usually, or hidden
+        pickupStationId: getInitialPickup(),
+        dropoffStationId: getInitialDropoff(),
       });
       // Move state updates to next tick to avoid synchronous update warning
       requestAnimationFrame(() => {
@@ -245,7 +274,7 @@ export const BookingEditDialog = ({ booking, open, onOpenChange }: BookingEditDi
       } else if (data.pickupStationId === 'DESTINATION') {
         finalPickupId = trip?.route.destinationStation.id; // Should not happen logically for pickup
       } else {
-        finalPickupStopId = data.pickupStationId;
+        finalPickupStopId = data.pickupStationId; // Using stop ID
       }
 
       let finalDropoffId: string | undefined;
@@ -388,13 +417,12 @@ export const BookingEditDialog = ({ booking, open, onOpenChange }: BookingEditDi
                                 {trip?.route.stops
                                   ?.filter(
                                     (s) =>
-                                      s.station &&
                                       (s.stopType === 'PICKUP' || s.stopType === 'BOTH'),
                                   )
                                   .sort((a, b) => a.stopOrder - b.stopOrder)
                                   .map((stop) => (
                                     <SelectItem key={stop.id} value={stop.id}>
-                                      {stop.station!.name} ({stop.durationMinutesFromOrigin}m)
+                                      {stop.station ? stop.station.name : stop.customName || stop.customAddress || 'Điểm khác'} ({stop.durationMinutesFromOrigin}m)
                                     </SelectItem>
                                   ))}
                               </>
@@ -437,13 +465,12 @@ export const BookingEditDialog = ({ booking, open, onOpenChange }: BookingEditDi
                                 {trip?.route.stops
                                   ?.filter(
                                     (s) =>
-                                      s.station &&
                                       (s.stopType === 'DROPOFF' || s.stopType === 'BOTH'),
                                   )
                                   .sort((a, b) => a.stopOrder - b.stopOrder)
                                   .map((stop) => (
                                     <SelectItem key={stop.id} value={stop.id}>
-                                      {stop.station!.name} ({stop.durationMinutesFromOrigin}m)
+                                      {stop.station ? stop.station.name : stop.customName || stop.customAddress || 'Điểm khác'} ({stop.durationMinutesFromOrigin}m)
                                     </SelectItem>
                                   ))}
                               </>
