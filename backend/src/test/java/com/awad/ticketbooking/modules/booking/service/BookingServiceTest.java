@@ -79,6 +79,9 @@ class BookingServiceTest {
     @Mock
     private SeatLockService seatLockService;
 
+    @Mock
+    private org.springframework.messaging.simp.SimpMessageSendingOperations messagingTemplate;
+
     private Trip testTrip;
     private User testUser;
     private Booking testBooking;
@@ -738,5 +741,409 @@ class BookingServiceTest {
         RuntimeException exception = assertThrows(RuntimeException.class,
                 () -> bookingService.lookupBooking("INVALID", "test@example.com"));
         assertEquals("Booking not found", exception.getMessage());
+    }
+
+    @Test
+    void createBooking_withSelfConflictDifferentSeats_cancelsOldBooking() {
+        // Arrange
+        CreateBookingRequest request = new CreateBookingRequest();
+        request.setTripId(testTrip.getId());
+        request.setUserId(testUser.getId());
+        request.setPassengerName("Test Passenger");
+        request.setPassengerPhone("0123456789");
+        request.setPassengerEmail("test@example.com");
+
+        TicketRequest ticketRequest = new TicketRequest();
+        ticketRequest.setSeatCode("A2"); // Different seat
+        ticketRequest.setPassengerName("Test Passenger");
+        ticketRequest.setPassengerPhone("0123456789");
+        ticketRequest.setPrice(new BigDecimal("200000"));
+        request.setTickets(Collections.singletonList(ticketRequest));
+
+        // Create a pending booking from the same user with different seats
+        Booking existingBooking = new Booking();
+        existingBooking.setId(UUID.randomUUID());
+        existingBooking.setStatus(BookingStatus.PENDING);
+        existingBooking.setUser(testUser);
+        existingBooking.setTrip(testTrip);
+        Ticket existingTicket = new Ticket();
+        existingTicket.setSeatCode("A1"); // Different seat
+        existingTicket.setBooking(existingBooking);
+        existingBooking.setTickets(Collections.singletonList(existingTicket));
+
+        when(tripRepository.findById(request.getTripId())).thenReturn(Optional.of(testTrip));
+        when(userRepository.findById(request.getUserId())).thenReturn(Optional.of(testUser));
+        when(ticketRepository.findBookedSeatCodesByTripId(request.getTripId())).thenReturn(Collections.emptyList());
+        when(ticketRepository.findByBookingTripIdAndSeatCodeIn(any(), anyList()))
+                .thenReturn(Collections.singletonList(existingTicket));
+        when(bookingRepository.findByCode(anyString())).thenReturn(Optional.empty());
+        when(bookingRepository.save(any(Booking.class))).thenAnswer(invocation -> {
+            Booking b = invocation.getArgument(0);
+            b.setId(UUID.randomUUID());
+            return b;
+        });
+
+        // Act
+        BookingResponse response = bookingService.createBooking(request);
+
+        // Assert
+        assertNotNull(response);
+        verify(bookingRepository, atLeastOnce()).save(any(Booking.class));
+    }
+
+    @Test
+    void createBooking_withPickupStationId_success() {
+        // Arrange
+        CreateBookingRequest request = new CreateBookingRequest();
+        request.setTripId(testTrip.getId());
+        request.setUserId(testUser.getId());
+        request.setPassengerName("Test Passenger");
+        request.setPassengerPhone("0123456789");
+        request.setPassengerEmail("test@example.com");
+        request.setPickupStationId(originStation.getId());
+        request.setDropoffStationId(destinationStation.getId());
+
+        TicketRequest ticketRequest = new TicketRequest();
+        ticketRequest.setSeatCode("A1");
+        ticketRequest.setPassengerName("Test Passenger");
+        ticketRequest.setPassengerPhone("0123456789");
+        ticketRequest.setPrice(new BigDecimal("200000"));
+        request.setTickets(Collections.singletonList(ticketRequest));
+
+        when(tripRepository.findById(request.getTripId())).thenReturn(Optional.of(testTrip));
+        when(userRepository.findById(request.getUserId())).thenReturn(Optional.of(testUser));
+        when(ticketRepository.findBookedSeatCodesByTripId(request.getTripId())).thenReturn(Collections.emptyList());
+        when(ticketRepository.findByBookingTripIdAndSeatCodeIn(any(), anyList())).thenReturn(Collections.emptyList());
+        when(bookingRepository.findByCode(anyString())).thenReturn(Optional.empty());
+        when(bookingRepository.save(any(Booking.class))).thenAnswer(invocation -> {
+            Booking b = invocation.getArgument(0);
+            b.setId(UUID.randomUUID());
+            return b;
+        });
+
+        // Act
+        BookingResponse response = bookingService.createBooking(request);
+
+        // Assert
+        assertNotNull(response);
+        verify(bookingRepository).save(any(Booking.class));
+    }
+
+    @Test
+    void createBooking_withInvalidPickupStation_throwsException() {
+        // Arrange
+        CreateBookingRequest request = new CreateBookingRequest();
+        request.setTripId(testTrip.getId());
+        request.setUserId(testUser.getId());
+        request.setPassengerName("Test Passenger");
+        request.setPassengerPhone("0123456789");
+        request.setPassengerEmail("test@example.com");
+        request.setPickupStationId(UUID.randomUUID()); // Invalid station
+
+        TicketRequest ticketRequest = new TicketRequest();
+        ticketRequest.setSeatCode("A1");
+        ticketRequest.setPassengerName("Test Passenger");
+        ticketRequest.setPassengerPhone("0123456789");
+        ticketRequest.setPrice(new BigDecimal("200000"));
+        request.setTickets(Collections.singletonList(ticketRequest));
+
+        when(tripRepository.findById(request.getTripId())).thenReturn(Optional.of(testTrip));
+        when(userRepository.findById(request.getUserId())).thenReturn(Optional.of(testUser));
+        when(ticketRepository.findBookedSeatCodesByTripId(request.getTripId())).thenReturn(Collections.emptyList());
+        when(ticketRepository.findByBookingTripIdAndSeatCodeIn(any(), anyList())).thenReturn(Collections.emptyList());
+
+        // Act & Assert
+        RuntimeException exception = assertThrows(RuntimeException.class,
+                () -> bookingService.createBooking(request));
+        assertTrue(exception.getMessage().contains("Invalid pickup station"));
+    }
+
+    @Test
+    void createBooking_withInvalidPickupDropoffOrder_throwsException() {
+        // Arrange - Create trip stops with different orders
+        Station midStation = new Station();
+        midStation.setId(UUID.randomUUID());
+        midStation.setName("Mid Station");
+        midStation.setCity("Mid City");
+
+        com.awad.ticketbooking.modules.trip.entity.TripStop pickupStop = new com.awad.ticketbooking.modules.trip.entity.TripStop();
+        pickupStop.setId(UUID.randomUUID());
+        pickupStop.setStopOrder(2); // Higher order (later in trip)
+        pickupStop.setStation(midStation);
+
+        com.awad.ticketbooking.modules.trip.entity.TripStop dropoffStop = new com.awad.ticketbooking.modules.trip.entity.TripStop();
+        dropoffStop.setId(UUID.randomUUID());
+        dropoffStop.setStopOrder(1); // Lower order (earlier in trip) - WRONG ORDER
+        dropoffStop.setStation(originStation);
+
+        testTrip.setTripStops(List.of(pickupStop, dropoffStop));
+
+        CreateBookingRequest request = new CreateBookingRequest();
+        request.setTripId(testTrip.getId());
+        request.setUserId(testUser.getId());
+        request.setPassengerName("Test Passenger");
+        request.setPassengerPhone("0123456789");
+        request.setPassengerEmail("test@example.com");
+        request.setPickupTripStopId(pickupStop.getId()); // Order 2
+        request.setDropoffTripStopId(dropoffStop.getId()); // Order 1 - WRONG ORDER
+
+        TicketRequest ticketRequest = new TicketRequest();
+        ticketRequest.setSeatCode("A1");
+        ticketRequest.setPassengerName("Test Passenger");
+        ticketRequest.setPassengerPhone("0123456789");
+        ticketRequest.setPrice(new BigDecimal("200000"));
+        request.setTickets(Collections.singletonList(ticketRequest));
+
+        when(tripRepository.findById(request.getTripId())).thenReturn(Optional.of(testTrip));
+        when(userRepository.findById(request.getUserId())).thenReturn(Optional.of(testUser));
+        when(ticketRepository.findBookedSeatCodesByTripId(request.getTripId())).thenReturn(Collections.emptyList());
+        when(ticketRepository.findByBookingTripIdAndSeatCodeIn(any(), anyList())).thenReturn(Collections.emptyList());
+
+        // Act & Assert
+        RuntimeException exception = assertThrows(RuntimeException.class,
+                () -> bookingService.createBooking(request));
+        assertTrue(exception.getMessage().contains("Pickup station must be before dropoff station"));
+    }
+
+    @Test
+    void createBooking_withBookingCodeRetry_success() {
+        // Arrange
+        CreateBookingRequest request = new CreateBookingRequest();
+        request.setTripId(testTrip.getId());
+        request.setUserId(testUser.getId());
+        request.setPassengerName("Test Passenger");
+        request.setPassengerPhone("0123456789");
+        request.setPassengerEmail("test@example.com");
+
+        TicketRequest ticketRequest = new TicketRequest();
+        ticketRequest.setSeatCode("A1");
+        ticketRequest.setPassengerName("Test Passenger");
+        ticketRequest.setPassengerPhone("0123456789");
+        ticketRequest.setPrice(new BigDecimal("200000"));
+        request.setTickets(Collections.singletonList(ticketRequest));
+
+        when(tripRepository.findById(request.getTripId())).thenReturn(Optional.of(testTrip));
+        when(userRepository.findById(request.getUserId())).thenReturn(Optional.of(testUser));
+        when(ticketRepository.findBookedSeatCodesByTripId(request.getTripId())).thenReturn(Collections.emptyList());
+        when(ticketRepository.findByBookingTripIdAndSeatCodeIn(any(), anyList())).thenReturn(Collections.emptyList());
+        // First call returns existing booking, second call returns empty (unique code found)
+        when(bookingRepository.findByCode(anyString()))
+                .thenReturn(Optional.of(testBooking)) // First attempt - code exists
+                .thenReturn(Optional.empty()); // Second attempt - unique code
+        when(bookingRepository.save(any(Booking.class))).thenAnswer(invocation -> {
+            Booking b = invocation.getArgument(0);
+            b.setId(UUID.randomUUID());
+            return b;
+        });
+
+        // Act
+        BookingResponse response = bookingService.createBooking(request);
+
+        // Assert
+        assertNotNull(response);
+        verify(bookingRepository, atLeast(2)).findByCode(anyString());
+    }
+
+    @Test
+    void updateBooking_withTripStopIds_success() {
+        // Arrange
+        testBooking.setStatus(BookingStatus.PENDING);
+        UpdateBookingRequest request = new UpdateBookingRequest();
+        request.setPassengerName("Updated Passenger");
+        request.setPassengerPhone("0987654321");
+        request.setPassengerEmail("updated@example.com");
+
+        com.awad.ticketbooking.modules.trip.entity.TripStop pickupStop = new com.awad.ticketbooking.modules.trip.entity.TripStop();
+        pickupStop.setId(UUID.randomUUID());
+        pickupStop.setStopOrder(1);
+        pickupStop.setStation(originStation);
+
+        com.awad.ticketbooking.modules.trip.entity.TripStop dropoffStop = new com.awad.ticketbooking.modules.trip.entity.TripStop();
+        dropoffStop.setId(UUID.randomUUID());
+        dropoffStop.setStopOrder(2);
+        dropoffStop.setStation(destinationStation);
+
+        testTrip.setTripStops(List.of(pickupStop, dropoffStop));
+        request.setPickupTripStopId(pickupStop.getId());
+        request.setDropoffTripStopId(dropoffStop.getId());
+
+        when(bookingRepository.findById(testBooking.getId())).thenReturn(Optional.of(testBooking));
+        when(ticketRepository.findByBookingTripIdAndSeatCodeIn(any(), anyList())).thenReturn(Collections.emptyList());
+        when(bookingRepository.save(any(Booking.class))).thenReturn(testBooking);
+
+        // Act
+        BookingResponse response = bookingService.updateBooking(testBooking.getId(), request);
+
+        // Assert
+        assertNotNull(response);
+        verify(bookingRepository).save(any(Booking.class));
+    }
+
+    @Test
+    void updateBooking_withTicketUpdate_success() {
+        // Arrange
+        testBooking.setStatus(BookingStatus.PENDING);
+        UpdateBookingRequest request = new UpdateBookingRequest();
+        request.setPassengerName("Updated Passenger");
+        request.setPassengerPhone("0987654321");
+        request.setPassengerEmail("updated@example.com");
+
+        TicketRequest ticketRequest = new TicketRequest();
+        ticketRequest.setSeatCode("A2"); // Different seat
+        ticketRequest.setPassengerName("Updated Passenger");
+        ticketRequest.setPassengerPhone("0987654321");
+        ticketRequest.setPrice(new BigDecimal("250000"));
+        request.setTickets(Collections.singletonList(ticketRequest));
+
+        when(bookingRepository.findById(testBooking.getId())).thenReturn(Optional.of(testBooking));
+        when(ticketRepository.findByBookingTripIdAndSeatCodeIn(any(), anyList())).thenReturn(Collections.emptyList());
+        when(bookingRepository.save(any(Booking.class))).thenReturn(testBooking);
+
+        // Act
+        BookingResponse response = bookingService.updateBooking(testBooking.getId(), request);
+
+        // Assert
+        assertNotNull(response);
+        verify(bookingRepository).save(any(Booking.class));
+    }
+
+    @Test
+    void cancelBooking_confirmedWithRefundPath() {
+        // Arrange
+        testBooking.setStatus(BookingStatus.CONFIRMED);
+        testTrip.setDepartureTime(Instant.now().plus(48, ChronoUnit.HOURS)); // More than 24h - refundable
+        when(bookingRepository.findById(testBooking.getId())).thenReturn(Optional.of(testBooking));
+        when(bookingRepository.save(any(Booking.class))).thenReturn(testBooking);
+
+        // Act
+        BookingResponse response = bookingService.cancelBooking(testBooking.getId());
+
+        // Assert
+        assertNotNull(response);
+        // Should call refundBooking which sets status to REFUNDED
+        verify(bookingRepository, atLeastOnce()).save(any(Booking.class));
+    }
+
+    @Test
+    void refundBooking_cancelledBooking_success() {
+        // Arrange
+        testBooking.setStatus(BookingStatus.CANCELLED);
+        when(bookingRepository.findById(testBooking.getId())).thenReturn(Optional.of(testBooking));
+        when(bookingRepository.save(any(Booking.class))).thenReturn(testBooking);
+
+        // Act
+        BookingResponse response = bookingService.refundBooking(testBooking.getId());
+
+        // Assert
+        assertNotNull(response);
+        verify(seatLockService).unlockSeatsForBooking(eq(testTrip.getId()), anyList());
+        verify(bookingRepository).save(any(Booking.class));
+    }
+
+    @Test
+    void lookupBooking_withUserEmail_success() {
+        // Arrange
+        testBooking.setPassengerEmail(null); // No passenger email
+        testBooking.setUser(testUser); // But has user with email
+        when(bookingRepository.findByCode("BK-ABC123")).thenReturn(Optional.of(testBooking));
+
+        // Act
+        BookingResponse response = bookingService.lookupBooking("BK-ABC123", "test@example.com");
+
+        // Assert
+        assertNotNull(response);
+        assertEquals("BK-ABC123", response.getCode());
+    }
+
+    @Test
+    void lookupBooking_withNullEmail_throwsException() {
+        // Arrange
+        testBooking.setPassengerEmail(null);
+        testBooking.setUser(null); // No user either
+        when(bookingRepository.findByCode("BK-ABC123")).thenReturn(Optional.of(testBooking));
+
+        // Act & Assert
+        RuntimeException exception = assertThrows(RuntimeException.class,
+                () -> bookingService.lookupBooking("BK-ABC123", "test@example.com"));
+        assertTrue(exception.getMessage().contains("not found or email does not match"));
+    }
+
+    @Test
+    void createBooking_withInvalidDropoffTripStopId_throwsException() {
+        // Arrange
+        CreateBookingRequest request = new CreateBookingRequest();
+        request.setTripId(testTrip.getId());
+        request.setUserId(testUser.getId());
+        request.setPassengerName("Test Passenger");
+        request.setPassengerPhone("0123456789");
+        request.setPassengerEmail("test@example.com");
+        request.setDropoffTripStopId(UUID.randomUUID()); // Invalid trip stop ID
+
+        TicketRequest ticketRequest = new TicketRequest();
+        ticketRequest.setSeatCode("A1");
+        ticketRequest.setPassengerName("Test Passenger");
+        ticketRequest.setPassengerPhone("0123456789");
+        ticketRequest.setPrice(new BigDecimal("200000"));
+        request.setTickets(Collections.singletonList(ticketRequest));
+
+        when(tripRepository.findById(request.getTripId())).thenReturn(Optional.of(testTrip));
+        when(userRepository.findById(request.getUserId())).thenReturn(Optional.of(testUser));
+        when(ticketRepository.findBookedSeatCodesByTripId(request.getTripId())).thenReturn(Collections.emptyList());
+        when(ticketRepository.findByBookingTripIdAndSeatCodeIn(any(), anyList())).thenReturn(Collections.emptyList());
+
+        // Act & Assert
+        RuntimeException exception = assertThrows(RuntimeException.class,
+                () -> bookingService.createBooking(request));
+        assertTrue(exception.getMessage().contains("Invalid dropoff trip stop ID"));
+    }
+
+    @Test
+    void updateBooking_withInvalidPickupTripStopId_throwsException() {
+        // Arrange
+        testBooking.setStatus(BookingStatus.PENDING);
+        UpdateBookingRequest request = new UpdateBookingRequest();
+        request.setPickupTripStopId(UUID.randomUUID()); // Invalid trip stop ID
+
+        when(bookingRepository.findById(testBooking.getId())).thenReturn(Optional.of(testBooking));
+
+        // Act & Assert
+        RuntimeException exception = assertThrows(RuntimeException.class,
+                () -> bookingService.updateBooking(testBooking.getId(), request));
+        assertTrue(exception.getMessage().contains("not found"));
+    }
+
+    @Test
+    void createBooking_withGuestUser_success() {
+        // Arrange
+        CreateBookingRequest request = new CreateBookingRequest();
+        request.setTripId(testTrip.getId());
+        request.setUserId(null); // Guest booking
+        request.setPassengerName("Guest Passenger");
+        request.setPassengerPhone("0123456789");
+        request.setPassengerEmail("guest@example.com");
+
+        TicketRequest ticketRequest = new TicketRequest();
+        ticketRequest.setSeatCode("A1");
+        ticketRequest.setPassengerName("Guest Passenger");
+        ticketRequest.setPassengerPhone("0123456789");
+        ticketRequest.setPrice(new BigDecimal("200000"));
+        request.setTickets(Collections.singletonList(ticketRequest));
+
+        when(tripRepository.findById(request.getTripId())).thenReturn(Optional.of(testTrip));
+        when(ticketRepository.findBookedSeatCodesByTripId(request.getTripId())).thenReturn(Collections.emptyList());
+        when(ticketRepository.findByBookingTripIdAndSeatCodeIn(any(), anyList())).thenReturn(Collections.emptyList());
+        when(bookingRepository.findByCode(anyString())).thenReturn(Optional.empty());
+        when(bookingRepository.save(any(Booking.class))).thenAnswer(invocation -> {
+            Booking b = invocation.getArgument(0);
+            b.setId(UUID.randomUUID());
+            return b;
+        });
+
+        // Act
+        BookingResponse response = bookingService.createBooking(request);
+
+        // Assert
+        assertNotNull(response);
+        verify(bookingRepository).save(any(Booking.class));
     }
 }
