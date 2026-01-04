@@ -121,11 +121,15 @@ export const BookingEditDialog = ({ booking, open, onOpenChange }: BookingEditDi
         if (booking.pickupTripPoint?.id) return booking.pickupTripPoint.id;
         // If no trip point, check if it's origin
         if (booking.pickupStation?.id === booking.trip.route.originStation.id) return 'ORIGIN';
-        
+
         // If it's a stop but no trip point recorded (maybe legacy or bug), try to find the stop ID
         if (booking.pickupStation?.id) {
-             const stop = booking.trip.route.stops?.find(s => s.station?.id === booking.pickupStation?.id && (s.stopType === 'PICKUP' || s.stopType === 'BOTH'));
-             if (stop) return stop.id;
+          const stop = booking.trip.route.stops?.find(
+            (s) =>
+              s.station?.id === booking.pickupStation?.id &&
+              (s.stopType === 'PICKUP' || s.stopType === 'BOTH'),
+          );
+          if (stop) return stop.id;
         }
 
         return booking.pickupStation?.id;
@@ -139,9 +143,13 @@ export const BookingEditDialog = ({ booking, open, onOpenChange }: BookingEditDi
 
         // If it's a stop but no trip point recorded, try to find the stop ID
         if (booking.dropoffStation?.id) {
-            const stop = booking.trip.route.stops?.find(s => s.station?.id === booking.dropoffStation?.id && (s.stopType === 'DROPOFF' || s.stopType === 'BOTH'));
-            if (stop) return stop.id;
-       }
+          const stop = booking.trip.route.stops?.find(
+            (s) =>
+              s.station?.id === booking.dropoffStation?.id &&
+              (s.stopType === 'DROPOFF' || s.stopType === 'BOTH'),
+          );
+          if (stop) return stop.id;
+        }
 
         return booking.dropoffStation?.id;
       };
@@ -415,14 +423,14 @@ export const BookingEditDialog = ({ booking, open, onOpenChange }: BookingEditDi
                                   {trip?.route.originStation.name} (Xuất phát)
                                 </SelectItem>
                                 {trip?.route.stops
-                                  ?.filter(
-                                    (s) =>
-                                      (s.stopType === 'PICKUP' || s.stopType === 'BOTH'),
-                                  )
+                                  ?.filter((s) => s.stopType === 'PICKUP' || s.stopType === 'BOTH')
                                   .sort((a, b) => a.stopOrder - b.stopOrder)
                                   .map((stop) => (
                                     <SelectItem key={stop.id} value={stop.id}>
-                                      {stop.station ? stop.station.name : stop.customName || stop.customAddress || 'Điểm khác'} ({stop.durationMinutesFromOrigin}m)
+                                      {stop.station
+                                        ? stop.station.name
+                                        : stop.customName || stop.customAddress || 'Điểm khác'}{' '}
+                                      ({stop.durationMinutesFromOrigin}m)
                                     </SelectItem>
                                   ))}
                               </>
@@ -463,14 +471,14 @@ export const BookingEditDialog = ({ booking, open, onOpenChange }: BookingEditDi
                                   {trip?.route.destinationStation.name} (Điểm cuối)
                                 </SelectItem>
                                 {trip?.route.stops
-                                  ?.filter(
-                                    (s) =>
-                                      (s.stopType === 'DROPOFF' || s.stopType === 'BOTH'),
-                                  )
+                                  ?.filter((s) => s.stopType === 'DROPOFF' || s.stopType === 'BOTH')
                                   .sort((a, b) => a.stopOrder - b.stopOrder)
                                   .map((stop) => (
                                     <SelectItem key={stop.id} value={stop.id}>
-                                      {stop.station ? stop.station.name : stop.customName || stop.customAddress || 'Điểm khác'} ({stop.durationMinutesFromOrigin}m)
+                                      {stop.station
+                                        ? stop.station.name
+                                        : stop.customName || stop.customAddress || 'Điểm khác'}{' '}
+                                      ({stop.durationMinutesFromOrigin}m)
                                     </SelectItem>
                                   ))}
                               </>
